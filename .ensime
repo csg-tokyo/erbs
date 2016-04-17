@@ -1,22 +1,25 @@
 (
- :root-dir "/Users/ganmacs/src/github.com/ganmacs/rbparesr"
- :cache-dir "/Users/ganmacs/src/github.com/ganmacs/rbparesr/.ensime_cache"
- :name "rbparesr"
- :java-home "/Library/Java/JavaVirtualMachines/jdk1.8.0_65.jdk/Contents/Home"
+ :root-dir "/Users/ganmacs/src/github.com/ganmacs/rbparser"
+ :cache-dir "/Users/ganmacs/src/github.com/ganmacs/rbparser/.ensime_cache"
+ :scala-compiler-jars ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.11.7.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.7.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.11.7.jar")
+ :name "rbparser"
+ :java-home "/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home"
  :java-flags ("-Xss2m" "-Xms1024m" "-Xmx1024m" "-XX:ReservedCodeCacheSize=128m" "-XX:MaxMetaspaceSize=256m")
- :reference-source-roots ("/Library/Java/JavaVirtualMachines/jdk1.8.0_65.jdk/Contents/Home/src.zip")
- :scala-version "2.10.6"
- :compiler-args ("-feature" "-deprecation" "-Xlint" "-Yinline-warnings" "-Yno-adapted-args" "-Ywarn-dead-code" "-Ywarn-numeric-widen" "-Xfuture")
- 
+ :reference-source-roots ("/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/src.zip")
+ :scala-version "2.11.7"
+ :compiler-args ("-feature" "-deprecation" "-Xlint" "-Yinline-warnings" "-Yno-adapted-args" "-Ywarn-dead-code" "-Ywarn-numeric-widen" "-Xfuture" "-Ywarn-unused-import" "-Ymacro-expand:discard")
+ :formatting-prefs nil
+ :disable-source-monitoring nil
+ :disable-class-monitoring nil
  :subprojects ((
-   :name "rbparesr"
-   :source-roots nil
-   :targets ("/Users/ganmacs/src/github.com/ganmacs/rbparesr/target/scala-2.10/classes")
-   :test-targets ("/Users/ganmacs/src/github.com/ganmacs/rbparesr/target/scala-2.10/test-classes")
+   :name "rbparser"
+   :source-roots ("/Users/ganmacs/src/github.com/ganmacs/rbparser/src/main/scala" "/Users/ganmacs/src/github.com/ganmacs/rbparser/src/test/scala")
+   :targets ("/Users/ganmacs/src/github.com/ganmacs/rbparser/target/scala-2.11/classes")
+   :test-targets ("/Users/ganmacs/src/github.com/ganmacs/rbparser/target/scala-2.11/test-classes")
    :depends-on-modules nil
-   :compile-deps ("/Users/ganmacs/.sbt/boot/scala-2.10.6/lib/scala-library.jar")
+   :compile-deps ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.7.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.11/bundles/scala-parser-combinators_2.11-1.0.4.jar")
    :runtime-deps nil
-   :test-deps nil
-   :doc-jars ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/docs/scala-library-2.10.6-javadoc.jar" "/Users/ganmacs/src/github.com/ganmacs/rbparesr/target/scala-2.10/rbparesr_2.10-0.1-SNAPSHOT-javadoc.jar")
-   :reference-source-roots ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/srcs/scala-library-2.10.6-sources.jar")))
+   :test-deps ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-reflect/jars/scala-reflect-2.11.2.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.2.jar" "/Users/ganmacs/.ivy2/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-2.2.4.jar")
+   :doc-jars ("/Users/ganmacs/src/github.com/ganmacs/rbparser/target/scala-2.11/rbparser_2.11-0.1-SNAPSHOT-javadoc.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/docs/scala-library-2.11.7-javadoc.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.11/docs/scala-parser-combinators_2.11-1.0.4-javadoc.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-reflect/docs/scala-reflect-2.11.2-javadoc.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/docs/scala-xml_2.11-1.0.2-javadoc.jar" "/Users/ganmacs/.ivy2/cache/org.scalatest/scalatest_2.11/docs/scalatest_2.11-2.2.4-javadoc.jar")
+   :reference-source-roots ("/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-library/srcs/scala-library-2.11.7-sources.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-parser-combinators_2.11/srcs/scala-parser-combinators_2.11-1.0.4-sources.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang/scala-reflect/srcs/scala-reflect-2.11.2-sources.jar" "/Users/ganmacs/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/srcs/scala-xml_2.11-1.0.2-sources.jar" "/Users/ganmacs/.ivy2/cache/org.scalatest/scalatest_2.11/srcs/scalatest_2.11-2.2.4-sources.jar")))
 )
