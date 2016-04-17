@@ -151,7 +151,7 @@ end""") { v => assert(v == DefExpr(MethodName("call"), Some(FormalArgs(List(IdLi
 end""") { v => assert(v == DefExpr(MethodName("call"), None, Stmnts(List(Prim(PLUS(), IntLit(1), IntLit(2)))))) }
   }
 
-  def parse(x: String)(fn: Expr => Unit): Unit = {
+  def parse(x: String)(fn: Stmnt => Unit): Unit = {
     val parser = new Parser()
     parser.parse(x + "\n") match {
       case Right(Stmnts(x)) => fn(x(0))

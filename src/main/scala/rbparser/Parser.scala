@@ -76,9 +76,11 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ fact ^^ { case op ~ f => (op, f) }
 
-  protected lazy val expr: PackratParser[Expr] = assign | defExpr | classExpr | fact ~ exprR.* ^^ { case f ~ e => makePrim(f, e) }
+  protected lazy val expr: PackratParser[Expr] = assign | fact ~ exprR.* ^^ { case f ~ e => makePrim(f, e) }
 
-  protected lazy val stmnts: PackratParser[Stmnts] = (expr <~ (EOL | T_SCOLON)).* ^^ { case e => Stmnts(e) }
+  protected lazy val stmnt: PackratParser[Stmnt] = defExpr | classExpr | expr
+
+  protected lazy val stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ { case e => Stmnts(e) }
 
   protected def makePrim(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakePrim(lh, rh, 0) match {
