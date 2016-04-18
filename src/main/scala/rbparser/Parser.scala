@@ -16,6 +16,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { case e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { case e => DoubleLit(e.toDouble) }
+  protected lazy val string: PackratParser[StringLit] = T_STRING ^^ StringLit
   // `not` method reuturns `()` if succes, this term does not consume tokens
   protected lazy val id: PackratParser[IdLit] = not(reserved) ~> T_ID ^^ IdLit
   protected lazy val instanceVar: PackratParser[InstVarLit] = T_INSTANCE_VAR ^^ { case e => InstVarLit(e.drop(1)) }
@@ -54,7 +55,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val assign: PackratParser[Assign] = (varLit <~ T_EQ) ~ expr ^^ { case name ~ value => Assign(name, value) }
 
-  protected lazy val fact: PackratParser[Expr] = mCall | valMinus | valWithNot | instanceVar | bool | double | int | id | const | T_LPAREN ~> expr <~ T_RPAREN
+  protected lazy val fact: PackratParser[Expr] = mCall | valMinus | valWithNot | instanceVar | string | bool | double | int | id | const | T_LPAREN ~> expr <~ T_RPAREN
   protected lazy val operator: PackratParser[Op] = (T_ORE | T_OR | T_AND | T_PLUS | T_MINS | T_AST | T_DIV | T_GE | T_GT | T_LE | T_LT) ^^ {
     case "+" => PLUS()
     case "-" => MINUS()

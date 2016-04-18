@@ -22,6 +22,13 @@ class ParserTest extends FunSpec {
       parse("x2") { v =>  assert(v == IdLit("x2")) }
     }
 
+    it ("returns String Literal") {
+      parse(""""asdf"""") { v =>  assert(v == StringLit("\"asdf\"")) }
+      parse(""""asdf\n"""") { v =>  assert(v == StringLit("\"asdf\\n\"")) }
+      parse(""""as\ndf\n"""") { v =>  assert(v == StringLit("\"as\\ndf\\n\"")) }
+      parse(""""as\"df"""") { v =>  assert(v == StringLit("\"as\\\"df\"")) }
+    }
+
     it ("returns BoolLit wrapped value") {
       parse("true") { v => assert(v == BoolLit(true)) }
     }

@@ -7,6 +7,7 @@ trait Tokens {
   val T_CONSTANT = """[A-Z][_A-Z0-9]*""".r
   val T_INSTANCE_VAR = """@_?[a-zA-Z][_a-zA-Z0-9]*""".r
   val T_MNAME = """[_a-zA-Z]*[a-zA-Z][_a-zA-Z0-9]*\??""".r
+  val T_STRING = """"(\"|\n|[^\"])*"""".r
 
   val T_COMMA = ","
   val T_DOT = "."
