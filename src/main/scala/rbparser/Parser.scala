@@ -92,13 +92,11 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   private def innerMakePrim(factor: Expr, input: List[(Op, Expr)], prec: Int): (List[(Op, Expr)],Expr) = input match {
     case Nil => (Nil, factor)
-    case (op, rhs) :: Nil => (Nil, Prim(op, factor, rhs))
-    case (op, rhs) :: (x@((op2, rhs2) :: _)) => {
-      if (prec > op.prec) { return (Nil, factor) }
-      val a = x.takeWhile { case (o, e) => o.prec > op.prec }
-      val b = x.dropWhile { case (o, e) => o.prec > op.prec }
-      val c = a.foldLeft(rhs) { case (a, (op, e)) => Prim(op, a, e) }
-      innerMakePrim(Prim(op, factor, c), b, 0)
+    case (op, rhs) :: xs if op.prec < prec => (Nil, factor)
+    case (op, rhs) :: xs => {
+      val (e1, rest) = xs.span { case (o, e) => o.prec > op.prec }
+      val newRhs = e1.foldLeft(rhs) { case (a, (op, e)) => Prim(op, a, e) }
+      innerMakePrim(Prim(op, factor, newRhs), rest, 0)
     }
   }
 }
