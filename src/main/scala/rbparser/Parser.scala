@@ -19,11 +19,12 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val string: PackratParser[StringLit] = T_STRING ^^ StringLit
   // `not` method reuturns `()` if succes, this term does not consume tokens
   protected lazy val id: PackratParser[IdLit] = not(reserved) ~> T_ID ^^ IdLit
-  protected lazy val instanceVar: PackratParser[InstVarLit] = T_INSTANCE_VAR ^^ { case e => InstVarLit(e.drop(1)) }
+  protected lazy val instanceVar: PackratParser[InstVarLit] = T_AT ~> T_SYMBOL ^^ InstVarLit
   protected lazy val const: PackratParser[ConstLit] = T_CONSTANT ^^ ConstLit
   protected lazy val bool: PackratParser[BoolLit] = T_TRUE ^^ { case _ => BoolLit(true) } | T_FALSE ^^ { case _ => BoolLit(false) }
   protected lazy val methName: PackratParser[MethodName] = T_MNAME ^^ MethodName
   protected lazy val varLit: PackratParser[Var] = instanceVar | id
+  protected lazy val symbol: PackratParser[SymbolLit] = T_COLON ~> T_SYMBOL ^^ SymbolLit
 
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
   protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | id | instanceVar | expr | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(EXT(), v) }
@@ -55,7 +56,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val assign: PackratParser[Assign] = (varLit <~ T_EQ) ~ expr ^^ { case name ~ value => Assign(name, value) }
 
-  protected lazy val fact: PackratParser[Expr] = mCall | valMinus | valWithNot | instanceVar | string | bool | double | int | id | const | T_LPAREN ~> expr <~ T_RPAREN
+  protected lazy val fact: PackratParser[Expr] = mCall | valMinus | valWithNot | instanceVar | symbol | string | bool | double | int | id | const | T_LPAREN ~> expr <~ T_RPAREN | expr
   protected lazy val operator: PackratParser[Op] = (T_ORE | T_OR | T_AND | T_PLUS | T_MINS | T_AST | T_DIV | T_GE | T_GT | T_LE | T_LT) ^^ {
     case "+" => PLUS()
     case "-" => MINUS()

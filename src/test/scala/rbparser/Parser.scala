@@ -38,11 +38,20 @@ class ParserTest extends FunSpec {
       parse("ASDF2") { v => assert(v == ConstLit("ASDF2")) }
     }
 
+    it ("returns symbol wrapped value") {
+      parse(":a") { v =>  assert(v == SymbolLit("a")) }
+      parse(":a1") { v =>  assert(v == SymbolLit("a1")) }
+      parse(":_a1") { v =>  assert(v == SymbolLit("_a1")) }
+      parse(":__a1") { v =>  assert(v == SymbolLit("__a1")) }
+      parse(":A") { v =>  assert(v == SymbolLit("A")) }
+    }
+
     it ("returns instance variable wrapped value") {
       parse("@a") { v =>  assert(v == InstVarLit("a")) }
       parse("@a1") { v =>  assert(v == InstVarLit("a1")) }
       parse("@_a") { v => assert(v == InstVarLit("_a")) }
       parse("@_a1") { v => assert(v == InstVarLit("_a1")) }
+      parse("@__a1") { v => assert(v == InstVarLit("__a1")) }
       parse("@A") { v => assert(v == InstVarLit("A")) }
     }
   }
