@@ -3,7 +3,7 @@ package rbparser
 trait Tokens {
   val T_INT = """(0|[1-9][0-9]*)""".r
   val T_DOUBLE = """(0|[1-9][0-9]*)\.[0-9]+""".r
-  val T_MNAME = """[_a-zA-Z]*[a-zA-Z][_a-zA-Z0-9]*\??""".r
+  val T_MNAME = """[_a-zA-Z]*[a-zA-Z][_a-zA-Z0-9]*[!?]?""".r
   val T_STRING = """"(\"|\n|[^\"])*"""".r
   val T_ID       = """_*[a-z][_a-zA-Z0-9]*""".r
   val T_SYMBOL   = """_*[a-zA-Z][_a-zA-Z0-9]*""".r
@@ -24,7 +24,7 @@ trait Tokens {
   val T_LP = "{"
   val T_RP = "}"
   val T_PLUS = "+"
-  val T_MINS = "-"
+  val T_MINUS = "-"
   val T_AST = "*"
   val T_DIV = "/"
   val T_GT = ">"
@@ -32,20 +32,24 @@ trait Tokens {
   val T_LT = "<"
   val T_LE = "<="
   val T_OR = "||"
-  val T_ORE = "||="
+  val T_OREQ = "||="
+  val T_ANDEQ = "&&="
   val T_AND = "&&"
   val T_EX = "!"
 
   val T_DO = "do"
   val T_CLS = "class"
+  val T_MODULE = "module"
   val T_DEF = "def"
   val T_END = "end"
   val T_IF = "if"
+  val T_UNLESS = "unless"
   val T_THEN = "then"
   val T_ELSE = "else"
 
   val T_TRUE = "true"
   val T_FALSE = "false"
+  val T_RETURN = "return"
 
   val K_DO = """do\b""".r
   val K_CLS = """class\b""".r
