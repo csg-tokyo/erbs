@@ -24,7 +24,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val t_le: PackratParser[LE] = "<=" ^^^ LE()
   protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
 
-  protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO
+  protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { case e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { case e => DoubleLit(e.toDouble) }
   protected lazy val string: PackratParser[StringLit] = T_STRING ^^ StringLit
@@ -40,7 +40,8 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | lvar | ivar | expr | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(EXT(), v) }
   protected lazy val valMinus: PackratParser[Unary] = (t_minus ~ (const | lvar | ivar | double | int | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(op, v) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
-  protected lazy val ret: PackratParser[Expr] = T_RETURN ~> actualArgs ^^ Return
+  protected lazy val ret: PackratParser[Expr] = T_RETURN ~> aArgs.? ^^ { case a => Return(a.getOrElse(Nil)) }
+  protected lazy val aref: PackratParser[ARef] = (primary <~ T_LB) ~ (primary <~ T_RB) ^^ { case v ~ ref => ARef(v, ref) }
 
   //add inheritace
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
@@ -102,7 +103,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val lhs: PackratParser[Expr] = (primary <~ T_DOT) ~ (methName | const) ^^ {
     case rev ~ ConstLit(c) => Call(Some(rev), MethodName(c), None)
     case rev ~ MethodName(c) => Call(Some(rev), MethodName(c), None)
-  }  | varLit | primary
+  }  | primary
 
   protected lazy val assign: PackratParser[Assign] = lhs ~ (T_OREQ | T_ANDEQ | T_EQ) ~ expr ^^ {
     case name ~ T_EQ ~ value => Assign(name, value)
@@ -117,7 +118,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   //TODO ADD `( stamnt  )`
   protected lazy val primary: PackratParser[Expr] =
-    ivar | literal | string | bool | lvar | const | symbol | T_LPAREN ~> expr <~ T_RPAREN | ret | methodCall | ifExpr | classExpr | moduleExpr | defExpr | valMinus | valWithNot
+     valMinus | valWithNot | literal | string | bool | const | symbol | aref | ivar | lvar  | T_LPAREN ~> expr <~ T_RPAREN | ret | methodCall | ifExpr | classExpr | moduleExpr | defExpr
 
   protected lazy val arg: PackratParser[Expr] = assign | arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) } | primary
   // protected lazy val arg: PackratParser[Expr] = assign | arg ~ operator ~ arg ^^ { case a ~ o ~ c => Prim(o, a, c) } | primary
@@ -138,8 +139,8 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
     case (op, rhs) :: xs if op.prec < prec => (Nil, factor)
     case (op, rhs) :: xs => {
       val (e1, rest) = xs.span { case (o, e) => o.prec > op.prec }
-      val newRhs = e1.foldLeft(rhs) { case (a, (op, e)) => Prim(op, a, e) }
-      innerMakeBin(Prim(op, factor, newRhs), rest, 0)
+      val newRhs = e1.foldLeft(rhs) { case (a, (op, e)) => Binary(op, a, e) }
+      innerMakeBin(Binary(op, factor, newRhs), rest, 0)
     }
   }
 }

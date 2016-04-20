@@ -53,6 +53,7 @@ trait Tokens {
 
   val K_DO = """do\b""".r
   val K_CLS = """class\b""".r
+  val K_MODULE = """module\b""".r
   val K_DEF = """def\b""".r
   val K_END = """end\b""".r
   val K_IF = """if\b""".r
@@ -61,4 +62,5 @@ trait Tokens {
 
   val K_TRUE = """true\b""".r
   val K_FALSE = """false\b""".r
+  val K_RETURN =  """return\b""".r
 }
