@@ -120,8 +120,9 @@ class ParserTest extends FunSpec {
       parse("a1._call(10)") { v => assert(v == Call(Some(LVar("a1")), MethodName("_call"), Some(ActualArgs(List(IntLit(10)))))) }
       parse("a1._calL?(10)") { v => assert(v == Call(Some(LVar("a1")), MethodName("_calL?"), Some(ActualArgs(List(IntLit(10)))))) }
       parse("a1._calL!(10)") { v => assert(v == Call(Some(LVar("a1")), MethodName("_calL!"), Some(ActualArgs(List(IntLit(10)))))) }
+      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), MethodName("call"), None)) }
+
       // parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), MethodName("call"), None), IntLit(10))) }
-      // parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), MethodName("call"), None)) }
       // parse("a1.call(10, true)") { v => assert(v == Call(Some(LVar("a1")), MethodName("call"), Some(ActualArgs(List(IntLit(10)))))) }
       // parse("!a1._calL?(10)") { v => assert(v == Unary(EXT(),Call(Some(LVar("a1")), MethodName("_calL?"), Some(ActualArgs(List(IntLit(10))))))) }
     }
@@ -192,21 +193,22 @@ end""") { v => assert(v == DefExpr(MethodName("call"), None, Stmnts(List(Binary(
       parse("i / 2") { v => assert(v == Binary(DIV(), LVar("i"), IntLit(2))) }
       parse("@a / 2") { v => assert(v == Binary(DIV(), IVar("a"), IntLit(2))) }
       parse("1 - 2 * 3") { v => assert(v == Binary(MINUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(3)))) }
-      // parse("1 - 2 - 3") { v => assert(v == Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) }
+      parse("1 - 2 - 3") { v => assert(v == Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) }
 
-      // parse("1 + 2 * 1 + 10") { v => assert(
-      //   v == Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10))) }
+      parse("1 + 2 * 1 + 10") { v => assert(
+        v == Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10)))
+      }
     }
 
     it ("parses compare binary") {
       parse("1 < 2") { v => assert(v == Binary(LT(), IntLit(1), IntLit(2))) }
       parse("1 >= 2") { v => assert(v == Binary(GE(), IntLit(1), IntLit(2))) }
-      // parse("1 + 2 >= 3") { v => assert(v == Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3))) }
+      parse("1 + 2 >= 3") { v => assert(v == Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3))) }
     }
 
     it  ("pares cond binary") {
       parse("true && false") { v => assert(v == Binary(AND(), BoolLit(true), BoolLit(false))) }
-      // parse("true || false && false") { v => assert(v == Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false)))) }
+      parse("true || false && false") { v => assert(v == Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false)))) }
     }
   }
 

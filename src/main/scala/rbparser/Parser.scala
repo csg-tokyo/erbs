@@ -98,7 +98,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val commadCall: PackratParser[Call] = command //  | blockCommand
 
-  protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ arg ^^ { case op ~ f => (op, f) }
+  protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ primary ^^ { case op ~ f => (op, f) }
 
   protected lazy val lhs: PackratParser[Expr] = (primary <~ T_DOT) ~ (methName | const) ^^ {
     case rev ~ ConstLit(c) => Call(Some(rev), MethodName(c), None)
@@ -120,7 +120,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val primary: PackratParser[Expr] =
      valMinus | valWithNot | literal | string | bool | const | symbol | aref | ivar | lvar  | T_LPAREN ~> expr <~ T_RPAREN | ret | methodCall | ifExpr | classExpr | moduleExpr | defExpr
 
-  protected lazy val arg: PackratParser[Expr] = assign | arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) } | primary
+  protected lazy val arg: PackratParser[Expr] = assign | primary~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
   // protected lazy val arg: PackratParser[Expr] = assign | arg ~ operator ~ arg ^^ { case a ~ o ~ c => Prim(o, a, c) } | primary
 
   protected lazy val expr: PackratParser[Expr] =  ret | commadCall | arg
