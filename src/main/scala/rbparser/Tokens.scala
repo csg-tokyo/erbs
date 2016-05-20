@@ -38,29 +38,41 @@ trait Tokens {
   val T_EX = "!"
 
   val T_DO = "do"
-  val T_CLS = "class"
-  val T_MODULE = "module"
-  val T_DEF = "def"
-  val T_END = "end"
-  val T_IF = "if"
-  val T_UNLESS = "unless"
-  val T_THEN = "then"
-  val T_ELSE = "else"
-
-  val T_TRUE = "true"
-  val T_FALSE = "false"
-  val T_RETURN = "return"
-
   val K_DO = """do\b""".r
+
+  val T_CLS = "class"
   val K_CLS = """class\b""".r
+
+  val T_MODULE = "module"
   val K_MODULE = """module\b""".r
+
+  val T_DEF = "def"
   val K_DEF = """def\b""".r
+
+  val T_END = "end"
   val K_END = """end\b""".r
+
+  val T_IF = "if"
   val K_IF = """if\b""".r
+
+  val T_UNLESS = "unless"
+  val K_UNLESS = """unless\b""".r
+
+  val T_THEN = "then"
   val K_THEN = """then\b""".r
+
+  val T_ELSE = "else"
   val K_ELSE = """else\b""".r
 
+  val T_SELF = "self"
+  val K_SELF = """self\b""".r
+
+  val T_TRUE = "true"
   val K_TRUE = """true\b""".r
+
+  val T_FALSE = "false"
   val K_FALSE = """false\b""".r
+
+  val T_RETURN = "return"
   val K_RETURN =  """return\b""".r
 }
