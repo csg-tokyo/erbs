@@ -22,8 +22,8 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val t_ge: PackratParser[GE] = ">=" ^^^ GE()
   protected lazy val t_lt: PackratParser[LT] = "<" ^^^ LT()
   protected lazy val t_le: PackratParser[LE] = "<=" ^^^ LE()
-  protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
 
+  protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
   protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { case e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { case e => DoubleLit(e.toDouble) }
@@ -36,11 +36,15 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val symbol: PackratParser[SymbolLit] = T_COLON ~> T_SYMBOL ^^ SymbolLit
   protected lazy val methName: PackratParser[MethodName] = T_MNAME ^^ MethodName
 
-  protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | lvar | ivar) ^^ { case op ~ v => Unary(EXT(), v) })
+  protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | lvar | ivar | T_LPAREN ~> expr <~ T_RPAREN | valWithNot) ^^ { case op ~ v => Unary(EXT(), v) })
   protected lazy val valMinus: PackratParser[Unary] = (t_minus ~ (const | lvar | ivar | double | int | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(op, v) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
   protected lazy val ret: PackratParser[Expr] = T_RETURN ~> aArgs.? ^^ { case a => Return(a.getOrElse(Nil)) }
-  protected lazy val aref: PackratParser[ARef] = (primary <~ T_LB) ~ (primary <~ T_RB) ^^ { case v ~ ref => ARef(v, ref) }
+
+  // not double ref
+  protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ '[') ~ (primary <~ ']') ^^ { case v ~ ref => ARef(v, ref) }
+  protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | T_LPAREN ~> expr <~ T_RPAREN
+
   protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
 
   //add inheritace
@@ -82,11 +86,11 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   //TODO add COLON call e.g. a::b
   protected lazy val command: PackratParser[Expr] = lvar ~ aArgs ^^ {
-    case LVar(name) ~ args => Call2(None, MethodName(name), Some(ActualArgs(args)))
+    case LVar(name) ~ args => Call(None, MethodName(name), Some(ActualArgs(args)))
   } |
   (primary <~ T_DOT) ~ methName ~ commandArgs ^^ {
-    case recv ~ name ~ ActualArgs(Nil) => Call2(Some(recv), name, None)
-    case recv ~ name ~ args => Call2(Some(recv), name, Some(args))
+    case recv ~ name ~ ActualArgs(Nil) => Call(Some(recv), name, None)
+    case recv ~ name ~ args => Call(Some(recv), name, Some(args))
   }
 
   protected lazy val primaryValue: PackratParser[Expr] = primary
@@ -101,10 +105,13 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
     case rev ~ MethodName(c) => Call(Some(rev), MethodName(c), None)
   }  | userVar
 
-  protected lazy val assign: PackratParser[Assign] = lhs ~ (T_OREQ | T_ANDEQ | T_EQ) ~ expr ^^ {
+  // ignore double assign
+  protected lazy val assign: PackratParser[Assign] = lhs ~ (T_OREQ | T_ANDEQ | T_EQ | T_ADDEQ | T_SUBEQ) ~ expr ^^ {
     case name ~ T_EQ ~ value => Assign(name, value)
-    case name ~ T_OREQ ~ value => Assign(name, value)
+    case name ~ T_OREQ ~ value => Assign(name, value) // TOFIX
     case name ~ T_ANDEQ ~ value => Assign(name, value)
+    case name ~ T_ADDEQ ~ value => Assign(name, value)
+    case name ~ T_SUBEQ ~ value => Assign(name, value)
   }
 
   protected lazy val postModifier: PackratParser[Expr] = expr ~ (T_IF | T_UNLESS) ~ expr ^^ {
@@ -123,7 +130,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val stmnt: PackratParser[Expr] = postModifier | assign | expr
 
-  protected lazy val stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ { case e => Stmnts(e) }
+  protected lazy val stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ Stmnts
 
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {
