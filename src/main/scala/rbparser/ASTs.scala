@@ -33,16 +33,17 @@ case class Keyword(v: String) extends Literal
 
 sealed trait Expr extends Syntax
 case class ARef(v: Expr, ref: Expr) extends Expr
-case class Ary(v: List[Expr]) extends Expr
+case class Ary(v: Option[List[Expr]]) extends Expr
 case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
 case class Return(args: List[Expr]) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
-case class Call2(rev: Option[Expr], name: MethodName, args: Option[ActualArgs]) extends Expr
-case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs]) extends Expr
+case class Call2(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], var block: Option[Block]) extends Expr
+case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], var block: Option[Block]) extends Expr
 case class Assign(id: Expr, value: Expr) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: MethodName, args: Option[FormalArgs], body: Stmnts) extends Expr
+case class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 
 case class Stmnts(v: List[Expr]) extends Syntax

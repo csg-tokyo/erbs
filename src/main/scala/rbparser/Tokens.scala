@@ -4,9 +4,9 @@ trait Tokens {
   val T_INT = """(0|[1-9][0-9]*)""".r
   val T_DOUBLE = """(0|[1-9][0-9]*)\.[0-9]+""".r
   val T_MNAME = """[_a-zA-Z]*[a-zA-Z][_a-zA-Z0-9]*[!?]?""".r
-  val T_MNAME2 = """[_a-zA-Z]*[a-zA-Z][_a-zA-Z0-9]*[!?]? """.r
   val T_STRING = """"(\"|\n|[^\"])*"""".r
   val T_ID       = """_*[a-z][_a-zA-Z0-9]*""".r
+  val T_ID2       = """_*[a-z][_a-zA-Z0-9]* """.r
   val T_SYMBOL   = """_*[a-zA-Z][_a-zA-Z0-9]*""".r
   val T_CONSTANT = """[A-Z][_A-Z0-9]*""".r
 
@@ -16,6 +16,7 @@ trait Tokens {
   val T_COLON = ":"
   val T_SCOLON = ";"
   val T_LPAREN = "("
+  val T_LPAREN2 = " ("
   val T_RPAREN = ")"
   val T_LB = "["
   val T_RB = "]"

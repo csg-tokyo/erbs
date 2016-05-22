@@ -1,5 +1,6 @@
 package rbparser
 
+import scala.util.matching.Regex
 import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
 class Parser extends RegexParsers with PackratParsers with Tokens {
@@ -42,8 +43,10 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val ret: PackratParser[Expr] = T_RETURN ~> aArgs.? ^^ { case a => Return(a.getOrElse(Nil)) }
 
   // not double ref
-  protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ '[') ~ (primary <~ ']') ^^ { case v ~ ref => ARef(v, ref) }
+  protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ customLiteral("[")) ~ (primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
   protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  protected lazy val ary: PackratParser[Ary] = "[" ~>  aref_args.? <~ "]" ^^ Ary
+  protected lazy val aref_args: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
 
   protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
 
@@ -61,7 +64,6 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
     case v ~ List(ids) => v :: ids
   }
 
-  // FIX: expr is too loose, use strict type
   protected lazy val aArgs: PackratParser[List[Expr]] = arg ~ (T_COMMA ~> aArgs).* ^^ {
     case v ~ Nil => List(v)
     case v ~ List(ids) => v :: ids
@@ -71,38 +73,55 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val actualArgs: PackratParser[ActualArgs] =  T_LPAREN ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
   protected lazy val ifExpr: PackratParser[IfExpr] = (T_IF ~> expr) ~ (stmnts <~ T_END) ^^ { case cond ~ body => IfExpr(cond, body) }
-  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs ^^ {
-    case LVar(name) ~ ActualArgs(Nil) => Call(None, MethodName(name), None)
-    case LVar(name) ~ args => Call(None, MethodName(name), Some(args))
+
+  protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral(T_LPAREN) ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
+
+  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2 ^^ {
+    case LVar(name) ~ ActualArgs(Nil) => Call(None, MethodName(name), None, None)
+    case LVar(name) ~ args => Call(None, MethodName(name), Some(args), None)
   } |
-  (primary <~ T_DOT) ~ methName ~ actualArgs ^^ {
-    case recv ~ name ~ ActualArgs(Nil) => Call(Some(recv), name, None)
-    case recv ~ name ~ args => Call(Some(recv), name, Some(args))
+  (primary <~ T_DOT) ~ methName ~ actualArgs2 ^^ {
+    case recv ~ name ~ ActualArgs(Nil) => Call(Some(recv), name, None, None)
+    case recv ~ name ~ args => Call(Some(recv), name, Some(args), None)
   }
 
-  protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs.? ^^ {
-    case args => ActualArgs(args.getOrElse(Nil))
+  protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs ^^ ActualArgs
+
+  protected lazy val doBlock: PackratParser[Block] = (K_DO ~> blockParamDef) ~ (stmnts <~ K_END) ^^ {
+    case params ~ body =>  Block(params, body)
   }
 
-  //TODO add COLON call e.g. a::b
-  protected lazy val command: PackratParser[Expr] = lvar ~ aArgs ^^ {
-    case LVar(name) ~ args => Call(None, MethodName(name), Some(ActualArgs(args)))
-  } |
-  (primary <~ T_DOT) ~ methName ~ commandArgs ^^ {
-    case recv ~ name ~ ActualArgs(Nil) => Call(Some(recv), name, None)
-    case recv ~ name ~ args => Call(Some(recv), name, Some(args))
+  protected lazy val blockParamDef: PackratParser[Option[ActualArgs]] = ("|" ~> fArgs <~ "|").? ^^ {
+    _.map(x => ActualArgs(x))
   }
+
+  // TODO add COLON call e.g. a::b
+  // command must havea at least one
+  protected lazy val command: PackratParser[Call] = (lvar <~ customLiteral(" ")) ~ aArgs ^^ { // call args
+      case LVar(name) ~ args => Call(None, MethodName(name), Some(ActualArgs(args)), None)
+    } | // a.call args
+      (primary <~ T_DOT) ~ methName ~ (customLiteral(" ") ~> commandArgs).? ^^ {
+        case recv ~ name ~ Some(args) => Call(Some(recv), name, Some(args), None)
+        case recv ~ name ~ None => Call(Some(recv), name, None, None)
+      }
 
   protected lazy val primaryValue: PackratParser[Expr] = primary
 
-  protected lazy val commadCall: PackratParser[Expr] = command //  | blockCommand
+  protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ doBlock ^^ {
+    case name ~ block => Call(None, MethodName(name), None, Some(block))
+  } |
+  command ~ doBlock.?  ^^ {
+    case c ~ None => c
+    case c ~ x => c.block = x; c
+  }
+
   protected lazy val CommadCallNot: PackratParser[Expr] = T_EX ~> commadCall ^^ { c => Unary(EXT(), c)}
 
   protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ primary ^^ { case op ~ f => (op, f) }
 
   protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ T_DOT) ~ (methName | const) ^^ {
-    case rev ~ ConstLit(c) => Call(Some(rev), MethodName(c), None)
-    case rev ~ MethodName(c) => Call(Some(rev), MethodName(c), None)
+    case rev ~ ConstLit(c) => Call(Some(rev), MethodName(c), None, None)
+    case rev ~ MethodName(c) => Call(Some(rev), MethodName(c), None, None)
   }  | userVar
 
   // ignore double assign
@@ -121,8 +140,8 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
-  protected lazy val primary: PackratParser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
-  methodCall | aref | literal | string | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  protected lazy val primary: Parser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
+  ary | aref | methodCall | literal | string | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
 
@@ -136,6 +155,27 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
     innerMakeBin(lh, rh, 0) match {
       case (Nil, expr) => expr
       case (e, expr) => throw new Exception(e.toString())
+    }
+  }
+
+  // be able to represent whitespace
+  def customLiteral(s: String): Parser[String] = new Parser[String] {
+    def apply(in: Input) = {
+      val source = in.source
+      val offset = in.offset
+      var i = 0
+      var j = offset
+
+      while (i < s.length && j < source.length && s.charAt(i) == source.charAt(j)) {
+        i += 1
+        j += 1
+      }
+      if (i == s.length) {
+        Success(source.subSequence(offset, j).toString, in.drop(i))
+      } else {
+        val found = if (offset == source.length()) "end of source" else "`"+source.charAt(offset)+"'"
+        Failure("`"+s+"' expected but "+found+" found", in.drop(offset))
+      }
     }
   }
 
