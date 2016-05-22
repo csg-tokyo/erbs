@@ -76,13 +76,13 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral(T_LPAREN) ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
-  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2 ^^ {
-    case LVar(name) ~ ActualArgs(Nil) => Call(None, MethodName(name), None, None)
-    case LVar(name) ~ args => Call(None, MethodName(name), Some(args), None)
+  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ doBlock.? ^^ {
+    case LVar(name) ~ ActualArgs(Nil) ~ block => Call(None, MethodName(name), None, block)
+    case LVar(name) ~ args ~ block => Call(None, MethodName(name), Some(args), block)
   } |
-  (primary <~ T_DOT) ~ methName ~ actualArgs2 ^^ {
-    case recv ~ name ~ ActualArgs(Nil) => Call(Some(recv), name, None, None)
-    case recv ~ name ~ args => Call(Some(recv), name, Some(args), None)
+  (primary <~ T_DOT) ~ methName ~ actualArgs2 ~ doBlock.? ^^ {
+    case recv ~ name ~ ActualArgs(Nil) ~ block => Call(Some(recv), name, None, block)
+    case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block)
   }
 
   protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs ^^ ActualArgs
