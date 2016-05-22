@@ -36,7 +36,6 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val const: PackratParser[ConstLit] = T_CONSTANT ^^ ConstLit
   protected lazy val bool: PackratParser[BoolLit] = T_TRUE ^^ { case _ => BoolLit(true) } | T_FALSE ^^ { case _ => BoolLit(false) }
   protected lazy val symbol: PackratParser[SymbolLit] = T_COLON ~> T_SYMBOL ^^ SymbolLit
-  protected lazy val methName: PackratParser[MethodName] = T_MNAME ^^ MethodName
 
   protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | lvar | ivar | T_LPAREN ~> expr <~ T_RPAREN | valWithNot) ^^ { case op ~ v => Unary(EXT(), v) })
   protected lazy val valMinus: PackratParser[Unary] = (t_minus ~ (const | lvar | ivar | double | int | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(op, v) }
@@ -56,7 +55,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
   protected lazy val moduleExpr: PackratParser[ClassExpr] = (T_MODULE ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
 
-  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> methName) ~ fomalArgs.? ~ (stmnts <~ T_END) ^^ {
+  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_MNAME) ~ fomalArgs.? ~ (stmnts <~ T_END) ^^ {
     case name ~ (None | Some(FormalArgs(Nil))) ~ body => DefExpr(name, None, body)
     case name ~ args ~ body => DefExpr(name, args, body)
   }
@@ -79,10 +78,10 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral(T_LPAREN) ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
   protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ block.? ^^ {
-    case LVar(name) ~ ActualArgs(Nil) ~ block => Call(None, MethodName(name), None, block)
-    case LVar(name) ~ args ~ block => Call(None, MethodName(name), Some(args), block)
+    case LVar(name) ~ ActualArgs(Nil) ~ block => Call(None, name, None, block)
+    case LVar(name) ~ args ~ block => Call(None, name, Some(args), block)
   } |
-    (primary <~ T_DOT) ~ methName ~ actualArgs2 ~ block.? ^^ {
+    (primary <~ T_DOT) ~ T_MNAME ~ actualArgs2 ~ block.? ^^ {
       case recv ~ name ~ ActualArgs(Nil) ~ block => Call(Some(recv), name, None, block)
       case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block)
     }
@@ -109,14 +108,14 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   // TODO add COLON call e.g. a::b
   // command must havea at least one
   protected lazy val command: PackratParser[Cmd] = (lvar <~ t_space) ~ aArgs ~ block.? ^^ { // call args
-      case LVar(name) ~ args ~ block => Cmd(None, MethodName(name), Some(ActualArgs(args)), block)
+      case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
     } | // a.call args
-      (primary <~ T_DOT) ~ methName ~ (t_space ~> commandArgs).? ~ block.? ^^ {
+      (primary <~ T_DOT) ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
         case recv ~ name ~ Some(args) ~ block => Cmd(Some(recv), name, Some(args), block)
         case recv ~ name ~ None ~ block => Cmd(Some(recv), name, None, block)
       }
 
-  protected lazy val commadCall: PackratParser[Expr] = methName ~ block ^^ {
+  protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))
   } | command
 
@@ -124,9 +123,9 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ primary ^^ { case op ~ f => (op, f) }
 
-  protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ T_DOT) ~ (methName | const) ^^ {
-    case rev ~ ConstLit(c) => Cmd(Some(rev), MethodName(c), None, None)
-    case rev ~ (name@MethodName(_)) => Cmd(Some(rev), name, None, None)
+  protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ T_DOT) ~ (T_MNAME | const) ^^ {
+    case rev ~ ConstLit(c) => Cmd(Some(rev), c, None, None)
+    case rev ~ name => Cmd(Some(rev), name.toString(), None, None)
   }  | userVar
 
   // ignore double assign

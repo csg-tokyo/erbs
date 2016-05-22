@@ -49,7 +49,6 @@ sealed trait ASTs
 sealed abstract class Literal[T](v: T) extends Expr {
   override def toString(): String = v.toString()
 }
-case class MethodName(v: String) extends Literal(v)
 case class IntLit(v: Int) extends Literal(v)
 case class DoubleLit(v: Double) extends Literal(v)
 case class BoolLit(v: Boolean) extends Literal(v)
@@ -76,12 +75,12 @@ case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
 case class Return(args: List[Expr]) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
-case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
+case class Call(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
 // to identify has ()
-case class Cmd(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
+case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
 case class Assign(id: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
-case class DefExpr(name: MethodName, args: Option[FormalArgs], body: Stmnts) extends Expr
+case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)

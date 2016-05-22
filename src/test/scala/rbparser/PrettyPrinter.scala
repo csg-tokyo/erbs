@@ -55,8 +55,8 @@ class PrettyPrinterTest extends FunSpec {
     }
 
     it ("prints assings stmnt") {
-      assert(pp(Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None), EQ())) == "a = @a.call")
-      assert(pp(Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10), EQ())) == "@a.size = 10")
+      assert(pp(Assign(LVar("a"), Cmd(Some(IVar("a")), "call", None, None), EQ())) == "a = @a.call")
+      assert(pp(Assign(Cmd(Some(IVar("a")) ,"size", None, None), IntLit(10), EQ())) == "@a.size = 10")
       assert(pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10), EQ())) == "@a[i] = 10")
       assert(pp(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) == "@a ||= 1 + 2")
     }
@@ -75,17 +75,17 @@ class PrettyPrinterTest extends FunSpec {
     }
 
     it ("prints command call") {
-      assert(pp(Cmd(Some(ConstLit("A")), MethodName("new"), None, None)) == "A.new")
-      assert(pp(Cmd(Some(IVar("a")), MethodName("call"), None, None)) == "@a.call")
-      assert(pp(Cmd(Some(IVar("a")), MethodName("call"), Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) == "@a.call 10, 20")
-      assert(pp(Cmd(None, MethodName("attr_reader"), Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) == "attr_reader :a, :b")
+      assert(pp(Cmd(Some(ConstLit("A")), "new", None, None)) == "A.new")
+      assert(pp(Cmd(Some(IVar("a")), "call", None, None)) == "@a.call")
+      assert(pp(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) == "@a.call 10, 20")
+      assert(pp(Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) == "attr_reader :a, :b")
     }
 
     it ("parses method call with { ~ } block") {
       assert(pp(
         Call(
           None,
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(IntLit(10)))),
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call(10) { |x| x + 1 }""")
@@ -93,7 +93,7 @@ class PrettyPrinterTest extends FunSpec {
       assert(pp(
         Call(
           Some(LVar("a")),
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(IntLit(10), IntLit(11)))),
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """a.call(10, 11) { |x| x + 1 }""")
@@ -103,7 +103,7 @@ class PrettyPrinterTest extends FunSpec {
       assert(pp(
         Call(
           None,
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
@@ -116,7 +116,7 @@ end"""
       assert(pp(
         Call(
           Some(LVar("a")),
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(IntLit(10)))),
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
@@ -131,7 +131,7 @@ end"""
       assert(pp(
         Cmd(
           None,
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(SymbolLit("symbol")))),
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
@@ -144,7 +144,7 @@ end"""
       assert(pp(
         Cmd(
           None,
-          MethodName("call"),
+          "call",
           None,
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
@@ -157,7 +157,7 @@ end"""
       assert(pp(
         Cmd(
           Some(Ary(List(IntLit(1), IntLit(2)))),
-          MethodName("each"),
+          "each",
           None,
           Some(
             DoBlock(Some(ActualArgs(List(LVar("x")))),
@@ -173,7 +173,7 @@ end"""
       assert(pp(
         Cmd(
           None,
-          MethodName("call"),
+          "call",
           None,
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call { |x| x + 1 }""")
@@ -181,7 +181,7 @@ end"""
       assert(pp(
         Cmd(
           None,
-          MethodName("call"),
+          "call",
           Some(ActualArgs(List(SymbolLit("aaa")))),
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call :aaa { |x| x + 1 }""")
@@ -193,7 +193,7 @@ end"""
       assert(pp(Unary(EXT(), IVar("a"))) == "!@a")
       assert(pp(Unary(EXT(), BoolLit(true))) == "!true")
       assert(pp(Unary(EXT(), ConstLit("A"))) == "!A")
-      assert(pp(Unary(EXT(), Cmd(Some(LVar("a")), MethodName("call"), None, None))) == "!a.call")
+      assert(pp(Unary(EXT(), Cmd(Some(LVar("a")), "call", None, None))) == "!a.call")
       assert(pp(Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false)))) == "!(true && false)")
       assert(pp(Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false))) == "!true && false")
       assert(pp(Unary(EXT(), Unary(EXT(), LVar("a")))) == "!!a")
@@ -210,14 +210,14 @@ end"""
       assert(pp(ARef(LVar("a"), IntLit(10))) == "a[10]")
       assert(pp(ARef(IVar("a"), IntLit(10))) == "@a[10]")
       assert(pp(ARef(IVar("a"), LVar("i"))) == "@a[i]")
-      assert(pp(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), MethodName("each"), None, None)) == "[1, 2].each")
+      assert(pp(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None, None)) == "[1, 2].each")
     }
 
     it ("prints method call") {
-      assert(pp(Call(None, MethodName("call"), Some(ActualArgs(List(LVar("a")))), None)) == "call(a)")
-      assert(pp(Binary(PLUS(), Call(None, MethodName("call"), Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) == "call(a) + 1")
-      assert(pp(Call(Some(LVar("a1")), MethodName("call"), None, None)) == "a1.call")
-      assert(pp(Call(Some(LVar("a1")), MethodName("call"), Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) == "a1.call(10, true)")
+      assert(pp(Call(None, "call", Some(ActualArgs(List(LVar("a")))), None)) == "call(a)")
+      assert(pp(Binary(PLUS(), Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) == "call(a) + 1")
+      assert(pp(Call(Some(LVar("a1")), "call", None, None)) == "a1.call")
+      assert(pp(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) == "a1.call(10, true)")
     }
 
     it ("prints if expression") {
@@ -227,7 +227,7 @@ end"""
 end"""
       )
 
-      assert(pp(UnlessExpr(Call(None, MethodName("a"), Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b")))))
+      assert(pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b")))))
         == """unless a(10)
 b
 end"""
@@ -243,7 +243,7 @@ end"""
       assert(pp(
         ClassExpr(ConstLit("A"),
           Stmnts(List(
-            DefExpr(MethodName("a"), None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))
+            DefExpr(("a"), None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))
         )) == """class A
 def a
 1 + 2
@@ -252,10 +252,10 @@ end""")
     }
 
     it ("print def expr") {
-      assert(pp(DefExpr(MethodName("a"), None, Stmnts(List()))) == """def a
+      assert(pp(DefExpr(("a"), None, Stmnts(List()))) == """def a
 end""")
 
-      assert(pp(DefExpr(MethodName("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(List()))) == """def a(opt)
+      assert(pp(DefExpr(("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(List()))) == """def a(opt)
 end""")
     }
   }
