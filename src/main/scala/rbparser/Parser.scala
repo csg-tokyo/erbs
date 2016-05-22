@@ -48,7 +48,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val ary: PackratParser[Ary] = "[" ~>  aref_args.? <~ "]" ^^ Ary
   protected lazy val aref_args: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
 
-  protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
+  protected lazy val userVar: PackratParser[Literal[String]] = lvar | ivar | const
 
   //add inheritace
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }

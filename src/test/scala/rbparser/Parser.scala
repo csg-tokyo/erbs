@@ -78,7 +78,7 @@ class ParserTest extends FunSpec {
       it ("parses simple assigns") {
         parse("a = 1 + 2") { v => assert(v == Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) }
         parse("@a = 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) }
-        parse("@a = :keywrod") { v => assert(v == Assign(IVar("a"),SymbolLit("keywrod"))) }
+        parse("@a = :keyword") { v => assert(v == Assign(IVar("a"),SymbolLit("keyword"))) }
       }
 
       it ("parses assings stmnt") {

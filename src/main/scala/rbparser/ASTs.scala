@@ -15,23 +15,52 @@ case class OR() extends Op    { override val prec: Int = 5 } // ||
 case class ORE() extends Op    { override val prec: Int = 3 } // ||= TODO add assocative
 case class DOT() extends Op    { override val prec: Int = 30 }
 
-case class MethodName(v: String)
-case class FormalArgs(name: List[LVar])
-case class ActualArgs(name: List[Expr])
+object Op {
+  def stringfy(op: Op) = op match {
+    case PLUS() => "+"
+    case MINUS() => "-"
+    case AST() => "*"
+    case DIV() => "/"
+    case EXT() => "!"
+    case GT() => ">"
+    case GE() => ">="
+    case LT() => "<"
+    case LE() => "<="
+    case AND() => "&&"
+    case OR() => "||"
+    case ORE() => "||="
+    case DOT() => "."
+  }
+}
 
-sealed trait Syntax
-sealed trait Literal extends Expr
-case class IntLit(v: Int) extends Literal
-case class DoubleLit(v: Double) extends Literal
-case class BoolLit(v: Boolean) extends Literal
-case class ConstLit(v: String) extends Literal
-case class SymbolLit(v: String) extends Literal
-case class StringLit(v: String) extends Literal
-case class LVar(v: String) extends Literal
-case class IVar(v: String) extends Literal
-case class Keyword(v: String) extends Literal
+case class MethodName(v: String) extends ASTs {
+  override def toString(): String = v
+}
 
-sealed trait Expr extends Syntax
+case class FormalArgs(name: List[LVar]) extends ASTs
+case class ActualArgs(name: List[Expr]) extends ASTs
+
+sealed trait ASTs
+sealed abstract class Literal[T](v: T) extends Expr {
+  override def toString(): String = v.toString()
+}
+case class IntLit(v: Int) extends Literal(v)
+case class DoubleLit(v: Double) extends Literal(v)
+case class BoolLit(v: Boolean) extends Literal(v)
+case class ConstLit(v: String) extends Literal(v)
+case class SymbolLit(v: String) extends Literal(v) {
+  override def toString(): String = ":"+v.toString()
+
+}
+case class StringLit(v: String) extends Literal(v)
+case class LVar(v: String) extends Literal(v)
+case class IVar(v: String) extends Literal(v) {
+  override def toString(): String = "@"+v.toString()
+}
+
+case class Keyword(v: String) extends Literal(v)
+
+sealed trait Expr extends ASTs
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: Option[List[Expr]]) extends Expr
 case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
@@ -39,11 +68,11 @@ case class Return(args: List[Expr]) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
-case class Call2(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], var block: Option[Block]) extends Expr
+// FIX: can identify () and do ~ end or  { ~ }
 case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], var block: Option[Block]) extends Expr
 case class Assign(id: Expr, value: Expr) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: MethodName, args: Option[FormalArgs], body: Stmnts) extends Expr
 case class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 
-case class Stmnts(v: List[Expr]) extends Syntax
+case class Stmnts(v: List[Expr]) extends ASTs
