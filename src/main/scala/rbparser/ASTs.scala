@@ -37,8 +37,8 @@ case class MethodName(v: String) extends ASTs {
   override def toString(): String = v
 }
 
-case class FormalArgs(name: List[LVar]) extends ASTs
-case class ActualArgs(name: List[Expr]) extends ASTs
+case class FormalArgs(names: List[LVar]) extends ASTs
+case class ActualArgs(names: List[Expr]) extends ASTs
 
 sealed trait ASTs
 sealed abstract class Literal[T](v: T) extends Expr {
@@ -64,15 +64,21 @@ sealed trait Expr extends ASTs
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: Option[List[Expr]]) extends Expr
 case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
-case class Return(args: List[Expr]) extends Expr
+case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr
+case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
+case class Return(args: List[Expr]) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
-// FIX: can identify () and do ~ end or  { ~ }
-case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], var block: Option[Block]) extends Expr
+case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
+// to identify has ()
+case class Cmd(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
 case class Assign(id: Expr, value: Expr) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: MethodName, args: Option[FormalArgs], body: Stmnts) extends Expr
-case class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
+
+sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
+case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
+case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
 
 case class Stmnts(v: List[Expr]) extends ASTs

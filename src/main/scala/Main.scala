@@ -4,7 +4,6 @@ object Main {
   def main(args: Array[String]) {
 
     // a() a () a(1) a (1) a(1,2) a (1,2)
-
     val p = new Parser
     // println(p.parse("a(1)+1\n"))
     println(p.parse("[1,2].each\n"))

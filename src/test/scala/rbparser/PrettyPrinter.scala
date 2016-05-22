@@ -55,16 +55,229 @@ class PrettyPrinterTest extends FunSpec {
     }
 
     it ("prints assings stmnt") {
-      assert(pp(Assign(LVar("a"), Call(Some(IVar("a")), MethodName("call"), None, None))) == "a = @a.call")
-      assert(pp(Assign(Call(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) == "@a.size = 10")
+      assert(pp(Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None))) == "a = @a.call")
+      assert(pp(Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) == "@a.size = 10")
       assert(pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10))) == "@a[i] = 10")
     }
 
-    // it ("parses post modifier") {
-    //   parse("10 if true") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(IntLit(10))))) }
-    //   parse("return 10 if true") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Return(List(IntLit(10))))))) }
-    //   parse("a[i] unless a.hash?") { v => assert(v == UnlessExpr(Call(Some(LVar("a")), MethodName("hash?"), None, None), Stmnts(List(ARef(LVar("a"), LVar("i")))))) }
-    // }
+    it ("parses if modifier and unelss moe") {
+      assert(pp(IfModExpr(BoolLit(true), IntLit(10))) == "10 if true")
+      assert(pp(UnlessModExpr(BoolLit(true), Return(List(IntLit(10))))) == "return 10 unless true")
+    }
+  }
+
+  describe("expr") {
+    it ("prints return stmnt") {
+      assert(pp(Return(Nil)) == "return")
+      assert(pp(Return(List(LVar("a")))) == "return a")
+      assert(pp(Return(List(LVar("a"), IntLit(10)))) == "return a, 10")
+    }
+
+    it ("prints command call") {
+      assert(pp(Cmd(Some(ConstLit("A")), MethodName("new"), None, None)) == "A.new")
+      assert(pp(Cmd(Some(IVar("a")), MethodName("call"), None, None)) == "@a.call")
+      assert(pp(Cmd(Some(IVar("a")), MethodName("call"), Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) == "@a.call 10, 20")
+      assert(pp(Cmd(None, MethodName("attr_reader"), Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) == "attr_reader :a, :b")
+    }
+
+    it ("parses method call with { ~ } block") {
+      assert(pp(
+        Call(
+          None,
+          MethodName("call"),
+          Some(ActualArgs(List(IntLit(10)))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call(10) { |x| x + 1 }""")
+
+      assert(pp(
+        Call(
+          Some(LVar("a")),
+          MethodName("call"),
+          Some(ActualArgs(List(IntLit(10), IntLit(11)))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """a.call(10, 11) { |x| x + 1 }""")
+    }
+
+    it ("prints method call with do ~ end block") {
+      assert(pp(
+        Call(
+          None,
+          MethodName("call"),
+          Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+        )) ==
+        """call(10, :symbol) do |x|
+x + 1
+end"""
+      )
+
+      assert(pp(
+        Call(
+          Some(LVar("a")),
+          MethodName("call"),
+          Some(ActualArgs(List(IntLit(10)))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+        )) ==
+        """a.call(10) do |x|
+x + 1
+end"""
+      )
+    }
+
+    it ("prints command call with do ~ end block") {
+      assert(pp(
+        Cmd(
+          None,
+          MethodName("call"),
+          Some(ActualArgs(List(SymbolLit("symbol")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+        )) ==
+        """call :symbol do |x|
+x + 1
+end"""
+      )
+
+      assert(pp(
+        Cmd(
+          None,
+          MethodName("call"),
+          None,
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+        )) ==
+        """call do |x|
+x + 1
+end"""
+      )
+
+      assert(pp(
+        Cmd(
+          Some(Ary(Some(List(IntLit(1), IntLit(2))))),
+          MethodName("each"),
+          None,
+          Some(
+            DoBlock(Some(ActualArgs(List(LVar("x")))),
+              Stmnts(List(Binary(PLUS(), LVar("x"), IntLit(1))))))
+        )) ==
+        """[1, 2].each do |x|
+x + 1
+end"""
+      )
+    }
+
+    it ("prints command call with { ~ } block") {
+      assert(pp(
+        Cmd(
+          None,
+          MethodName("call"),
+          None,
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call { |x| x + 1 }""")
+
+      assert(pp(
+        Cmd(
+          None,
+          MethodName("call"),
+          Some(ActualArgs(List(SymbolLit("aaa")))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) == """call :aaa { |x| x + 1 }""")
+    }
+  }
+
+  describe("primary") {
+    it ("prints exclamation prefix") {
+      assert(pp(Unary(EXT(), IVar("a"))) == "!@a")
+      assert(pp(Unary(EXT(), BoolLit(true))) == "!true")
+      assert(pp(Unary(EXT(), ConstLit("A"))) == "!A")
+      assert(pp(Unary(EXT(), Cmd(Some(LVar("a")), MethodName("call"), None, None))) == "!a.call")
+      assert(pp(Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false)))) == "!(true && false)")
+      assert(pp(Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false))) == "!true && false")
+      assert(pp(Unary(EXT(), Unary(EXT(), LVar("a")))) == "!!a")
+    }
+
+    it ("prints minus prefix") {
+      assert(pp(Unary(MINUS(), IntLit(10))) == "-10")
+      assert(pp(Unary(MINUS(), LVar("a"))) == "-a")
+      assert(pp(Unary(MINUS(), ConstLit("A"))) == "-A")
+      assert(pp(Unary(MINUS(), Binary(PLUS(), IntLit(1), IntLit(2)))) == "-(1 + 2)")
+    }
+
+    it ("prints array ref") {
+      assert(pp(ARef(LVar("a"), IntLit(10))) == "a[10]")
+      assert(pp(ARef(IVar("a"), IntLit(10))) == "@a[10]")
+      assert(pp(ARef(IVar("a"), LVar("i"))) == "@a[i]")
+      assert(pp(Cmd(Some(Ary(Some(List(IntLit(1), IntLit(2))))), MethodName("each"), None, None)) == "[1, 2].each")
+    }
+
+    it ("prints method call") {
+      assert(pp(Call(None, MethodName("call"), Some(ActualArgs(List(LVar("a")))), None)) == "call(a)")
+      assert(pp(Binary(PLUS(), Call(None, MethodName("call"), Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) == "call(a) + 1")
+      assert(pp(Call(Some(LVar("a1")), MethodName("call"), None, None)) == "a1.call")
+      assert(pp(Call(Some(LVar("a1")), MethodName("call"), Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) == "a1.call(10, true)")
+    }
+
+    it ("prints if expression") {
+      assert(pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2))))))
+        == """if true
+1 + 2
+end"""
+      )
+
+      assert(pp(UnlessExpr(Call(None, MethodName("a"), Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b")))))
+        == """unless a(10)
+b
+end"""
+      )
+    }
+
+    it ("print class expr") {
+      assert(pp(ClassExpr(ConstLit("A"), Stmnts(List())))
+        == """class A
+end"""
+      )
+
+      assert(pp(
+        ClassExpr(ConstLit("A"),
+          Stmnts(List(
+            DefExpr(MethodName("a"), None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))
+        )) == """class A
+def a
+1 + 2
+end
+end""")
+    }
+
+    it ("print def expr") {
+      assert(pp(DefExpr(MethodName("a"), None, Stmnts(List()))) == """def a
+end""")
+
+      assert(pp(DefExpr(MethodName("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(List()))) == """def a(opt)
+end""")
+    }
+  }
+
+  describe("arg") {
+    it ("prints binary expr") {
+      assert(pp(Binary(PLUS(), IntLit(1), IntLit(2))) == "1 + 2")
+      assert(pp(Binary(PLUS(), Unary(MINUS(), IntLit(2)), IntLit(1))) == "-2 + 1")
+      assert(pp(Binary(AST(), IntLit(1), IntLit(2))) == "1 * 2")
+      assert(pp(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10))) == "1 + 2 * 1 + 10")
+      assert(pp(Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) == "1 - 2 - 3")
+    }
+
+    it ("prints compare binary") {
+      assert(pp(Binary(LT(), IntLit(1), IntLit(2))) == "1 < 2")
+      assert(pp(Binary(GE(), IntLit(1), IntLit(2))) == "1 >= 2")
+      assert(pp(Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3))) == "1 + 2 >= 3")
+    }
+
+    it ("prints cond binary") {
+      assert(pp(Binary(AND(), BoolLit(true), BoolLit(false))) == "true && false")
+      assert(pp(Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false)))) == "true || false && false")
+    }
   }
 
   def pp(ast: ASTs): String = PrettyPrinter.call(ast)

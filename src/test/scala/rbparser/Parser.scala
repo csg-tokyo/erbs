@@ -82,16 +82,16 @@ class ParserTest extends FunSpec {
       }
 
       it ("parses assings stmnt") {
-        parse("a = @a.call") { v => assert(v == Assign(LVar("a"), Call(Some(IVar("a")), MethodName("call"), None, None))) }
-        parse("""@a.size = 10""") { v => assert(v == Assign(Call(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) }
+        parse("a = @a.call") { v => assert(v == Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None))) }
+        parse("""@a.size = 10""") { v => assert(v == Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) }
         parse("""@a[i] = "asdf"""") { v => assert(v == Assign(ARef(IVar("a"), LVar("i")), StringLit(""""asdf""""))) }
       }
     }
 
     it ("parses post modifier") {
-      parse("10 if true") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(IntLit(10))))) }
-      parse("return 10 if true") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Return(List(IntLit(10))))))) }
-      parse("a[i] unless a.hash?") { v => assert(v == UnlessExpr(Call(Some(LVar("a")), MethodName("hash?"), None, None), Stmnts(List(ARef(LVar("a"), LVar("i")))))) }
+      parse("10 if true") { v => assert(v == IfModExpr(BoolLit(true), IntLit(10))) }
+      parse("return 10 if true") { v => assert(v == IfModExpr(BoolLit(true), Return(List(IntLit(10))))) }
+      parse("a[i] unless a.hash?") { v => assert(v == UnlessModExpr(Cmd(Some(LVar("a")), MethodName("hash?"), None, None), ARef(LVar("a"), LVar("i")))) }
     }
   }
 
@@ -103,12 +103,12 @@ class ParserTest extends FunSpec {
     }
 
     it("parses command call") {
-      parse("A.new") { v => assert(v == Call(Some(ConstLit("A")), MethodName("new"), None, None)) }
-      parse("@a.call") { v => assert(v == Call(Some(IVar("a")), MethodName("call"), None, None)) }
-      parse("@a.call 10, 20") { v => assert(v == Call(Some(IVar("a")), MethodName("call"), Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) }
-      parse("call 10") { v => assert(v == Call(None, MethodName("call"), Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("call 10 + 1") { v => assert(v == Call(None, MethodName("call"), Some(ActualArgs(List(Binary(PLUS(), IntLit(10), IntLit(1))))), None)) }
-      parse("attr_reader :a, :b") { v => assert(v == Call(None, MethodName("attr_reader"), Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) }
+      parse("A.new") { v => assert(v == Cmd(Some(ConstLit("A")), MethodName("new"), None, None)) }
+      parse("@a.call") { v => assert(v == Cmd(Some(IVar("a")), MethodName("call"), None, None)) }
+      parse("@a.call 10, 20") { v => assert(v == Cmd(Some(IVar("a")), MethodName("call"), Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) }
+      parse("call 10") { v => assert(v == Cmd(None, MethodName("call"), Some(ActualArgs(List(IntLit(10)))), None)) }
+      parse("call 10 + 1") { v => assert(v == Cmd(None, MethodName("call"), Some(ActualArgs(List(Binary(PLUS(), IntLit(10), IntLit(1))))), None)) }
+      parse("attr_reader :a, :b") { v => assert(v == Cmd(None, MethodName("attr_reader"), Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) }
     }
 
     it("parses method call with { ~ } block") {
@@ -117,7 +117,7 @@ class ParserTest extends FunSpec {
           None,
           MethodName("call"),
           Some(ActualArgs(List(IntLit(10)))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
 
@@ -126,7 +126,7 @@ class ParserTest extends FunSpec {
           Some(LVar("a")),
           MethodName("call"),
           Some(ActualArgs(List(IntLit(10), IntLit(11)))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
     }
@@ -139,7 +139,7 @@ end""") { v =>
           None,
           MethodName("call"),
           Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         ))
       }
@@ -151,7 +151,7 @@ end""") { v =>
           Some(LVar("a")),
           MethodName("call"),
           Some(ActualArgs(List(IntLit(10)))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         ))
       }
@@ -159,29 +159,20 @@ end""") { v =>
 
     it("parses command call with { ~ } block") {
       parse("""call { |x| x + 1 }""") { v =>
-        assert(v == Call(
+        assert(v == Cmd(
           None,
           MethodName("call"),
           None,
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
 
       parse("""call :aaa { |x| x + 1 }""") { v =>
-        assert(v == Call(
+        assert(v == Cmd(
           None,
           MethodName("call"),
           Some(ActualArgs(List(SymbolLit("aaa")))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
-      }
-
-      parse("""a.call :aaa { |x| x + 1 }""") { v =>
-        assert(v == Call(
-          Some(LVar("a")),
-          MethodName("call"),
-          Some(ActualArgs(List(SymbolLit("aaa")))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
     }
@@ -190,42 +181,42 @@ end""") { v =>
       parse("""call do |x|
 x + 1
 end""") { v =>
-        assert(v == Call(
+        assert(v == Cmd(
           None,
           MethodName("call"),
           None,
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
 
       parse("""call :visual do |x|
 x + 1
 end""") { v =>
-        assert(v == Call(
+        assert(v == Cmd(
           None,
           MethodName("call"),
           Some(ActualArgs(List(SymbolLit("visual")))),
-          Some(Block(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
             Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
       }
 
       parse("""[1,2].each do |x|
 a + 1
 end""") { v =>
-        assert(v == Call(
+        assert(v == Cmd(
           Some(Ary(Some(List(IntLit(1), IntLit(2))))),
           MethodName("each"),
           None,
           Some(
-            Block(Some(ActualArgs(List(LVar("x")))),
+            DoBlock(Some(ActualArgs(List(LVar("x")))),
               Stmnts(List(Binary(PLUS(), LVar("a"), IntLit(1))))))
         ))
       }
 
       parse("""A.new do
 a + 1
-end""") { v => assert(v == Call(Some(ConstLit("A")), MethodName("new"), None, Some(
-  Block(None,Stmnts(List(Binary(PLUS(),LVar("a"),IntLit(1)))))))) }
+end""") { v => assert(v == Cmd(Some(ConstLit("A")), MethodName("new"), None, Some(
+  DoBlock(None,Stmnts(List(Binary(PLUS(),LVar("a"),IntLit(1)))))))) }
     }
   }
 
@@ -235,7 +226,7 @@ end""") { v => assert(v == Call(Some(ConstLit("A")), MethodName("new"), None, So
       parse("!true") { v =>  assert(v == Unary(EXT(), BoolLit(true))) }
       parse("!a") { v =>  assert(v == Unary(EXT(), LVar("a"))) }
       parse("!A") { v =>  assert(v == Unary(EXT(), ConstLit("A"))) }
-      parse("!a.call") { v =>  assert(v == Unary(EXT(), Call(Some(LVar("a")), MethodName("call"), None, None))) }
+      parse("!a.call") { v =>  assert(v == Unary(EXT(), Cmd(Some(LVar("a")), MethodName("call"), None, None))) }
       parse("!(true && false)") { v =>  assert(v == Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false)))) }
       parse("!true && false") { v =>  assert(v == Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false))) }
       parse("!!a") { v =>  assert(v == Unary(EXT(), Unary(EXT(), LVar("a")))) }
@@ -253,7 +244,7 @@ end""") { v => assert(v == Call(Some(ConstLit("A")), MethodName("new"), None, So
       parse("a[10]") { v =>  assert(v == ARef(LVar("a"), IntLit(10))) }
       parse("@abc[10]") { v =>  assert(v == ARef(IVar("abc"), IntLit(10))) }
       parse("@abc[i]") { v =>  assert(v == ARef(IVar("abc"), LVar("i"))) }
-      parse("[1,2].each") { v =>  assert(v == Call(Some(Ary(Some(List(IntLit(1), IntLit(2))))), MethodName("each"), None, None)) }
+      parse("[1,2].each") { v =>  assert(v == Cmd(Some(Ary(Some(List(IntLit(1), IntLit(2))))), MethodName("each"), None, None)) }
     }
 
     it("parses method call") {
