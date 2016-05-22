@@ -23,8 +23,6 @@ trait Tokens {
   val T_LBR = "{"
   val T_RBR = "}"
   val T_EQ = "="
-  val T_LP = "{"
-  val T_RP = "}"
   val T_PLUS = "+"
   val T_MINUS = "-"
   val T_AST = "*"

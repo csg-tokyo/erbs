@@ -76,20 +76,29 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral(T_LPAREN) ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
-  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ doBlock.? ^^ {
+  protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ block.? ^^ {
     case LVar(name) ~ ActualArgs(Nil) ~ block => Call(None, MethodName(name), None, block)
     case LVar(name) ~ args ~ block => Call(None, MethodName(name), Some(args), block)
   } |
-  (primary <~ T_DOT) ~ methName ~ actualArgs2 ~ doBlock.? ^^ {
-    case recv ~ name ~ ActualArgs(Nil) ~ block => Call(Some(recv), name, None, block)
-    case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block)
-  }
+    (primary <~ T_DOT) ~ methName ~ actualArgs2 ~ block.? ^^ {
+      case recv ~ name ~ ActualArgs(Nil) ~ block => Call(Some(recv), name, None, block)
+      case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block)
+    }
 
   protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs ^^ ActualArgs
 
   protected lazy val doBlock: PackratParser[Block] = (K_DO ~> blockParamDef) ~ (stmnts <~ K_END) ^^ {
     case params ~ body =>  Block(params, body)
   }
+
+  protected lazy val braceBlock: PackratParser[Block] = (T_LBR ~> blockParamDef) ~ (stmnt <~ T_RBR) ^^ { //  FIX multi stmnt in one line
+    case params ~ body =>  Block(params, Stmnts(List(body)))
+  } |
+    (T_LBR ~> blockParamDef) ~ (stmnts <~ T_RBR) ^^ {
+    case params ~ body =>  Block(params, body)
+    }
+
+  protected lazy val block: PackratParser[Block] = braceBlock | doBlock
 
   protected lazy val blockParamDef: PackratParser[Option[ActualArgs]] = ("|" ~> fArgs <~ "|").? ^^ {
     _.map(x => ActualArgs(x))
@@ -107,10 +116,10 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val primaryValue: PackratParser[Expr] = primary
 
-  protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ doBlock ^^ {
+  protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Call(None, MethodName(name), None, Some(block))
   } |
-  command ~ doBlock.?  ^^ {
+  command ~ block.?  ^^ {
     case c ~ None => c
     case c ~ x => c.block = x; c
   }
