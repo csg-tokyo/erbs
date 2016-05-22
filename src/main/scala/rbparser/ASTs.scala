@@ -11,9 +11,14 @@ case class GE() extends Op    { override val prec: Int = 8 } // >=
 case class LT() extends Op    { override val prec: Int = 8 } // <
 case class LE() extends Op    { override val prec: Int = 8 } // <=
 case class AND() extends Op   { override val prec: Int = 6 } // &&
+case class ANDE() extends Op   { override val prec: Int = 6 } // &&=
 case class OR() extends Op    { override val prec: Int = 5 } // ||
 case class ORE() extends Op    { override val prec: Int = 3 } // ||= TODO add assocative
+case class ADDE() extends Op    { override val prec: Int = 6 } // +=
+case class SUBE() extends Op    { override val prec: Int = 6 } // -=
+case class EQ() extends Op    { override val prec: Int = 6 } // =
 case class DOT() extends Op    { override val prec: Int = 30 }
+
 
 object Op {
   def stringfy(op: Op) = op match {
@@ -30,11 +35,11 @@ object Op {
     case OR() => "||"
     case ORE() => "||="
     case DOT() => "."
+    case ANDE() => "&&="
+    case ADDE() => "+="
+    case SUBE() => "-="
+    case EQ() => "="
   }
-}
-
-case class MethodName(v: String) extends ASTs {
-  override def toString(): String = v
 }
 
 case class FormalArgs(names: List[LVar]) extends ASTs
@@ -44,6 +49,7 @@ sealed trait ASTs
 sealed abstract class Literal[T](v: T) extends Expr {
   override def toString(): String = v.toString()
 }
+case class MethodName(v: String) extends Literal(v)
 case class IntLit(v: Int) extends Literal(v)
 case class DoubleLit(v: Double) extends Literal(v)
 case class BoolLit(v: Boolean) extends Literal(v)
@@ -62,7 +68,7 @@ case class Keyword(v: String) extends Literal(v)
 
 sealed trait Expr extends ASTs
 case class ARef(v: Expr, ref: Expr) extends Expr
-case class Ary(v: Option[List[Expr]]) extends Expr
+case class Ary(v: List[Expr]) extends Expr
 case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr
@@ -73,7 +79,7 @@ case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
 case class Call(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
 // to identify has ()
 case class Cmd(rev: Option[Expr], name: MethodName, args: Option[ActualArgs], block: Option[Block]) extends Expr
-case class Assign(id: Expr, value: Expr) extends Expr
+case class Assign(id: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: MethodName, args: Option[FormalArgs], body: Stmnts) extends Expr
 

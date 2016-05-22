@@ -8,9 +8,8 @@ class ParserTest extends FunSpec {
    *
    * parse("a = a = 1 + 2") { v => assert(v == Assign(LVar("a"), Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2))))) }
    * parse("""@a[i][10] = "asdf"""") { v => assert(v == Assign(ARef(ARef(IVar("a"), LVar("i")), IntLit(10)), StringLit(""""asdf""""))) }
-   * parse("@a ||= 1 + 2") { v => assert(v == Assign(ORE(), IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) }
+   * parse("@a.call + 10") { v => assert(v == Cmd(Some(IVar("a")), MethodName("call"), None, None)) }
    * parse("!a.call(10)") { v => assert(v == Unary(EXT(),Call(Some(LVar("a")), MethodName("call"), Some(ActualArgs(List(IntLit(10))))))) }
-   * parse("@a.call + 10") { v => assert(v == Call(Some(IVar("a")), MethodName("call"), None)) }
    *
    */
 
@@ -67,24 +66,26 @@ class ParserTest extends FunSpec {
     }
 
     it ("parses instance array value") {
-      parse("[]") { v =>  assert(v == Ary(None)) }
-      parse("[1]") { v =>  assert(v == Ary(Some(List(IntLit(1))))) }
-      parse("""["asf",3]""") { v => assert(v == Ary(Some(List(StringLit(""""asf""""), IntLit(3))))) }
+      parse("[]") { v =>  assert(v == Ary(Nil)) }
+      parse("[1]") { v =>  assert(v == Ary(List(IntLit(1)))) }
+      parse("""["asf",3]""") { v => assert(v == Ary(List(StringLit(""""asf""""), IntLit(3)))) }
     }
   }
 
   describe("stmnt") {
     describe("Assigns") {
       it ("parses simple assigns") {
-        parse("a = 1 + 2") { v => assert(v == Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) }
-        parse("@a = 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) }
-        parse("@a = :keyword") { v => assert(v == Assign(IVar("a"),SymbolLit("keyword"))) }
+        parse("a = 1 + 2") { v => assert(v == Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) }
+        parse("@a = 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) }
+        parse("@a = :keyword") { v => assert(v == Assign(IVar("a"),SymbolLit("keyword"), EQ())) }
       }
 
       it ("parses assings stmnt") {
-        parse("a = @a.call") { v => assert(v == Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None))) }
-        parse("""@a.size = 10""") { v => assert(v == Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) }
-        parse("""@a[i] = "asdf"""") { v => assert(v == Assign(ARef(IVar("a"), LVar("i")), StringLit(""""asdf""""))) }
+        parse("a = @a.call") { v => assert(v == Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None), EQ())) }
+        parse("""@a.size = 10""") { v => assert(v == Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10), EQ())) }
+        parse("""@a[i] = "asdf"""") { v => assert(v == Assign(ARef(IVar("a"), LVar("i")), StringLit(""""asdf""""), EQ())) }
+        parse("@a ||= 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) }
+        parse("@a += 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ADDE())) }
       }
     }
 
@@ -204,7 +205,7 @@ end""") { v =>
 a + 1
 end""") { v =>
         assert(v == Cmd(
-          Some(Ary(Some(List(IntLit(1), IntLit(2))))),
+          Some(Ary(List(IntLit(1), IntLit(2)))),
           MethodName("each"),
           None,
           Some(
@@ -244,7 +245,7 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), MethodName("new"), None, Som
       parse("a[10]") { v =>  assert(v == ARef(LVar("a"), IntLit(10))) }
       parse("@abc[10]") { v =>  assert(v == ARef(IVar("abc"), IntLit(10))) }
       parse("@abc[i]") { v =>  assert(v == ARef(IVar("abc"), LVar("i"))) }
-      parse("[1,2].each") { v =>  assert(v == Cmd(Some(Ary(Some(List(IntLit(1), IntLit(2))))), MethodName("each"), None, None)) }
+      parse("[1,2].each") { v =>  assert(v == Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), MethodName("each"), None, None)) }
     }
 
     it("parses method call") {

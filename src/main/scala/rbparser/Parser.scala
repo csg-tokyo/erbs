@@ -23,6 +23,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val t_ge: PackratParser[GE] = ">=" ^^^ GE()
   protected lazy val t_lt: PackratParser[LT] = "<" ^^^ LT()
   protected lazy val t_le: PackratParser[LE] = "<=" ^^^ LE()
+  protected lazy val t_space: PackratParser[String] = customLiteral(" ")
 
   protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
   protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
@@ -45,7 +46,8 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   // not double ref
   protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ customLiteral("[")) ~ (primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
   protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | T_LPAREN ~> expr <~ T_RPAREN
-  protected lazy val ary: PackratParser[Ary] = "[" ~>  aref_args.? <~ "]" ^^ Ary
+  protected lazy val ary: PackratParser[Ary] = "[" ~>  aref_args.? <~ "]" ^^ { case args => Ary(args.getOrElse(Nil)) }
+
   protected lazy val aref_args: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
 
   protected lazy val userVar: PackratParser[Literal[String]] = lvar | ivar | const
@@ -106,18 +108,16 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   // TODO add COLON call e.g. a::b
   // command must havea at least one
-  protected lazy val command: PackratParser[Cmd] = (lvar <~ customLiteral(" ")) ~ aArgs ~ block.? ^^ { // call args
+  protected lazy val command: PackratParser[Cmd] = (lvar <~ t_space) ~ aArgs ~ block.? ^^ { // call args
       case LVar(name) ~ args ~ block => Cmd(None, MethodName(name), Some(ActualArgs(args)), block)
     } | // a.call args
-      (primary <~ T_DOT) ~ methName ~ (customLiteral(" ") ~> commandArgs).? ~ block.? ^^ {
+      (primary <~ T_DOT) ~ methName ~ (t_space ~> commandArgs).? ~ block.? ^^ {
         case recv ~ name ~ Some(args) ~ block => Cmd(Some(recv), name, Some(args), block)
         case recv ~ name ~ None ~ block => Cmd(Some(recv), name, None, block)
       }
 
-  protected lazy val primaryValue: PackratParser[Expr] = primary
-
-  protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
-    case name ~ block => Cmd(None, MethodName(name), None, Some(block))
+  protected lazy val commadCall: PackratParser[Expr] = methName ~ block ^^ {
+    case name ~ block => Cmd(None, name, None, Some(block))
   } | command
 
   protected lazy val CommadCallNot: PackratParser[Expr] = T_EX ~> commadCall ^^ { c => Unary(EXT(), c)}
@@ -126,16 +126,16 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
 
   protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ T_DOT) ~ (methName | const) ^^ {
     case rev ~ ConstLit(c) => Cmd(Some(rev), MethodName(c), None, None)
-    case rev ~ MethodName(c) => Cmd(Some(rev), MethodName(c), None, None)
+    case rev ~ (name@MethodName(_)) => Cmd(Some(rev), name, None, None)
   }  | userVar
 
   // ignore double assign
   protected lazy val assign: PackratParser[Assign] = lhs ~ (T_OREQ | T_ANDEQ | T_EQ | T_ADDEQ | T_SUBEQ) ~ expr ^^ {
-    case name ~ T_EQ ~ value => Assign(name, value)
-    case name ~ T_OREQ ~ value => Assign(name, value) // TOFIX
-    case name ~ T_ANDEQ ~ value => Assign(name, value)
-    case name ~ T_ADDEQ ~ value => Assign(name, value)
-    case name ~ T_SUBEQ ~ value => Assign(name, value)
+    case name ~ T_EQ ~ value => Assign(name, value, EQ())
+    case name ~ T_OREQ ~ value => Assign(name, value, ORE())
+    case name ~ T_ANDEQ ~ value => Assign(name, value, ANDE())
+    case name ~ T_ADDEQ ~ value => Assign(name, value, ADDE())
+    case name ~ T_SUBEQ ~ value => Assign(name, value, SUBE())
   }
 
   protected lazy val postModifier: PackratParser[Expr] = expr ~ (T_IF | T_UNLESS) ~ expr ^^ {

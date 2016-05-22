@@ -42,22 +42,23 @@ class PrettyPrinterTest extends FunSpec {
     }
 
     it ("prints array") {
-      assert(pp(Ary(None)) == "[]")
-      assert(pp(Ary(Some(List(IntLit(1))))) == "[1]")
-      assert(pp(Ary(Some(List(StringLit(""""asf""""), IntLit(2))))) == """["asf", 2]""")
+      assert(pp(Ary(Nil)) == "[]")
+      assert(pp(Ary(List(IntLit(1)))) == "[1]")
+      assert(pp(Ary(List(StringLit(""""asf""""), IntLit(2)))) == """["asf", 2]""")
     }
   }
 
   describe("stmnt") {
     it ("prints simple assign") {
-      assert(pp(Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)))) == "a = 1 + 2")
-      assert(pp(Assign(IVar("a"),SymbolLit("keyword"))) == "@a = :keyword")
+      assert(pp(Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) == "a = 1 + 2")
+      assert(pp(Assign(IVar("a"), SymbolLit("keyword"), EQ())) == "@a = :keyword")
     }
 
     it ("prints assings stmnt") {
-      assert(pp(Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None))) == "a = @a.call")
-      assert(pp(Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10))) == "@a.size = 10")
-      assert(pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10))) == "@a[i] = 10")
+      assert(pp(Assign(LVar("a"), Cmd(Some(IVar("a")), MethodName("call"), None, None), EQ())) == "a = @a.call")
+      assert(pp(Assign(Cmd(Some(IVar("a")) ,MethodName("size"), None, None), IntLit(10), EQ())) == "@a.size = 10")
+      assert(pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10), EQ())) == "@a[i] = 10")
+      assert(pp(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) == "@a ||= 1 + 2")
     }
 
     it ("parses if modifier and unelss moe") {
@@ -155,7 +156,7 @@ end"""
 
       assert(pp(
         Cmd(
-          Some(Ary(Some(List(IntLit(1), IntLit(2))))),
+          Some(Ary(List(IntLit(1), IntLit(2)))),
           MethodName("each"),
           None,
           Some(
@@ -209,7 +210,7 @@ end"""
       assert(pp(ARef(LVar("a"), IntLit(10))) == "a[10]")
       assert(pp(ARef(IVar("a"), IntLit(10))) == "@a[10]")
       assert(pp(ARef(IVar("a"), LVar("i"))) == "@a[i]")
-      assert(pp(Cmd(Some(Ary(Some(List(IntLit(1), IntLit(2))))), MethodName("each"), None, None)) == "[1, 2].each")
+      assert(pp(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), MethodName("each"), None, None)) == "[1, 2].each")
     }
 
     it ("prints method call") {
