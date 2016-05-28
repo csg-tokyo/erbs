@@ -5,8 +5,32 @@ object Main {
 
     // a() a () a(1) a (1) a(1,2) a (1,2)
     val p = new Parser
-    // println(p.parse("a(1)+1\n"))
-    println(p.parse("[1,2].each\n"))
+    val v = p.parse("""
+class A
+  def a(b, b)
+    a = b + 1
+    a + 2
+    a
+  end
+
+  def a
+    k = if true
+      a + 1
+    end
+
+    a = b + 1
+    a + 2
+    a
+  end
+end
+""") match {
+      case Right(x) => x
+    }
+
+    PrettyPrinter.print(v)
+
+    // println()
+    // println(p.parse("@a.call + 10\n"))
     // println(p.parse("a (1)+1\n"))
     // println(p.parse("a.a(1) < 1\n"))
     // println(p.parse("a\n"))
