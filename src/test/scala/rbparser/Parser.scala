@@ -288,31 +288,32 @@ end
     it ("parses def") {
       parse("""def a
 end""") { v => assert(v == DefExpr("a", None, Stmnts(List())))}
-    }
-    parse("""def a?
+
+      parse("""def a?
 end""") { v => assert(v == DefExpr("a?", None, Stmnts(List())))}
 
-    parse("""def ASDF?
+      parse("""def ASDF?
 end""") { v => assert(v == DefExpr("ASDF?", None, Stmnts(List())))}
 
-    parse("""def _a?
+      parse("""def _a?
 end""") { v => assert(v == DefExpr("_a?", None, Stmnts(List())))}
 
-    parse("""def a?()
+      parse("""def a?()
 end""") { v => assert(v == DefExpr("a?", None, Stmnts(List())))}
 
-    parse("""def a()
+      parse("""def a()
 end""") { v => assert(v == DefExpr("a", None, Stmnts(List())))}
 
-    parse("""def a(opt)
+      parse("""def a(opt)
 end""") { v => assert(v == DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(List())))}
 
-    parse("""def call(a, b)
+      parse("""def call(a, b)
 end""") { v => assert(v == DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar("b")))), Stmnts(List())))}
 
-    parse("""def call()
-   1 + 2
-end""") { v => assert(v == DefExpr("call", None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))) }
+      parse("""def call
+  "1+2"
+end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
+    }
   }
 
   describe("arg") {
