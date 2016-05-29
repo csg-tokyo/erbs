@@ -46,6 +46,7 @@ class ParserTest extends FunSpec {
     it ("parses Const wrapped value") {
       parse("ASDF") { v =>  assert(v == ConstLit("ASDF")) }
       parse("ASDF2") { v => assert(v == ConstLit("ASDF2")) }
+      parse("Aasd") { v => assert(v == ConstLit("Aasd")) }
     }
 
     it ("parses symbol wrapped value") {
@@ -271,8 +272,8 @@ end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10
     }
 
     it ("parses class") {
-      parse("""class A
-end""") { v => assert(v == ClassExpr(ConstLit("A"), Stmnts(List()))) }
+      parse("""class Sample
+end""") { v => assert(v == ClassExpr(ConstLit("Sample"), Stmnts(List()))) }
 
       parse("""class A
     def a
