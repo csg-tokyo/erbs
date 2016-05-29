@@ -1,13 +1,12 @@
 package rbparser
 
 object PrettyPrinter {
-  def print(ast: ASTs) = {
-    println(PrettyPrinter(ast, 0).call)
-  }
+  def print(ast: ASTs) = println(call(ast))
+  def call(ast: ASTs) = PrettyPrinter(ast, 0).call
 }
 
-private[rbparser] case class PrettyPrinter(ast: ASTs, private var depth: Int) {
-  val buffer = new StringBuilder
+case class PrettyPrinter(ast: ASTs, private var depth: Int) {
+  private val buffer = new StringBuilder
 
   def call: String = {
     _write(ast)

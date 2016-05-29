@@ -61,7 +61,7 @@ class PrettyPrinterTest extends FunSpec {
       assert(pp(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) == "@a ||= 1 + 2")
     }
 
-    it ("parses if modifier and unelss moe") {
+    it ("prints if modifier and unelss mod") {
       assert(pp(IfModExpr(BoolLit(true), IntLit(10))) == "10 if true")
       assert(pp(UnlessModExpr(BoolLit(true), Return(List(IntLit(10))))) == "return 10 unless true")
     }
@@ -81,7 +81,7 @@ class PrettyPrinterTest extends FunSpec {
       assert(pp(Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) == "attr_reader :a, :b")
     }
 
-    it ("parses method call with { ~ } block") {
+    it ("prints method call with { ~ } block") {
       assert(pp(
         Call(
           None,
@@ -109,7 +109,7 @@ class PrettyPrinterTest extends FunSpec {
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         )) ==
         """call(10, :symbol) do |x|
-x + 1
+  x + 1
 end"""
       )
 
@@ -122,7 +122,7 @@ end"""
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         )) ==
         """a.call(10) do |x|
-x + 1
+  x + 1
 end"""
       )
     }
@@ -137,7 +137,7 @@ end"""
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         )) ==
         """call :symbol do |x|
-x + 1
+  x + 1
 end"""
       )
 
@@ -150,7 +150,7 @@ end"""
             Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
         )) ==
         """call do |x|
-x + 1
+  x + 1
 end"""
       )
 
@@ -164,7 +164,7 @@ end"""
               Stmnts(List(Binary(PLUS(), LVar("x"), IntLit(1))))))
         )) ==
         """[1, 2].each do |x|
-x + 1
+  x + 1
 end"""
       )
     }
@@ -223,13 +223,13 @@ end"""
     it ("prints if expression") {
       assert(pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2))))))
         == """if true
-1 + 2
+  1 + 2
 end"""
       )
 
       assert(pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b")))))
         == """unless a(10)
-b
+  b
 end"""
       )
     }
@@ -245,9 +245,9 @@ end"""
           Stmnts(List(
             DefExpr(("a"), None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))
         )) == """class A
-def a
-1 + 2
-end
+  def a
+    1 + 2
+  end
 end""")
     }
 
