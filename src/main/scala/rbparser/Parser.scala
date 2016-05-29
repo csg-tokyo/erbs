@@ -44,7 +44,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { case e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { case e => DoubleLit(e.toDouble) }
-  protected lazy val string: PackratParser[StringLit] = T_STRING ^^ StringLit
+  protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit
   // `not` method reuturns `()` if succes, this term does not consume tokens
   protected lazy val lvar: PackratParser[LVar] = not(reserved) ~> T_ID ^^ LVar
   protected lazy val ivar: PackratParser[IVar] = T_AT ~> T_SYMBOL ^^ IVar

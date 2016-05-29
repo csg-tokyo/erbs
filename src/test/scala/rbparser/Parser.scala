@@ -39,6 +39,12 @@ class ParserTest extends FunSpec {
       parse(""""as\"df"""") { v =>  assert(v == StringLit("\"as\\\"df\"")) }
     }
 
+    it ("parses String Literal with single quoate") {
+      parse("""'asdf'""") { v =>  assert(v == StringLit("'asdf'")) }
+      parse("""'as\ndf\n'""") { v =>  assert(v == StringLit("'as\\ndf\\n'")) }
+      parse("""'as"df'""") { v =>  assert(v == StringLit("'as\"df'")) }
+    }
+
     it ("parses BoolLit wrapped value") {
       parse("true") { v => assert(v == BoolLit(true)) }
     }
@@ -263,11 +269,11 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
 
     it ("parses if expression") {
       parse("""if  true
-   1 + 2
+  1 + 2
 end""") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) }
 
       parse("""if a(10)
-     b
+  b
 end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
     }
 
@@ -276,9 +282,9 @@ end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10
 end""") { v => assert(v == ClassExpr(ConstLit("Sample"), Stmnts(List()))) }
 
       parse("""class A
-    def a
-     1 + 2
-    end
+  def a
+    1 + 2
+  end
 end
   """) { v => assert(v == ClassExpr(ConstLit("A"), Stmnts(List(
     DefExpr("a", None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))))
@@ -359,8 +365,9 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
     val parser = new Parser()
     parser.parse(x + "\n") match {
       case Right(Stmnts(x)) => fn(x(0))
-      case Right(x) => assert(x == 0)
-      case Left(s) => assert(s == 0)
+      case Left(s) => throw new Exception(s)
+        // case Right(x) => assert(x == 0)
+        // case Left(s) => assert(s == "parsing fail")
     }
   }
 }
