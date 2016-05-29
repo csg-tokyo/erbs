@@ -5,13 +5,28 @@ import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
 class Parser extends RegexParsers with PackratParsers with Tokens {
   def parse(in: String): Either[String, Stmnts] = {
-    parseAll(stmnts, in) match {
+    parseAll(stmnts, preprocess(in)) match {
       case Success(d, next) => Right(d)
       case NoSuccess(errorMsg, next) =>
         Left(s"$errorMsg: in ${next.pos.line} at column ${next.pos.column}")
     }
   }
 
+  private def preprocess(txt: String) = {
+    val lines = txt.split("\n").toSeq.map {
+      line => trimSpace(removeComment(line))
+    }
+    removeEmptyLine(lines).mkString("\n") + "\n"
+  }
+
+  private def removeEmptyLine(lines: Seq[String]): Seq[String] = lines.filter(_.size > 0)
+
+  private def removeComment(line: String) = {
+    val i = line.indexOf(T_HASH)
+    if (i >= 0) line.take(i) else line
+  }
+
+  private def trimSpace(line: String) = line.trim
   protected lazy val EOL = opt('\r') <~ '\n'
   protected lazy val t_plus: PackratParser[PLUS] = "+" ^^^ PLUS()
   protected lazy val t_minus: PackratParser[MINUS] = "-" ^^^ MINUS()

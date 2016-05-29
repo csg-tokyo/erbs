@@ -76,4 +76,6 @@ trait Tokens {
 
   val T_RETURN = "return"
   val K_RETURN =  """return\b""".r
+
+  val T_HASH = "#"
 }

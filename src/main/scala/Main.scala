@@ -8,7 +8,7 @@ object Main {
     val v = p.parse("""
 class A
   def a(a, b)
-    a = [1, 2, 3]
+    a = [1, 2, 3] # asf
     b = 10 * 10 unless true
     k = a[0]
     call(10, 10)
@@ -41,7 +41,6 @@ class A
      puts x + 1
      puts y + 1
    }
-
   end
 end
 """) match {

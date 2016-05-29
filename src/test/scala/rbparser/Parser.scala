@@ -347,6 +347,14 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
     }
   }
 
+  describe ("comment") {
+    it ("ignore the code of following '#' ") {
+      parse("""def call
+  "1+2" # shoud be ingore
+end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
+    }
+  }
+
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()
     parser.parse(x + "\n") match {
