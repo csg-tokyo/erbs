@@ -46,28 +46,21 @@ case class FormalArgs(names: List[LVar]) extends ASTs
 case class ActualArgs(names: List[Expr]) extends ASTs
 
 sealed trait ASTs
-sealed abstract class Literal[T](v: T) extends Expr {
-  override def toString(): String = v.toString()
-}
-case class IntLit(v: Int) extends Literal(v)
-case class DoubleLit(v: Double) extends Literal(v)
-case class BoolLit(v: Boolean) extends Literal(v)
-case class ConstLit(v: String) extends Literal(v)
-case class SymbolLit(v: String) extends Literal(v) {
-  override def toString(): String = ":"+v.toString()
-
-}
-case class StringLit(v: String) extends Literal(v)
-case class LVar(v: String) extends Literal(v)
-case class IVar(v: String) extends Literal(v) {
-  override def toString(): String = "@"+v.toString()
-}
-
-case class Keyword(v: String) extends Literal(v)
+sealed trait Literal extends Expr
+case class IntLit(v: Int) extends Literal
+case class DoubleLit(v: Double) extends Literal
+case class BoolLit(v: Boolean) extends Literal
+case class ConstLit(v: String) extends Literal
+case class SymbolLit(v: String) extends Literal
+case class StringLit(v: String) extends Literal
+case class LVar(v: String) extends Literal
+case class IVar(v: String) extends Literal
+case class Keyword(v: String) extends Literal
 
 sealed trait Expr extends ASTs
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
+case class Hash(v: Map[Expr, Expr]) extends Expr
 case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr

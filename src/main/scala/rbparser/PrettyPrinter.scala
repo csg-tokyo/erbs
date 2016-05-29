@@ -14,7 +14,15 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
   }
 
   def _write(ast: ASTs) = ast match {
-    case literal: Literal[_] => write(literal.toString)
+    case IntLit(v) => write(v.toString)
+    case DoubleLit(v) => write(v.toString)
+    case BoolLit(v) => write(v.toString)
+    case ConstLit(v) => write(v.toString)
+    case SymbolLit(v) => write(":" + v.toString)
+    case StringLit(v) => write(v.toString)
+    case Keyword(v) => write(v.toString)
+    case LVar(v) => write(v.toString)
+    case IVar(v) => write("@" + v.toString)
     case Binary(op, lhs, rhs) => write(format(lhs) + s" ${Op.stringfy(op)} " + format(rhs))
     case Assign(lhs, rhs, op) => write(format(lhs) + s" ${Op.stringfy(op)} " + format(rhs))
     case Ary(vars) => write("[" + joinWithComma(vars) + "]")
