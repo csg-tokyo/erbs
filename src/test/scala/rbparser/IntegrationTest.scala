@@ -11,8 +11,8 @@ class IntegrationTest extends FunSpec {
 
   private def fileAssert(filename: String) = {
     val body = loadFile(filename)
-    val ppBody = translate(body)
-    assert(parse(body) == parse(ppBody))
+    val ppBody = translate(body).trim
+    assert(body == ppBody)
   }
 
   private def translate(source: String): String = PrettyPrinter.call(parse(source))
