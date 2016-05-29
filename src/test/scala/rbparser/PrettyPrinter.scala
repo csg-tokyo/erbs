@@ -46,6 +46,12 @@ class PrettyPrinterTest extends FunSpec {
       assert("[1]" == pp(Ary(List(IntLit(1)))))
       assert("""["asf", 2]""" == pp(Ary(List(StringLit(""""asf""""), IntLit(2)))))
     }
+
+    it ("prints hash") {
+      assert("{}" == pp(Hash(Map.empty)))
+      assert("{ :key => 1 }" == pp(Hash(Map(SymbolLit("key") -> IntLit(1)))))
+      assert("""{ "key1" => 1, :key2 => 2 }""" == pp(Hash(Map(StringLit("\"key1\"") -> IntLit(1), SymbolLit("key2") -> IntLit(2)))))
+    }
   }
 
   describe("stmnt") {

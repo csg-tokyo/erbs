@@ -60,11 +60,19 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   // not double ref
   protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ customLiteral("[")) ~ (primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
   protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | T_LPAREN ~> expr <~ T_RPAREN
-  protected lazy val ary: PackratParser[Ary] = "[" ~>  aref_args.? <~ "]" ^^ { case args => Ary(args.getOrElse(Nil)) }
+  protected lazy val ary: PackratParser[Ary] = "[" ~>  arefArgs.? <~ "]" ^^ { case args => Ary(args.getOrElse(Nil)) }
 
-  protected lazy val aref_args: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
+  protected lazy val hash: PackratParser[Hash] = "{" ~>  hashBody.? <~ "}" ^^ { case args =>  Hash(args.getOrElse(Map.empty)) }
+  protected lazy val hashBody: PackratParser[Map[Expr, Expr]] = keyValues <~ T_COMMA.?
+  protected lazy val keyValues: PackratParser[Map[Expr, Expr]] = (symbolKey | (arg <~ T_ROCKET)) ~ arg ~ (T_COMMA ~> keyValues).* ^^ {
+    case k ~ v ~ Nil => Map(k -> v)
+    case k ~ v ~ List(m) => Map(k -> v) ++ m
+  }
+  protected lazy val symbolKey: PackratParser[Expr] = ((string | T_SYMBOL ^^ SymbolLit) <~ T_COLON)
 
-  protected lazy val userVar: PackratParser[Literal[String]] = lvar | ivar | const
+  protected lazy val arefArgs: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
+
+  protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
 
   //add inheritace
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
@@ -160,7 +168,7 @@ class Parser extends RegexParsers with PackratParsers with Tokens {
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
   protected lazy val primary: Parser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
-  ary | aref | methodCall | literal | string | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  ary | hash | aref | string | methodCall | literal  | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
 

@@ -27,6 +27,10 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
     case Assign(lhs, rhs, op) => write(format(lhs) + s" ${Op.stringfy(op)} " + format(rhs))
     case Ary(vars) => write("[" + joinWithComma(vars) + "]")
     case ARef(v, ref) => write(format(v) + "[" + format(ref) + "]")
+    case Hash(maps) => {
+      val kvs = maps.map { kv => format(kv._1) + " => " + format(kv._2) }.mkString(", ")
+      if (maps.size == 0) write("{}") else write("{ " + kvs + " }")
+    }
     case IfExpr(cond, Stmnts(stmnts)) => {
       writeln("if " + format(cond))
       nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }

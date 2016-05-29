@@ -37,12 +37,14 @@ class ParserTest extends FunSpec {
       parse(""""asdf\n"""") { v =>  assert(v == StringLit("\"asdf\\n\"")) }
       parse(""""as\ndf\n"""") { v =>  assert(v == StringLit("\"as\\ndf\\n\"")) }
       parse(""""as\"df"""") { v =>  assert(v == StringLit("\"as\\\"df\"")) }
+      parse("""1 * "asdf" + "asdf2" * 2""") { v =>  assert(v == Binary(PLUS(),Binary(AST(),IntLit(1),StringLit("\"asdf\"")),Binary(AST(),StringLit("\"asdf2\""),IntLit(2))) ) }
     }
 
     it ("parses String Literal with single quoate") {
       parse("""'asdf'""") { v =>  assert(v == StringLit("'asdf'")) }
       parse("""'as\ndf\n'""") { v =>  assert(v == StringLit("'as\\ndf\\n'")) }
       parse("""'as"df'""") { v =>  assert(v == StringLit("'as\"df'")) }
+      parse("""'as\'df'""") { v =>  assert(v == StringLit("'as\\'df'")) }
     }
 
     it ("parses BoolLit wrapped value") {
@@ -72,10 +74,24 @@ class ParserTest extends FunSpec {
       parse("@A") { v => assert(v == IVar("A")) }
     }
 
-    it ("parses instance array value") {
+    it ("parses array value") {
       parse("[]") { v =>  assert(v == Ary(Nil)) }
       parse("[1]") { v =>  assert(v == Ary(List(IntLit(1)))) }
       parse("""["asf",3]""") { v => assert(v == Ary(List(StringLit(""""asf""""), IntLit(3)))) }
+    }
+
+    it ("parses hash") {
+      parse("{}") { v =>  assert(v == Hash(Map.empty)) }
+      parse("{ :key => 1 }") { v =>  assert(v == Hash(Map(SymbolLit("key") -> IntLit(1)))) }
+      parse("""{ "key1" => 1, :key2 => 2 }""") {
+        v => assert(v == Hash(Map(StringLit("\"key1\"") -> IntLit(1), SymbolLit("key2") -> IntLit(2))))
+      }
+
+      parse("{ key: 1 }") { v =>  assert(v == Hash(Map(SymbolLit("key") -> IntLit(1)))) }
+      parse("""{ "key": 1 }""") { v =>  assert(v == Hash(Map(StringLit("\"key\"") -> IntLit(1)))) }
+      parse("""{ key1: "value1", key2: "value2" }""") { v =>
+        assert(v == Hash(Map(SymbolLit("key1") -> StringLit("\"value1\""), SymbolLit("key2") -> StringLit("\"value2\""))))
+      }
     }
   }
 
