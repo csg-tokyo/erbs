@@ -19,7 +19,6 @@ case class SUBE() extends Op    { override val prec: Int = 6 } // -=
 case class EQ() extends Op    { override val prec: Int = 6 } // =
 case class DOT() extends Op    { override val prec: Int = 30 }
 
-
 object Op {
   def stringfy(op: Op) = op match {
     case PLUS() => "+"

@@ -79,7 +79,7 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
   protected lazy val moduleExpr: PackratParser[ClassExpr] = (T_MODULE ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
 
-  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_MNAME) ~ fomalArgs.? ~ (stmnts <~ T_END) ^^ {
+  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_MNAME) ~ formalArgs.? ~ (stmnts <~ T_END) ^^ {
     case name ~ (None | Some(FormalArgs(Nil))) ~ body => DefExpr(name, None, body)
     case name ~ args ~ body => DefExpr(name, args, body)
   }
@@ -94,7 +94,7 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
     case v ~ List(ids) => v :: ids
   }
 
-  protected lazy val fomalArgs: PackratParser[FormalArgs] =  T_LPAREN ~> fArgs.? <~ T_RPAREN ^^ { args => FormalArgs(args.getOrElse(Nil)) }
+  protected lazy val formalArgs: PackratParser[FormalArgs] =  T_LPAREN ~> fArgs.? <~ T_RPAREN ^^ { args => FormalArgs(args.getOrElse(Nil)) }
   protected lazy val actualArgs: PackratParser[ActualArgs] =  T_LPAREN ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
   protected lazy val ifExpr: PackratParser[IfExpr] = (T_IF ~> expr) ~ (stmnts <~ T_END) ^^ { case cond ~ body => IfExpr(cond, body) }
