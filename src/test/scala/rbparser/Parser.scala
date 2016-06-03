@@ -377,6 +377,18 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
     }
   }
 
+  describe ("Extendable") {
+    it ("pares operator_with") {
+      parse("""operator_with(mod, origin)
+  { x -> y } where { x: origin, y: mod } => { x = y }
+end""") { v => assert(v == Operator(
+  FormalArgs(List(LVar("mod"), LVar("origin"))),
+  Syntax(Hash(Map(SymbolLit("x") -> LVar("origin"), SymbolLit("y") -> LVar("mod"))), Ary(List(LVar("x"), LVar("->"), LVar("y")))),
+  Assign(LVar("x"), LVar("y"), EQ())))}
+    }
+  }
+
+
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()
     parser.parse(x + "\n") match {

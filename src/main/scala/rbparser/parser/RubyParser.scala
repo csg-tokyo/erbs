@@ -41,8 +41,11 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   protected lazy val t_le: PackratParser[LE] = "<=" ^^^ LE()
   protected lazy val t_space: PackratParser[String] = customLiteral(" ")
 
+  // hack to overrride primary value at subclass @ http://www.scala-lang.org/old/node/11315.html
+  protected def reserved = reserved_value
+  protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
+
   protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
-  protected lazy val reserved = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { case e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { case e => DoubleLit(e.toDouble) }
   protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit
@@ -168,7 +171,9 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
 
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
-  protected lazy val primary: Parser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
+  // hack to overrride primary value at subclass @ http://www.scala-lang.org/old/node/11315.html
+  def primary: Parser[Expr] = primary_value
+  protected lazy val primary_value: Parser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
   ary | hash | aref | string | methodCall | literal  | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
