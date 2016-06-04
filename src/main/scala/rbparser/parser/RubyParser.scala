@@ -171,10 +171,10 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
 
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
-  // hack to overrride primary value at subclass @ http://www.scala-lang.org/old/node/11315.html
-  def primary: Parser[Expr] = primary_value
-  protected lazy val primary_value: Parser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
+  // hack to extend primary value
+  protected lazy val primary_value: PackratParser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
   ary | hash | aref | string | methodCall | literal  | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  protected var primary = primary_value
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
 

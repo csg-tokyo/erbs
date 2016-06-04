@@ -68,16 +68,17 @@ case class Return(args: List[Expr]) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
 case class Call(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
-// to identify has ()
 case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
 case class Assign(id: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
-case class Operator(tags: FormalArgs, syntax: Syntax, body: Expr) extends Expr
-case class Syntax(tags: Hash, body: Ary) extends Expr
+case class Operator(tags: List[String], syntax: Syntax, body: Expr) extends Expr
+case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
 case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
 
-case class Stmnts(v: List[Expr]) extends ASTs
+case class Stmnts(v: List[Expr]) extends ASTs {
+  def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
+}

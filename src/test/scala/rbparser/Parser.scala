@@ -382,9 +382,10 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
       parse("""operator_with(mod, origin)
   { x -> y } where { x: origin, y: mod } => { x = y }
 end""") { v => assert(v == Operator(
-  FormalArgs(List(LVar("mod"), LVar("origin"))),
-  Syntax(Hash(Map(SymbolLit("x") -> LVar("origin"), SymbolLit("y") -> LVar("mod"))), Ary(List(LVar("x"), LVar("->"), LVar("y")))),
-  Assign(LVar("x"), LVar("y"), EQ())))}
+  List("mod", "origin"),
+  Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+  Assign(LVar("x"), LVar("y"), EQ())))
+      }
     }
   }
 
