@@ -69,7 +69,7 @@ case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr
 case class Call(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
 case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block: Option[Block]) extends Expr
-case class Assign(id: Expr, value: Expr, op: Op) extends Expr
+case class Assign(target: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
 case class Operator(tags: List[String], syntax: Syntax, body: Expr) extends Expr

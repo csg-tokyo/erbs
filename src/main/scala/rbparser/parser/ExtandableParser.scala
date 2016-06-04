@@ -5,7 +5,8 @@ import scala.collection.mutable.{Map => MMap}
 class ExtendableParser extends RubyParser with OperatorToken {
   val DEFAULT_TAG = "origin"
 
-  protected var pmap: MMap[String, PackratParser[Map[String, Expr]]] = MMap(DEFAULT_TAG ->  (stmnt ^^^ Map.empty[String, Expr]))
+  // x => originParser
+  protected var pmap: MMap[String, PackratParser[Expr]] = MMap.empty[String, PackratParser[Expr]]
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | T_SCOLON)).* ^^ Stmnts
   override def reserved = K_OPERATOR | super.reserved
@@ -39,24 +40,24 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   // protected def extendWith(op:  Operator): PackratParser[Expr] = {
   protected def extendWith(op:  Operator)= {
-    val p = buildParser(op)
-    op.tags.foreach { x =>
-      pmap.get(x) match {
-        case None => pmap.put(x, p)
+    val p = buildParser(op) ^^ { case map =>
+      MacroConverter.convert(op.body, map) }
+    op.tags.foreach { tag =>
+      pmap.get(tag) match {
+        case None => pmap.put(tag, p)
         case Some(pp) =>
-          if (x != DEFAULT_TAG) pmap.put(x, p | pp)
+          if (tag != DEFAULT_TAG) pmap.put(tag, p | pp)
           else {
             val tmp = stmnt
-            stmnt = p ^^ { case map => MacroConverter.convert(op.body, map) } | tmp
+            stmnt = p | tmp
           }
       }
     }
   }
 
-  protected def findOrCreateParser(key: String): PackratParser[Map[String, Expr]] = pmap.get(key).getOrElse {
-    val ep = new ExtendableParser
-    val stmt = (ep.stmnt.asInstanceOf[PackratParser[Expr]] ^^ { case x => Map(key -> x) })
-    // default parser
+  protected def findOrCreateParser(key: String): PackratParser[Expr] = pmap.get(key).getOrElse {
+    val base = if (key == DEFAULT_TAG) this else new ExtendableParser
+    val stmt = base.stmnt.asInstanceOf[PackratParser[Expr]]
     pmap.put(key,  stmt)
     stmt
   }
@@ -67,7 +68,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
         case None => val v: PackratParser[Map[String, Expr]] = term ^^^ Map.empty[String, Expr]; v
         case Some(tag_cond) => tag_cond match {
           // case x => ADD more case condtion
-          case LVar(cond) => findOrCreateParser(cond)
+          case LVar(cond) => findOrCreateParser(cond) ^^ { case x => Map(term -> x) }
           case x => println(x);throw new Exception
         }
       }

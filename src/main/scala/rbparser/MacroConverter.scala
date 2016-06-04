@@ -27,7 +27,7 @@ object MacroConverter {
       val b = block.map(convert(_, m).asInstanceOf[Block]) // fix?
       Cmd(rev.map(convert(_, m)), name, as, b)
     }
-    case Assign(id, value, op) => Assign(id, convert(value, m), op)
+    case Assign(target, value, op) => Assign(convert(target, m), convert(value, m), op)
     case ClassExpr(name, body) => ClassExpr(name, body.map(convert(_, m)))
     case DefExpr(name, args, body) => DefExpr(name, args, body.map(convert(_, m)))
     case DoBlock(args, body) => DoBlock(args, body.map(convert(_, m)))
