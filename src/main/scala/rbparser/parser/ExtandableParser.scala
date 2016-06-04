@@ -3,13 +3,11 @@ package parser
 import scala.collection.mutable.{Map => MMap}
 
 class ExtendableParser extends RubyParser with OperatorToken {
-  primary = {
-    val x = primary
-    defop | x
-  }
+  val DEFAULT_TAG = "origin"
 
-  protected var pmap: MMap[String, PackratParser[Map[String, Expr]]] = MMap.empty[String, PackratParser[Map[String, Expr]]]
+  protected var pmap: MMap[String, PackratParser[Map[String, Expr]]] = MMap(DEFAULT_TAG ->  (stmnt ^^^ Map.empty[String, Expr]))
 
+  override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | T_SCOLON)).* ^^ Stmnts
   override def reserved = K_OPERATOR | super.reserved
   // Parse each item of syntax
   protected lazy val v: PackratParser[String] = """[^}\s]+""".r ^^ identity
@@ -33,28 +31,34 @@ class ExtendableParser extends RubyParser with OperatorToken {
   }
 
   protected lazy val defop: PackratParser[Operator] = (T_OPERATOR ~> opTags) ~ opSyntax ~ ("=>" ~> opSemantics <~ "end") ^^ {
-    case tags ~ syntax ~ body => val op = Operator(tags, syntax, body); extendWith(op); op
+    case tags ~ syntax ~ body =>
+      val op = Operator(tags, syntax, body);
+      extendWith(op)
+      op
   }
 
-  protected def extendWith(op:  Operator) = {
+  // protected def extendWith(op:  Operator): PackratParser[Expr] = {
+  protected def extendWith(op:  Operator)= {
     val p = buildParser(op)
-    val tags = op.tags
-    val tmp = primary
-    tags.foreach { x =>
+    op.tags.foreach { x =>
       pmap.get(x) match {
         case None => pmap.put(x, p)
-        case Some(pp) => pmap.put(x, p | pp)
+        case Some(pp) =>
+          if (x != DEFAULT_TAG) pmap.put(x, p | pp)
+          else {
+            val tmp = stmnt
+            stmnt = p ^^ { case map => MacroConverter.convert(op.body, map) } | tmp
+          }
       }
     }
-    primary = p ^^ { case map => MacroConverter.convert(op.body, map) } | tmp
   }
 
   protected def findOrCreateParser(key: String): PackratParser[Map[String, Expr]] = pmap.get(key).getOrElse {
     val ep = new ExtendableParser
-    val prim = (ep.primary.asInstanceOf[PackratParser[Expr]] ^^ { case x => Map(key -> x) })
+    val stmt = (ep.stmnt.asInstanceOf[PackratParser[Expr]] ^^ { case x => Map(key -> x) })
     // default parser
-    pmap.put(key,  prim)
-    prim
+    pmap.put(key,  stmt)
+    stmt
   }
 
   protected def buildParser(op: Operator): PackratParser[Map[String, Expr]] = {

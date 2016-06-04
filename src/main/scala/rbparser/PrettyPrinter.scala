@@ -99,6 +99,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
       indented_write("end")
     }
+    case Operator(tags, syntax, body) => // noop
     case Stmnts(stmnts) => stmnts.foreach { x => writeln(format(x)) }
   }
 

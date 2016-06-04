@@ -171,18 +171,17 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
 
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
-  // hack to extend primary value
-  protected lazy val primary_value: PackratParser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
+  protected lazy val primary: PackratParser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
   ary | hash | aref | string | methodCall | literal  | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
-  protected var primary = primary_value
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
 
   protected lazy val expr: PackratParser[Expr] = ret | CommadCallNot | commadCall | arg
 
-  protected lazy val stmnt: PackratParser[Expr] = postModifier | assign | expr
+  protected lazy val stmnt_value: PackratParser[Expr] = postModifier | assign | expr
+  protected var stmnt: PackratParser[Expr] = stmnt_value
 
-  protected lazy val stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ Stmnts
+  protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ Stmnts
 
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {
