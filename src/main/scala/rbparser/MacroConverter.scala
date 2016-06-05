@@ -32,6 +32,7 @@ object MacroConverter {
     case DefExpr(name, args, body) => DefExpr(name, args, body.map(convert(_, m)))
     case DoBlock(args, body) => DoBlock(args, body.map(convert(_, m)))
     case BraceBlock(args, body) => BraceBlock(args, body.map(convert(_, m)))
+    case OpBody(body) => OpBody(body.map(convert(_, m)))
     case x => x
   }
 }

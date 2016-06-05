@@ -389,7 +389,7 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
 end""") { v => assert(v == Operator(
   List("mod", "origin"),
   Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
-  Assign(LVar("x"), LVar("y"), EQ())))
+  OpBody(List(Assign(LVar("x"), LVar("y"), EQ())))))
       }
     }
   }

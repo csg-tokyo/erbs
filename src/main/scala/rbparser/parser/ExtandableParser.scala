@@ -26,22 +26,21 @@ class ExtendableParser extends RubyParser with OperatorToken {
   protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate ^^ {
     case list ~ tags => Syntax(tags, list)
   }
-  protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
+  protected lazy val opSemantics: PackratParser[Stmnts] = "{" ~> stmnt <~ "}" ^^ { x => Stmnts(List(x)) } | "{" ~> stmnts <~ "}"
   protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ {
     case FormalArgs(args) => args.map { case LVar(v) => v}
   }
 
   protected lazy val defop: PackratParser[Operator] = (T_OPERATOR ~> opTags) ~ opSyntax ~ ("=>" ~> opSemantics <~ "end") ^^ {
-    case tags ~ syntax ~ body =>
-      val op = Operator(tags, syntax, body);
+    case tags ~ syntax ~ Stmnts(body) =>
+      val op = Operator(tags, syntax, OpBody(body));
       extendWith(op)
       op
   }
 
   // protected def extendWith(op:  Operator): PackratParser[Expr] = {
   protected def extendWith(op:  Operator)= {
-    val p = buildParser(op) ^^ { case map =>
-      MacroConverter.convert(op.body, map) }
+    val p = buildParser(op) ^^ { case map => MacroConverter.convert(op.body, map) }
     op.tags.foreach { tag =>
       pmap.get(tag) match {
         case None => pmap.put(tag, p)

@@ -99,7 +99,6 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
       indented_write("end")
     }
-    case Operator(tags, syntax, body) => // noop
     case Stmnts(stmnts) => {
       val s = stmnts.size
       for (i <- 0 until s) {
@@ -107,6 +106,24 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
           case Operator(_, _, _) | Syntax(_, _) => // noop
           case stmnt if i == s => writeln(format(stmnt))
           case stmnt => write(format(stmnt))
+        }
+      }
+    }
+    case Operator(_, _, _) => // noop
+    case Syntax(_, _) => // noop
+    case OpBody(body) => {
+      val size = body.size
+      for (i <- 0 until size) {
+        body(i) match {
+          case e@(DefExpr(_, _, _) | ClassExpr(_, _)) => {
+            val cr = if (i == size-1) "" else "\n\n"
+            if (i == 0) {
+              write(format(e)+cr)
+            } else {
+              indented_write(format(e)+cr)
+            }
+          }
+          case e => write(format(e))
         }
       }
     }
