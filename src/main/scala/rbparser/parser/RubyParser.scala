@@ -82,7 +82,7 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
   protected lazy val moduleExpr: PackratParser[ClassExpr] = (T_MODULE ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
 
-  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_MNAME) ~ formalArgs.? ~ (stmnts <~ T_END) ^^ {
+  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_DEFMNAME) ~ formalArgs.? ~ (stmnts <~ T_END) ^^ {
     case name ~ (None | Some(FormalArgs(Nil))) ~ body => DefExpr(name, None, body)
     case name ~ args ~ body => DefExpr(name, args, body)
   }

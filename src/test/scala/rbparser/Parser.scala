@@ -335,6 +335,11 @@ end""") { v => assert(v == DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar(
       parse("""def call
   "1+2"
 end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
+
+      parse("""def value=(v)
+  @value = v
+end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))),
+      Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
     }
   }
 
