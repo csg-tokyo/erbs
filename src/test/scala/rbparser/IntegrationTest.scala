@@ -4,14 +4,13 @@ import org.scalatest._
 import scala.io.Source
 
 class IntegrationTest extends FunSpec {
-
   it ("foo primitive") {
     fileAssert("basic_class.rb")
   }
 
   private def fileAssert(filename: String) = {
     val body = loadFile(filename)
-    val ppBody = translate(body).trim
+    val ppBody = translate(body)
     assert(body == ppBody)
   }
 

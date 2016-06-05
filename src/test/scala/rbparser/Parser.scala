@@ -335,6 +335,11 @@ end""") { v => assert(v == DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar(
       parse("""def call
   "1+2"
 end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
+
+      parse("""def value=(v)
+  @value = v
+end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))),
+      Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
     }
   }
 
@@ -376,6 +381,19 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
 end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
     }
   }
+
+  describe ("Extendable") {
+    it ("pares operator_with") {
+      parse("""operator_with(mod, origin)
+  { x -> y } where { x: origin, y: mod } => { x = y }
+end""") { v => assert(v == Operator(
+  List("mod", "origin"),
+  Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+  OpBody(List(Assign(LVar("x"), LVar("y"), EQ())))))
+      }
+    }
+  }
+
 
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()
