@@ -100,7 +100,16 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       indented_write("end")
     }
     case Operator(tags, syntax, body) => // noop
-    case Stmnts(stmnts) => stmnts.foreach { x => writeln(format(x)) }
+    case Stmnts(stmnts) => {
+      val s = stmnts.size
+      for (i <- 0 until s) {
+        stmnts(i) match {
+          case Operator(_, _, _) | Syntax(_, _) => // noop
+          case stmnt if i == s => writeln(format(stmnt))
+          case stmnt => write(format(stmnt))
+        }
+      }
+    }
   }
 
   private def flush(): String = buffer.toString()
