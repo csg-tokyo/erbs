@@ -109,6 +109,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
         }
       }
     }
+    case Operators(_) => // noop
     case Operator(_, _, _) => // noop
     case Syntax(_, _) => // noop
   }
