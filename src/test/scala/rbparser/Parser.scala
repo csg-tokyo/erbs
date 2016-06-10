@@ -385,11 +385,28 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
   describe ("Extendable") {
     it ("pares operator_with") {
       parse("""operator_with(mod, origin)
-  { x -> y } where { x: origin, y: mod } => { x = y }
-end""") { v => assert(v == Operator(
-  List("mod", "origin"),
-  Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
-  Assign(LVar("x"), LVar("y"), EQ())))
+  { x -> y } where { x: origin, y: mod } => { y = x }
+end""") { v => assert(v == Operators(List(
+    Operator(List("mod", "origin"),
+      Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+      Assign(LVar("y"), LVar("x"), EQ())))))
+      }
+    }
+
+    describe ("when mutiple defition in operator_with") {
+      it ("parses") {
+        parse("""operator_with(mod, origin)
+  { x -> y } where { x: origin, y: mod } => { y = x }
+  { x <- y } where { x: origin, y: mod } => { x = y }
+end
+""") { v => assert(v == Operators(List(
+  Operator(List("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+    Assign(LVar("y"), LVar("x"), EQ())),
+  Operator(List("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "<-", "y")),
+    Assign(LVar("x"), LVar("y"), EQ())))))
+        }
       }
     }
   }
