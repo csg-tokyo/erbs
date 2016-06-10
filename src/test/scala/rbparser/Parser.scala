@@ -409,8 +409,23 @@ end
         }
       }
     }
-  }
 
+    describe ("when tag has condition") {
+      it ("pares and, or, !") {
+        parse("""operator_with(origin)
+  { x <- 1 } where { x: origin && mod } => { x = 1 }
+  { x <- y } where { x: origin || mod, y: foo && bar || !baz } => { x = y }
+end""") { v => assert(v == Operators(List(
+  Operator(List("origin"), Syntax(Map("x" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
+  Operator(List("origin"), Syntax(Map(
+    "x" -> Binary(OR(), LVar("origin"), LVar("mod")),
+    "y" -> Binary(OR(),Binary(AND(), LVar("foo"), LVar("bar")), Unary(EXT(), LVar("baz")))
+  ), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
+)))
+        }
+      }
+    }
+  }
 
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()

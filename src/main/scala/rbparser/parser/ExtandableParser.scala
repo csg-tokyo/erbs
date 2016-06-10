@@ -13,30 +13,32 @@ class ExtendableParser extends RubyParser with OperatorToken {
   // Parse each item of syntax
   protected lazy val v: PackratParser[String] = """[^}\s]+""".r ^^ identity
 
+  protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => makeBin(f, e) }
+  protected lazy val tagExprR: PackratParser[(Op, Expr)] = tagOp ~ tagExpr ^^ { case op ~ f => (op, f) }
+  protected lazy val tagOp: PackratParser[Op] = t_and | t_or
+  protected lazy val tagExpr: PackratParser[Expr] = "!".? ~ lvar ^^ {
+    case Some(_) ~ v => Unary(EXT(), v)
+    case None ~ v => v
+  } | "(" ~> tagBinary <~ ")"
+
   protected lazy val tagHash: PackratParser[Map[String, Expr]] = "{" ~>  tagHashBody.? <~ "}" ^^ { case args => args.getOrElse(Map.empty) }
   protected lazy val tagHashBody: PackratParser[Map[String, Expr]] = tagKeyValues <~ T_COMMA.?
-  protected lazy val tagKeyValues: PackratParser[Map[String, Expr]] = tagSymbolKey ~ binary ~ (T_COMMA ~> tagKeyValues).* ^^ {
+  protected lazy val tagSymbolKey: PackratParser[LVar] = lvar <~ T_COLON
+  protected lazy val tagKeyValues: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ~ (T_COMMA ~> tagKeyValues).* ^^ {
     case LVar(k) ~ v ~ Nil => Map(k -> v)
     case LVar(k) ~ v ~ List(m) => Map(k -> v) ++ m
   }
-  protected lazy val tagSymbolKey: PackratParser[LVar] = lvar <~ T_COLON
 
-  // TODO fix, ary and hash are tmporary
   protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = T_WHERE ~> tagHash
   protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate ^^ {
     case list ~ tags => Syntax(tags, list)
   }
   protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
-  protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ {
-    case FormalArgs(args) => args.map { case LVar(v) => v}
-  }
-
+  protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v} }
   protected lazy val defop: PackratParser[Operators] = (T_OPERATOR ~> opTags) ~ (opDefinition.+ <~ "end") ^^ {
     case tags ~ definitions =>
-      val ops = Operators(
-        definitions.map { case (syntax, body) => Operator(tags, syntax, body) }
-      )
-      extendWith(ops)
+      val ops = Operators( definitions.map { case (syntax, body) => Operator(tags, syntax, body) } )
+      // extendWith(ops)
       ops
   }
 
