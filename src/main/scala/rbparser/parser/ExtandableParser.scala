@@ -70,7 +70,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
     case Binary(OR(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
     case Binary(AND(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
-    case x => println(x);throw new Exception
+    case x => println(x); throw new Exception
   }
 
   protected def buildParser(op: Operator): PackratParser[Map[String, Expr]] = {
@@ -83,6 +83,26 @@ class ExtendableParser extends RubyParser with OperatorToken {
     parsers.tail.foldLeft(parsers.head) {
       case (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 }
     }
+  }
+
+  object ParserMap {
+    def empty[T, S] = new ParserMap[T, S]()
+  }
+
+  class ParserMap[T, S] (m: MMap[List[T], PackratParser[S]] = MMap.empty[List[T], PackratParser[S]]) {
+    def get(k: T) = searchBy(_.contains(k))
+
+    def getWithAllMatch(k: List[T]) = searchBy { key => k.forall(key.contains(_)) }
+
+    def getWithSomeMatch(k: List[T]) = searchBy { key => k.exists(key.contains(_)) }
+
+    def put(key: List[T], value: PackratParser[S]) = m.get(key) match {
+      case None => m.put(key, value)
+      case Some(parser) => m.put(key, value | parser)
+    }
+
+    def searchBy(cond: List[T] => Boolean): Option[PackratParser[S]] =
+      m.keys.toList.filter(cond).map(m(_)).reduceLeftOption { (acc, v) => acc | v }
   }
 }
 
