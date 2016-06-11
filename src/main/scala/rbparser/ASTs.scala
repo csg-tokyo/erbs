@@ -72,8 +72,8 @@ case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block:
 case class Assign(target: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
-case class Operator(tags: List[String], syntax: Syntax, body: Expr) extends Expr
 case class Operators(ops: List[Operator]) extends Expr
+case class Operator(tags: List[String], syntax: Syntax, body: Expr) extends Expr
 case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr

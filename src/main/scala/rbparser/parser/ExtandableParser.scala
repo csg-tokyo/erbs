@@ -38,7 +38,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
   protected lazy val defop: PackratParser[Operators] = (T_OPERATOR ~> opTags) ~ (opDefinition.+ <~ "end") ^^ {
     case tags ~ definitions =>
       val ops = Operators( definitions.map { case (syntax, body) => Operator(tags, syntax, body) } )
-      // extendWith(ops)
+      extendWith(ops)
       ops
   }
 
@@ -61,22 +61,23 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
   }
 
-  protected def findOrCreateParser(key: String): PackratParser[Expr] = pmap.get(key).getOrElse {
-    val base = if (key == DEFAULT_TAG) this else new ExtendableParser
-    val stmt = base.stmnt.asInstanceOf[PackratParser[Expr]]
-    pmap.put(key,  stmt)
-    stmt
+  protected def findOrCreateParser(cond: Expr): PackratParser[Expr] = cond match {
+    case LVar(key) => pmap.get(key).getOrElse {
+      val base = if (key == DEFAULT_TAG) this else new ExtendableParser
+      val stmt = base.stmnt.asInstanceOf[PackratParser[Expr]]
+      pmap.put(key,  stmt)
+      stmt
+    }
+    case Binary(OR(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
+    case Binary(AND(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
+    case x => println(x);throw new Exception
   }
 
   protected def buildParser(op: Operator): PackratParser[Map[String, Expr]] = {
     val parsers = op.syntax.body.map { term =>
       op.syntax.tags.get(term) match {
         case None => val v: PackratParser[Map[String, Expr]] = term ^^^ Map.empty[String, Expr]; v
-        case Some(tag_cond) => tag_cond match {
-          // case x => ADD more case condtion
-          case LVar(cond) => findOrCreateParser(cond) ^^ { case x => Map(term -> x) }
-          case x => println(x);throw new Exception
-        }
+        case Some(cond) => findOrCreateParser(cond) ^^ { case x => Map(term -> x) }
       }
     }
     parsers.tail.foldLeft(parsers.head) {

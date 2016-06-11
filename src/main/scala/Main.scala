@@ -18,25 +18,10 @@ operator_with(origin)
 end
 
 operator_with(origin)
-  { attr_accessor x } where { x: origin } => {
-    def x=(v)
-      @x = v
-    end
-
-    def x
-      @x
-    end
-  }
+  { x <> y } where { x: origin || cond, y: cond } => { x = y + 1 }
 end
 
-def foo
-  def a
-  end
-end
-
-class A
-  attr_accessor asdf
-end
+% <> %
 """) match {
       case Right(x) => x
       case _ => throw new Exception
