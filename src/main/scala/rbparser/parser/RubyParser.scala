@@ -121,10 +121,9 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
 
   protected lazy val braceBlock: PackratParser[Block] = (T_LBR ~> blockParamDef) ~ (stmnt <~ T_RBR) ^^ { //  FIX multi stmnt in one line
     case params ~ body =>  BraceBlock(params, Stmnts(List(body)))
-  } |
-    (T_LBR ~> blockParamDef) ~ (stmnts <~ T_RBR) ^^ {
+  } | (T_LBR ~> blockParamDef) ~ (stmnts <~ T_RBR) ^^ {
     case params ~ body =>  BraceBlock(params, body)
-    }
+  }
 
   protected lazy val block: PackratParser[Block] = braceBlock | doBlock
 
@@ -135,12 +134,11 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   // TODO add COLON call e.g. a::b
   // command must havea at least one
   protected lazy val command: PackratParser[Cmd] = (lvar <~ t_space) ~ aArgs ~ block.? ^^ { // call args
-      case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
-    } | // a.call args
-      (primary <~ T_DOT) ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
-        case recv ~ name ~ Some(args) ~ block => Cmd(Some(recv), name, Some(args), block)
-        case recv ~ name ~ None ~ block => Cmd(Some(recv), name, None, block)
-      }
+    case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
+  } | (primary <~ T_DOT) ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ { // a.call args
+    case recv ~ name ~ Some(args) ~ block => Cmd(Some(recv), name, Some(args), block)
+    case recv ~ name ~ None ~ block => Cmd(Some(recv), name, None, block)
+  }
 
   protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))
