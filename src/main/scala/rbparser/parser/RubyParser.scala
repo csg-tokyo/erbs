@@ -28,6 +28,7 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   }
 
   private def trimSpace(line: String) = line.trim
+
   protected lazy val EOL = opt('\r') <~ '\n'
   protected lazy val t_plus: PackratParser[PLUS] = "+" ^^^ PLUS()
   protected lazy val t_minus: PackratParser[MINUS] = "-" ^^^ MINUS()
@@ -51,77 +52,77 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit
   // `not` method reuturns `()` if succes, this term does not consume tokens
   protected lazy val lvar: PackratParser[LVar] = not(reserved) ~> T_ID ^^ LVar
-  protected lazy val ivar: PackratParser[IVar] = T_AT ~> T_SYMBOL ^^ IVar
+  protected lazy val ivar: PackratParser[IVar] = "@" ~> T_SYMBOL ^^ IVar
   protected lazy val const: PackratParser[ConstLit] = T_CONSTANT ^^ ConstLit
-  protected lazy val bool: PackratParser[BoolLit] = T_TRUE ^^ { case _ => BoolLit(true) } | T_FALSE ^^ { case _ => BoolLit(false) }
-  protected lazy val symbol: PackratParser[SymbolLit] = T_COLON ~> T_SYMBOL ^^ SymbolLit
+  protected lazy val bool: PackratParser[BoolLit] = "true" ^^ { case _ => BoolLit(true) } | "false" ^^ { case _ => BoolLit(false) }
+  protected lazy val symbol: PackratParser[SymbolLit] = ":" ~> T_SYMBOL ^^ SymbolLit
 
-  protected lazy val valWithNot: PackratParser[Unary] = (T_EX ~ (bool | const | lvar | ivar | T_LPAREN ~> expr <~ T_RPAREN | valWithNot) ^^ { case op ~ v => Unary(EXT(), v) })
-  protected lazy val valMinus: PackratParser[Unary] = (t_minus ~ (const | lvar | ivar | double | int | (T_LPAREN ~> expr <~ T_RPAREN))) ^^ { case op ~ v => Unary(op, v) }
+  protected lazy val valWithNot: PackratParser[Unary] = ("!" ~ (bool | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { case op ~ v => Unary(EXT(), v) })
+  protected lazy val valMinus: PackratParser[Unary] = (t_minus ~ (const | lvar | ivar | double | int | ("(" ~> expr <~ ")"))) ^^ { case op ~ v => Unary(op, v) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
-  protected lazy val ret: PackratParser[Expr] = T_RETURN ~> aArgs.? ^^ { case a => Return(a.getOrElse(Nil)) }
+  protected lazy val ret: PackratParser[Expr] = "return" ~> aArgs.? ^^ { case a => Return(a.getOrElse(Nil)) }
 
   // not double ref
   protected lazy val aref: PackratParser[ARef] = (primaryForAref <~ customLiteral("[")) ~ (primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
-  protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | ifExpr | string | userVar | "(" ~> expr <~ ")"
   protected lazy val ary: PackratParser[Ary] = "[" ~>  arefArgs.? <~ "]" ^^ { case args => Ary(args.getOrElse(Nil)) }
 
   protected lazy val hash: PackratParser[Hash] = "{" ~>  hashBody.? <~ "}" ^^ { case args =>  Hash(args.getOrElse(Map.empty)) }
-  protected lazy val hashBody: PackratParser[Map[Expr, Expr]] = keyValues <~ T_COMMA.?
-  protected lazy val keyValues: PackratParser[Map[Expr, Expr]] = (symbolKey | (arg <~ T_ROCKET)) ~ arg ~ (T_COMMA ~> keyValues).* ^^ {
+  protected lazy val hashBody: PackratParser[Map[Expr, Expr]] = keyValues <~ ",".?
+  protected lazy val keyValues: PackratParser[Map[Expr, Expr]] = (symbolKey | (arg <~ "=>")) ~ arg ~ ("," ~> keyValues).* ^^ {
     case k ~ v ~ Nil => Map(k -> v)
     case k ~ v ~ List(m) => Map(k -> v) ++ m
   }
-  protected lazy val symbolKey: PackratParser[Expr] = ((string | T_SYMBOL ^^ SymbolLit) <~ T_COLON)
+  protected lazy val symbolKey: PackratParser[Expr] = ((string | T_SYMBOL ^^ SymbolLit) <~ ":")
 
-  protected lazy val arefArgs: PackratParser[List[Expr]] = aArgs <~ T_COMMA.?
+  protected lazy val arefArgs: PackratParser[List[Expr]] = aArgs <~ ",".?
 
   protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
 
   //add inheritace
-  protected lazy val classExpr: PackratParser[ClassExpr] = (T_CLS ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
-  protected lazy val moduleExpr: PackratParser[ClassExpr] = (T_MODULE ~> const) ~ (stmnts <~ T_END) ^^ { case name ~ body => ClassExpr(name, body) }
+  protected lazy val classExpr: PackratParser[ClassExpr] = ("class" ~> const) ~ (stmnts <~ "end") ^^ { case name ~ body => ClassExpr(name, body) }
+  protected lazy val moduleExpr: PackratParser[ClassExpr] = ("module" ~> const) ~ (stmnts <~ "end") ^^ { case name ~ body => ClassExpr(name, body) }
 
-  protected lazy val defExpr: PackratParser[DefExpr] = (T_DEF ~> T_DEFMNAME) ~ formalArgs.? ~ (stmnts <~ T_END) ^^ {
+  protected lazy val defExpr: PackratParser[DefExpr] = ("def" ~> T_DEFMNAME) ~ formalArgs.? ~ (stmnts <~ "end") ^^ {
     case name ~ (None | Some(FormalArgs(Nil))) ~ body => DefExpr(name, None, body)
     case name ~ args ~ body => DefExpr(name, args, body)
   }
 
-  protected lazy val fArgs: PackratParser[List[LVar]] = lvar ~ (T_COMMA ~> fArgs).* ^^ {
+  protected lazy val fArgs: PackratParser[List[LVar]] = lvar ~ ("," ~> fArgs).* ^^ {
     case v ~ Nil => List(v)
     case v ~ List(ids) => v :: ids
   }
 
-  protected lazy val aArgs: PackratParser[List[Expr]] = arg ~ (T_COMMA ~> aArgs).* ^^ {
+  protected lazy val aArgs: PackratParser[List[Expr]] = arg ~ ("," ~> aArgs).* ^^ {
     case v ~ Nil => List(v)
     case v ~ List(ids) => v :: ids
   }
 
-  protected lazy val formalArgs: PackratParser[FormalArgs] =  T_LPAREN ~> fArgs.? <~ T_RPAREN ^^ { args => FormalArgs(args.getOrElse(Nil)) }
-  protected lazy val actualArgs: PackratParser[ActualArgs] =  T_LPAREN ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
+  protected lazy val formalArgs: PackratParser[FormalArgs] =  "(" ~> fArgs.? <~ ")" ^^ { args => FormalArgs(args.getOrElse(Nil)) }
+  protected lazy val actualArgs: PackratParser[ActualArgs] =  "(" ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
-  protected lazy val ifExpr: PackratParser[IfExpr] = (T_IF ~> expr) ~ (stmnts <~ T_END) ^^ { case cond ~ body => IfExpr(cond, body) }
+  protected lazy val ifExpr: PackratParser[IfExpr] = ("if" ~> expr) ~ (stmnts <~ "end") ^^ { case cond ~ body => IfExpr(cond, body) }
 
-  protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral(T_LPAREN) ~> aArgs.? <~ T_RPAREN ^^ { args => ActualArgs(args.getOrElse(Nil)) }
+  protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral("(") ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
   protected lazy val methodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ block.? ^^ {
     case LVar(name) ~ ActualArgs(Nil) ~ block => Call(None, name, None, block)
     case LVar(name) ~ args ~ block => Call(None, name, Some(args), block)
   } |
-    (primary <~ T_DOT) ~ T_MNAME ~ actualArgs2 ~ block.? ^^ {
+    (primary <~ ".") ~ T_MNAME ~ actualArgs2 ~ block.? ^^ {
       case recv ~ name ~ ActualArgs(Nil) ~ block => Call(Some(recv), name, None, block)
       case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block)
     }
 
   protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs ^^ ActualArgs
 
-  protected lazy val doBlock: PackratParser[Block] = (K_DO ~> blockParamDef) ~ (stmnts <~ K_END) ^^ {
+  protected lazy val doBlock: PackratParser[Block] = ("do" ~> blockParamDef) ~ (stmnts <~ "end") ^^ {
     case params ~ body =>  DoBlock(params, body)
   }
 
-  protected lazy val braceBlock: PackratParser[Block] = (T_LBR ~> blockParamDef) ~ (stmnt <~ T_RBR) ^^ { //  FIX multi stmnt in one line
+  protected lazy val braceBlock: PackratParser[Block] = ("{" ~> blockParamDef) ~ (stmnt <~ "}") ^^ { //  FIX multi stmnt in one line
     case params ~ body =>  BraceBlock(params, Stmnts(List(body)))
-  } | (T_LBR ~> blockParamDef) ~ (stmnts <~ T_RBR) ^^ {
+  } | ("{" ~> blockParamDef) ~ (stmnts <~ "}") ^^ {
     case params ~ body =>  BraceBlock(params, body)
   }
 
@@ -135,7 +136,7 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   // command must havea at least one
   protected lazy val command: PackratParser[Cmd] = (lvar <~ t_space) ~ aArgs ~ block.? ^^ { // call args
     case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
-  } | (primary <~ T_DOT) ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ { // a.call args
+  } | (primary <~ ".") ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ { // a.call args
     case recv ~ name ~ Some(args) ~ block => Cmd(Some(recv), name, Some(args), block)
     case recv ~ name ~ None ~ block => Cmd(Some(recv), name, None, block)
   }
@@ -144,42 +145,42 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
     case name ~ block => Cmd(None, name, None, Some(block))
   } | command
 
-  protected lazy val CommadCallNot: PackratParser[Expr] = T_EX ~> commadCall ^^ { c => Unary(EXT(), c)}
+  protected lazy val CommadCallNot: PackratParser[Expr] = "!" ~> commadCall ^^ { c => Unary(EXT(), c)}
 
   protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ primary ^^ { case op ~ f => (op, f) }
 
-  protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ T_DOT) ~ (T_MNAME | const) ^^ {
+  protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ ".") ~ (T_MNAME | const) ^^ {
     case rev ~ ConstLit(c) => Cmd(Some(rev), c, None, None)
     case rev ~ name => Cmd(Some(rev), name.toString(), None, None)
   }  | userVar
 
   // ignore double assign
-  protected lazy val assign: PackratParser[Assign] = lhs ~ (T_OREQ | T_ANDEQ | T_EQ | T_ADDEQ | T_SUBEQ) ~ expr ^^ {
-    case name ~ T_EQ ~ value => Assign(name, value, EQ())
-    case name ~ T_OREQ ~ value => Assign(name, value, ORE())
-    case name ~ T_ANDEQ ~ value => Assign(name, value, ANDE())
-    case name ~ T_ADDEQ ~ value => Assign(name, value, ADDE())
-    case name ~ T_SUBEQ ~ value => Assign(name, value, SUBE())
+  protected lazy val assign: PackratParser[Assign] = lhs ~ ("||=" | "&&=" | "=" | "+=" | "-=") ~ expr ^^ {
+    case name ~ "=" ~ value => Assign(name, value, EQ())
+    case name ~ "||=" ~ value => Assign(name, value, ORE())
+    case name ~ "&&=" ~ value => Assign(name, value, ANDE())
+    case name ~ "+=" ~ value => Assign(name, value, ADDE())
+    case name ~ "-=" ~ value => Assign(name, value, SUBE())
   }
 
-  protected lazy val postModifier: PackratParser[Expr] = expr ~ (T_IF | T_UNLESS) ~ expr ^^ {
-    case body ~ T_IF ~ cond => IfModExpr(cond, body)
-    case body ~ T_UNLESS ~ cond => UnlessModExpr(cond, body)
+  protected lazy val postModifier: PackratParser[Expr] = expr ~ ("if" | "unless") ~ expr ^^ {
+    case body ~ "if" ~ cond => IfModExpr(cond, body)
+    case body ~ "unless" ~ cond => UnlessModExpr(cond, body)
   }
 
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
   protected lazy val primary: PackratParser[Expr] = valMinus | valWithNot | ret | ifExpr | classExpr | moduleExpr | defExpr |
-  ary | hash | aref | string | methodCall | literal  | bool | userVar | T_LPAREN ~> expr <~ T_RPAREN
+  ary | hash | aref | string | methodCall | literal  | bool | userVar | "(" ~> expr <~ ")"
 
-  protected lazy val arg: PackratParser[Expr] = assign | binary | T_EX ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
+  protected lazy val arg: PackratParser[Expr] = assign | binary | "!" ~> methodCall ^^ { case c => Unary(EXT(), c)} | primary
 
   protected lazy val expr: PackratParser[Expr] = ret | CommadCallNot | commadCall | arg
 
   protected lazy val stmnt_value: PackratParser[Expr] = postModifier | assign | expr
   protected var stmnt: PackratParser[Expr] = stmnt_value
 
-  protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | T_SCOLON)).* ^^ Stmnts
+  protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | ";")).* ^^ Stmnts
 
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {

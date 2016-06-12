@@ -8,9 +8,9 @@ class ExtendableParser extends RubyParser with OperatorToken {
   // terminal -> MatchedAst
   protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
 
-  override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | T_SCOLON)).* ^^ Stmnts
+  override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
   override def reserved = K_OPERATOR | super.reserved
-  // Parse each item of syntax
+  // Parse each item of syntax interleaved by '\s'
   protected lazy val v: PackratParser[String] = """[^}\s]+""".r ^^ identity
 
   protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => DNFBuilder.build(makeBin(f, e)) }
@@ -22,20 +22,20 @@ class ExtendableParser extends RubyParser with OperatorToken {
   } | "(" ~> tagBinary <~ ")"
 
   protected lazy val tagHash: PackratParser[Map[String, Expr]] = "{" ~>  tagHashBody.? <~ "}" ^^ { case args => args.getOrElse(Map.empty) }
-  protected lazy val tagHashBody: PackratParser[Map[String, Expr]] = tagKeyValues <~ T_COMMA.?
-  protected lazy val tagSymbolKey: PackratParser[LVar] = lvar <~ T_COLON
-  protected lazy val tagKeyValues: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ~ (T_COMMA ~> tagKeyValues).* ^^ {
+  protected lazy val tagHashBody: PackratParser[Map[String, Expr]] = tagKeyValues <~ ",".?
+  protected lazy val tagSymbolKey: PackratParser[LVar] = lvar <~ ":"
+  protected lazy val tagKeyValues: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ~ ("," ~> tagKeyValues).* ^^ {
     case LVar(k) ~ v ~ Nil => Map(k -> v)
     case LVar(k) ~ v ~ List(m) => Map(k -> v) ++ m
   }
 
-  protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = T_WHERE ~> tagHash
+  protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = "where" ~> tagHash
   protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate ^^ {
     case list ~ tags => Syntax(tags, list)
   }
   protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
   protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v} }
-  protected lazy val defop: PackratParser[Operators] = (T_OPERATOR ~> opTags) ~ (opDefinition.+ <~ "end") ^^ {
+  protected lazy val defop: PackratParser[Operators] = ("operator_with" ~> opTags) ~ (opDefinition.+ <~ "end") ^^ {
     case tags ~ definitions =>
       val ops = Operators( definitions.map { case (syntax, body) => Operator(tags, syntax, body) } )
       extendWith(ops)
@@ -107,9 +107,6 @@ class ExtendableParser extends RubyParser with OperatorToken {
 }
 
 trait OperatorToken {
-  val T_OPERATOR = "operator_with"
   val K_OPERATOR =  """operator_with\b""".r
-
-  val T_WHERE = "where"
   val K_WHERE =  """where\b""".r
 }
