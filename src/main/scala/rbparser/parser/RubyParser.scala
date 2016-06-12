@@ -99,7 +99,7 @@ trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
   }
   // TODO add COLON call e.g. a::b
   // command must have at least one
-  protected lazy val command: PackratParser[Cmd] = simpleCommand |reciverCommand
+  protected lazy val command: PackratParser[Cmd] = simpleCommand | reciverCommand
 
   protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))
@@ -125,7 +125,7 @@ trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
   protected lazy val binary: PackratParser[Expr] = arg ~ exprR.* ^^ { case f ~ e => makeBin(f, e) }
 
   protected lazy val primary: PackratParser[Expr] = valMinus | valWithNot | ret | branchExpr | classExpr | moduleExpr | defExpr |
-  ary | hash | aref | string | methodCall | literal  | bool | userVar | "(" ~> expr <~ ")"
+    ary | hash | aref | string | methodCall | literal  | bool | userVar | "(" ~> expr <~ ")"
 
   protected lazy val arg: PackratParser[Expr] = assign | binary | methodCallNot | primary
 
