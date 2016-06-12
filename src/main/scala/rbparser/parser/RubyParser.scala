@@ -4,30 +4,8 @@ package parser
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
-trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
-  def parse(in: String): Either[String, Stmnts] = {
-    parseAll(stmnts, preprocess(in)) match {
-      case Success(d, next) => Right(d)
-      case NoSuccess(errorMsg, next) =>
-        Left(s"$errorMsg: in ${next.pos.line} at column ${next.pos.column}")
-    }
-  }
-
-  private def preprocess(txt: String) = {
-    val lines = txt.split("\n").toSeq.map {
-      line => trimSpace(removeComment(line))
-    }
-    removeEmptyLine(lines).mkString("\n") + "\n"
-  }
-
-  private def removeEmptyLine(lines: Seq[String]): Seq[String] = lines.filter(_.size > 0)
-
-  private def removeComment(line: String) = {
-    val i = line.indexOf(T_HASH)
-    if (i >= 0) line.take(i) else line
-  }
-
-  private def trimSpace(line: String) = line.trim
+trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
+  override protected def commentLiteral = "#"
 
   protected lazy val EOL = opt('\r') <~ '\n'
   protected lazy val t_plus: PackratParser[PLUS] = "+" ^^^ PLUS()
@@ -156,33 +134,12 @@ trait RubyParser extends RegexParsers with PackratParsers with rbparser.Tokens {
   protected lazy val stmnt_value: PackratParser[Expr] = postModifier | assign | expr
   protected var stmnt: PackratParser[Expr] = stmnt_value
 
-  protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | ";")).* ^^ Stmnts
+  override protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | ";")).* ^^ Stmnts
 
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {
       case (Nil, expr) => expr
       case (e, expr) => throw new Exception(e.toString())
-    }
-  }
-
-  // be able to represent whitespace
-  def customLiteral(s: String): Parser[String] = new Parser[String] {
-    def apply(in: Input) = {
-      val source = in.source
-      val offset = in.offset
-      var i = 0
-      var j = offset
-
-      while (i < s.length && j < source.length && s.charAt(i) == source.charAt(j)) {
-        i += 1
-        j += 1
-      }
-      if (i == s.length) {
-        Success(source.subSequence(offset, j).toString, in.drop(i))
-      } else {
-        val found = if (offset == source.length()) "end of source" else "`"+source.charAt(offset)+"'"
-        Failure("`"+s+"' expected but "+found+" found", in.drop(offset))
-      }
     }
   }
 
