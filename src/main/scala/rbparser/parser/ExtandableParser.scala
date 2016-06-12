@@ -5,15 +5,15 @@ import scala.collection.mutable.{Map => MMap}
 class ExtendableParser extends RubyParser with OperatorToken {
   val DEFAULT_TAG = "origin"
 
-  // x => originParser
-  protected var pmap: MMap[String, PackratParser[Expr]] = MMap.empty[String, PackratParser[Expr]]
+  // terminal -> MatchedAst
+  protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | T_SCOLON)).* ^^ Stmnts
   override def reserved = K_OPERATOR | super.reserved
   // Parse each item of syntax
   protected lazy val v: PackratParser[String] = """[^}\s]+""".r ^^ identity
 
-  protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => makeBin(f, e) }
+  protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => DNFBuilder.build(makeBin(f, e)) }
   protected lazy val tagExprR: PackratParser[(Op, Expr)] = tagOp ~ tagExpr ^^ { case op ~ f => (op, f) }
   protected lazy val tagOp: PackratParser[Op] = t_and | t_or
   protected lazy val tagExpr: PackratParser[Expr] = "!".? ~ lvar ^^ {
@@ -47,41 +47,43 @@ class ExtendableParser extends RubyParser with OperatorToken {
   protected def extendWith(ops: Operators): Unit = ops match { case Operators(x) =>  x.foreach { x: Operator => extendWith(x) } }
 
   protected def extendWith(op: Operator): Unit = {
-    val p = buildParser(op) ^^ { case map => MacroConverter.convert(op.body, map) }
-    op.tags.foreach { tag =>
-      pmap.get(tag) match {
-        case None => pmap.put(tag, p)
-        case Some(pp) =>
-          if (tag != DEFAULT_TAG) pmap.put(tag, p | pp)
-          else {
-            val tmp = stmnt
-            stmnt = p | tmp
-          }
-      }
+    val tags = op.tags
+    val newParser = buildParser(op)
+    pmap.put(tags, newParser)
+
+    // Should extend default no terminal class stmnt
+    if (tags.contains(DEFAULT_TAG)) {
+      val tmp = stmnt
+      stmnt = newParser | tmp
     }
   }
 
-  protected def findOrCreateParser(cond: Expr): PackratParser[Expr] = cond match {
-    case LVar(key) => pmap.get(key).getOrElse {
-      val base = if (key == DEFAULT_TAG) this else new ExtendableParser
-      val stmt = base.stmnt.asInstanceOf[PackratParser[Expr]]
-      pmap.put(key,  stmt)
-      stmt
+  protected def findParser(cond: Expr): Option[PackratParser[Expr]] = cond match {
+    case Binary(OR(), l, r) => for (e1 <- findParser(l); e2 <- findParser(r)) yield { e1 | e2 }
+    case e@Binary(AND(), _, _) => flattenAndForm(e) match {
+      case List(DEFAULT_TAG) => Some(stmnt)
+      case x => pmap.getWithAllMatch(x)
     }
-    case Binary(OR(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
-    case Binary(AND(), e1, e2)=> findOrCreateParser(e1) | findOrCreateParser(e2)
-    case x => println(x); throw new Exception
+    case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else pmap.get(key)
+    case x => println(x); throw new Exception // TODO FIX
   }
 
-  protected def buildParser(op: Operator): PackratParser[Map[String, Expr]] = {
+  protected def flattenAndForm(e: Expr): List[String] = e match {
+    case Binary(AND(), e1, e2)=> flattenAndForm(e1) ++ flattenAndForm(e2)
+    case LVar(e) => List(e)
+    case _ => throw new Exception()
+  }
+
+  protected def buildParser(op: Operator): PackratParser[Expr] = {
     val parsers = op.syntax.body.map { term =>
       op.syntax.tags.get(term) match {
         case None => val v: PackratParser[Map[String, Expr]] = term ^^^ Map.empty[String, Expr]; v
-        case Some(cond) => findOrCreateParser(cond) ^^ { case x => Map(term -> x) }
+        case Some(cond) => findParser(cond).get ^^ { case ast => Map(term -> ast) } // TOFIX raise execption
       }
     }
-    parsers.tail.foldLeft(parsers.head) {
-      case (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 }
+
+    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ {
+      case map => MacroConverter.convert(op.body, map)
     }
   }
 
@@ -93,8 +95,6 @@ class ExtendableParser extends RubyParser with OperatorToken {
     def get(k: T) = searchBy(_.contains(k))
 
     def getWithAllMatch(k: List[T]) = searchBy { key => k.forall(key.contains(_)) }
-
-    def getWithSomeMatch(k: List[T]) = searchBy { key => k.exists(key.contains(_)) }
 
     def put(key: List[T], value: PackratParser[S]) = m.get(key) match {
       case None => m.put(key, value)

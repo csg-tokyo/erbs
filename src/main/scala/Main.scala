@@ -13,15 +13,17 @@ object Main {
   { % } where { } => { 10 }
 end
 
+operator_with(cond, origin, foo)
+  { |< } where { } => { 100 }
+end
+
 operator_with(origin)
   { x <<= y } where { x: origin, y: cond } => { x = y + 1 }
+  { x <>= y } where { x: origin, y: foo } => { x = y + 1 }
+  { x <> y  } where { x: origin || cond, y: cond && origin  } => { x = y + 1 }
 end
 
-operator_with(origin)
-  { x <> y } where { x: origin || cond, y: cond } => { x = y + 1 }
-end
-
-% <> %
+% <> |<
 """) match {
       case Right(x) => x
       case _ => throw new Exception

@@ -338,8 +338,7 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
 
       parse("""def value=(v)
   @value = v
-end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))),
-      Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
+end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
     }
   }
 
@@ -385,26 +384,26 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
   describe ("Extendable") {
     it ("pares operator_with") {
       parse("""operator_with(mod, origin)
-  { x -> y } where { x: origin, y: mod } => { y = x }
+  { x -> y } where { x: origin, y: origin } => { y = x }
 end""") { v => assert(v == Operators(List(
-    Operator(List("mod", "origin"),
-      Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
-      Assign(LVar("y"), LVar("x"), EQ())))))
+  Operator(List("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
+    Assign(LVar("y"), LVar("x"), EQ())))))
       }
     }
 
     describe ("when mutiple defition in operator_with") {
       it ("parses") {
         parse("""operator_with(mod, origin)
-  { x -> y } where { x: origin, y: mod } => { y = x }
-  { x <- y } where { x: origin, y: mod } => { x = y }
+  { x -> y } where { x: origin, y: origin } => { y = x }
+  { x <- y } where { x: origin, y: origin } => { x = y }
 end
 """) { v => assert(v == Operators(List(
   Operator(List("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
     Assign(LVar("y"), LVar("x"), EQ())),
   Operator(List("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "<-", "y")),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
     Assign(LVar("x"), LVar("y"), EQ())))))
         }
       }
@@ -412,16 +411,22 @@ end
 
     describe ("when tag has condition") {
       it ("pares and, or, !") {
-        parse("""operator_with(origin)
-  { x <- 1 } where { x: origin && mod } => { x = 1 }
-  { x <- y } where { x: origin || mod, y: foo && bar || !baz } => { x = y }
-end""") { v => assert(v == Operators(List(
-  Operator(List("origin"), Syntax(Map("x" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
-  Operator(List("origin"), Syntax(Map(
-    "x" -> Binary(OR(), LVar("origin"), LVar("mod")),
-    "y" -> Binary(OR(),Binary(AND(), LVar("foo"), LVar("bar")), Unary(EXT(), LVar("baz")))
-  ), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
-)))
+        assertResult(Operators(List(
+          Operator(List("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
+          Operator(List("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
+        ))) {
+          val parser = new Parser()
+          parser.parse("""operator_with(mod, origin)
+  { x <- 1 } where { x: origin } => { x = 1 }
+end
+
+operator_with(origin)
+  { x <- 1 } where { x: origin || mod } => { x = 1 }
+  { x <- y } where { x: origin || (origin && mod), y: origin && mod } => { x = y }
+end""" + "\n") match {
+            case Right(Stmnts(x)) => x(1)
+            case Left(s) => throw new Exception(s)
+          }
         }
       }
     }

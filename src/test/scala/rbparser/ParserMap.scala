@@ -64,9 +64,9 @@ class ParserMapTest extends FunSpec {
     m.put(List("div"), div)
 
     it ("returns specifed value") {
-      m.getWithAllMatch(List("add", "origin")) shouldBe Some(add)
-      m.getWithAllMatch(List("div")) shouldBe Some(div)
-      m.getWithAllMatch(List("mul", "foo")) shouldBe None
+      assertResult(Some(add)) { m.getWithAllMatch(List("add", "origin")) }
+      assertResult(Some(div)) { m.getWithAllMatch(List("div")) }
+      assertResult(None) { m.getWithAllMatch(List("mul", "foo")) }
     }
 
     def assertParseResult(tag: List[String], in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.getWithAllMatch(tag).map { parseAll(_, in).get }) {
@@ -80,31 +80,6 @@ class ParserMapTest extends FunSpec {
       withClue("does not returns if can't parse") {
         intercept[java.lang.RuntimeException] {
           assertParseResult(List("origin", "sub"), "&", sub | div)
-        }
-      }
-    }
-  }
-
-  describe("#getWithSomeMatch") {
-    val m = ParserMap.empty[String, Char]
-    m.put(List("origin", "add"), add)
-    m.put(List("div"), div)
-
-    it ("returns specifed value") {
-      m.getWithAllMatch(List("div")) shouldBe Some(div)
-    }
-
-    def assertParseResult(tag: List[String], in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.getWithSomeMatch(tag).map { parseAll(_, in).get }) {
-      Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get }
-    }
-
-    it ("returns mutiple Parsers") {
-      assertParseResult(List("origin", "div"), "+", add | div)
-      assertParseResult(List("origin", "div"), "/", add | div)
-
-      withClue("does not returns if can't parse") {
-        intercept[java.lang.RuntimeException] {
-          assertParseResult(List("origin", "sub"), "*", add | div)
         }
       }
     }
