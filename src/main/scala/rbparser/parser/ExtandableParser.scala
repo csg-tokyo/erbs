@@ -3,31 +3,26 @@ package parser
 import scala.collection.mutable.{Map => MMap}
 
 class ExtendableParser extends RubyParser with OperatorToken {
-  val DEFAULT_TAG = "origin"
+  protected val DEFAULT_TAG = "origin"
 
   // terminal -> MatchedAst
   protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
-  override def reserved = K_OPERATOR | super.reserved
+  override def reserved = K_OPERATOR | K_WHERE | super.reserved
   // Parse each item of syntax interleaved by '\s'
   protected lazy val v: PackratParser[String] = """[^}\s]+""".r ^^ identity
 
   protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => DNFBuilder.build(makeBin(f, e)) }
   protected lazy val tagExprR: PackratParser[(Op, Expr)] = tagOp ~ tagExpr ^^ { case op ~ f => (op, f) }
   protected lazy val tagOp: PackratParser[Op] = t_and | t_or
-  protected lazy val tagExpr: PackratParser[Expr] = "!".? ~ lvar ^^ {
-    case Some(_) ~ v => Unary(EXT(), v)
-    case None ~ v => v
-  } | "(" ~> tagBinary <~ ")"
+  protected lazy val tagExLVar: PackratParser[Expr] = "!" ~> lvar ^^ { Unary(EXT(), _) }
+  protected lazy val tagExpr: PackratParser[Expr] = tagExLVar | lvar  | "(" ~> tagBinary <~ ")"
 
-  protected lazy val tagHash: PackratParser[Map[String, Expr]] = "{" ~>  tagHashBody.? <~ "}" ^^ { case args => args.getOrElse(Map.empty) }
-  protected lazy val tagHashBody: PackratParser[Map[String, Expr]] = tagKeyValues <~ ",".?
-  protected lazy val tagSymbolKey: PackratParser[LVar] = lvar <~ ":"
-  protected lazy val tagKeyValues: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ~ ("," ~> tagKeyValues).* ^^ {
-    case LVar(k) ~ v ~ Nil => Map(k -> v)
-    case LVar(k) ~ v ~ List(m) => Map(k -> v) ++ m
-  }
+  protected lazy val tagSymbolKey: PackratParser[String] = lvar <~ ":" ^^ { case LVar(v) => v }
+  protected lazy val tagKeyValue: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ^^ { case k ~ v => Map(k -> v) }
+  protected lazy val tagHashBody: PackratParser[Map[String, Expr]] = rep1sep(tagKeyValue, ",") ^^ { _.reduceLeft { (acc, e) => acc ++ e } }
+  protected lazy val tagHash: PackratParser[Map[String, Expr]] = "{" ~>  tagHashBody.? <~ "}" ^^ { _.getOrElse(Map.empty) }
 
   protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = "where" ~> tagHash
   protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate ^^ {
@@ -35,16 +30,15 @@ class ExtendableParser extends RubyParser with OperatorToken {
   }
   protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
   protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v} }
-  protected lazy val defop: PackratParser[Operators] = ("operator_with" ~> opTags) ~ (opDefinition.+ <~ "end") ^^ {
+  protected lazy val opDefinition: PackratParser[(Syntax, Expr)] = opSyntax ~ ("=>" ~> opSemantics) ^^ { case syntax ~ body => (syntax, body) }
+  protected lazy val defop: PackratParser[Operators] = "operator_with" ~> opTags ~ opDefinition.+ <~ "end" ^^ {
     case tags ~ definitions =>
       val ops = Operators( definitions.map { case (syntax, body) => Operator(tags, syntax, body) } )
       extendWith(ops)
       ops
   }
 
-  protected lazy val opDefinition: PackratParser[(Syntax, Expr)] = opSyntax ~ ("=>" ~> opSemantics) ^^ { case syntax ~ body => (syntax, body) }
-
-  protected def extendWith(ops: Operators): Unit = ops match { case Operators(x) =>  x.foreach { x: Operator => extendWith(x) } }
+  protected def extendWith(ops: Operators): Unit = ops match { case Operators(x) => x.foreach { x: Operator => extendWith(x) } }
 
   protected def extendWith(op: Operator): Unit = {
     val tags = op.tags

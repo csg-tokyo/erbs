@@ -2,7 +2,6 @@ package rbparser
 package parser
 
 import scala.util.matching.Regex
-import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
 trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
   override protected def commentLiteral = "#"
@@ -54,7 +53,7 @@ trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
   protected lazy val hashBody: PackratParser[Map[Expr, Expr]] = rep1sep(keyValue, ",") ^^ { _.reduceLeft { (acc, e) => acc ++ e } }
   protected lazy val symbolKey: PackratParser[Expr] = (string | T_SYMBOL ^^ SymbolLit) <~ ":"
   protected lazy val rocketKey: PackratParser[Expr] = arg <~ "=>"
-  protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolKey | rocketKey) ~ arg ^^ { case k ~ v => Map(k -> v)}
+  protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolKey | rocketKey) ~ arg ^^ { case k ~ v => Map(k -> v) }
 
   // TODO add inheritace
   protected lazy val classExpr: PackratParser[ClassExpr] = "class" ~> const ~ stmnts <~ "end" ^^ { case name ~ body => ClassExpr(name, body) }
