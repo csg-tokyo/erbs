@@ -94,6 +94,16 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       }
       indented_write("end")
     }
+    case ModuleExpr(name, Stmnts(stmnts)) => {
+      writeln("module " + format(name))
+      nested {
+        for (i <- 0 until stmnts.length) {
+          val cr = if (i == stmnts.length-1) "\n"  else "\n\n"
+          indented_write(format(stmnts(i))+cr)
+        }
+      }
+      indented_write("end")
+    }
     case DefExpr(name, args, Stmnts(stmnts)) => {
       writeln("def "+ name + args.fold("") ("(" + format(_) + ")"))
       nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }

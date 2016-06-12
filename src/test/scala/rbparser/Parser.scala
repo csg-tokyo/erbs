@@ -278,8 +278,8 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
       parse("a1._call(10)") { v => assert(v == Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(IntLit(10)))), None)) }
       parse("a1._calL?(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(IntLit(10)))), None)) }
       parse("a1._calL!(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), "call", None, None)) }
-      parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), "call", None, None), IntLit(10))) }
+      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List())), None)) }
+      parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), "call", Some(ActualArgs(List())), None), IntLit(10))) }
       parse("a1.call(10, true)") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) }
     }
 
@@ -287,10 +287,12 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
       parse("""if  true
   1 + 2
 end""") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) }
-
       parse("""if a(10)
   b
 end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
+    parse("""unless a(10)
+  b
+end""") { v => assert(v == UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
     }
 
     it ("parses class") {
@@ -321,10 +323,10 @@ end""") { v => assert(v == DefExpr("ASDF?", None, Stmnts(List())))}
 end""") { v => assert(v == DefExpr("_a?", None, Stmnts(List())))}
 
       parse("""def a?()
-end""") { v => assert(v == DefExpr("a?", None, Stmnts(List())))}
+end""") { v => assert(v == DefExpr("a?", Some(FormalArgs(Nil)), Stmnts(List())))}
 
       parse("""def a()
-end""") { v => assert(v == DefExpr("a", None, Stmnts(List())))}
+end""") { v => assert(v == DefExpr("a", Some(FormalArgs(Nil)), Stmnts(List())))}
 
       parse("""def a(opt)
 end""") { v => assert(v == DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(List())))}
