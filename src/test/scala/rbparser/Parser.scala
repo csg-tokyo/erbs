@@ -394,6 +394,17 @@ end""") { v => assert(v == Operators(List(
       }
     }
 
+    describe ("when ellipsis where cond") {
+      it ("pares operator_with") {
+        assertParseResult(Operators(List(Operator(List("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
+          """operator_with(origin)
+  { % }  => { 100 }
+end"""
+        }
+
+      }
+    }
+
     describe ("when mutiple defition in operator_with") {
       it ("parses") {
         parse("""operator_with(mod, origin)
@@ -433,6 +444,18 @@ end""" + "\n") match {
       }
     }
   }
+
+  def assertParseResult(expect: Expr, cule: String = "")(body: String) = {
+    val parser = new Parser()
+    assertResult(Stmnts(List(expect))) {
+      parser.parse(body + "\n") match {
+        case Right(x) => x
+        case Left(s) => throw new ParsingError(s)
+      }
+    }
+  }
+
+  protected class ParsingError(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
 
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()

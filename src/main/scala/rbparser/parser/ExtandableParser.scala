@@ -25,8 +25,8 @@ class ExtendableParser extends RubyParser with OperatorToken {
   protected lazy val tagHash: PackratParser[Map[String, Expr]] = "{" ~>  tagHashBody.? <~ "}" ^^ { _.getOrElse(Map.empty) }
 
   protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = "where" ~> tagHash
-  protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate ^^ {
-    case list ~ tags => Syntax(tags, list)
+  protected lazy val opSyntax: PackratParser[Syntax] = ("{" ~> v.+ <~ "}") ~ opTagPredicate.? ^^ {
+    case list ~ tags => Syntax(tags.getOrElse(Map.empty), list)
   }
   protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
   protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v} }
