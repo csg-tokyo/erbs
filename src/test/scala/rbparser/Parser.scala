@@ -388,7 +388,7 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
       parse("""operator_with(mod, origin)
   { x -> y } where { x: origin, y: origin } => { y = x }
 end""") { v => assert(v == Operators(List(
-  Operator(List("mod", "origin"),
+  Operator(Set("mod", "origin"),
     Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
     Assign(LVar("y"), LVar("x"), EQ())))))
       }
@@ -396,7 +396,7 @@ end""") { v => assert(v == Operators(List(
 
     describe ("when ellipsis where cond") {
       it ("pares operator_with") {
-        assertParseResult(Operators(List(Operator(List("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
+        assertParseResult(Operators(List(Operator(Set("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
           """operator_with(origin)
   { % }  => { 100 }
 end"""
@@ -412,10 +412,10 @@ end"""
   { x <- y } where { x: origin, y: origin } => { x = y }
 end
 """) { v => assert(v == Operators(List(
-  Operator(List("mod", "origin"),
+  Operator(Set("mod", "origin"),
     Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
     Assign(LVar("y"), LVar("x"), EQ())),
-  Operator(List("mod", "origin"),
+  Operator(Set("mod", "origin"),
     Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
     Assign(LVar("x"), LVar("y"), EQ())))))
         }
@@ -425,8 +425,8 @@ end
     describe ("when tag has condition") {
       it ("pares and, or, !") {
         assertResult(Operators(List(
-          Operator(List("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
-          Operator(List("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
         ))) {
           val parser = new Parser()
           parser.parse("""operator_with(mod, origin)

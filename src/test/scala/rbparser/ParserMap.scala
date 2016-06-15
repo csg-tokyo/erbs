@@ -29,9 +29,9 @@ class ParserMapTest extends FunSpec {
 
   describe("#get") {
     val m = ParserMap.empty[String, Char]
-    m.put(List("origin", "add"), add)
-    m.put(List("origin", "sub"), sub)
-    m.put(List("mul"), mul)
+    m.put(Set("origin", "add"), add)
+    m.put(Set("origin", "sub"), sub)
+    m.put(Set("mul"), mul)
 
     it ("returns specifed value") {
       m.get("add") shouldBe Some(add)
@@ -57,29 +57,29 @@ class ParserMapTest extends FunSpec {
 
   describe("#getWithAllMatch") {
     val m = ParserMap.empty[String, Char]
-    m.put(List("origin", "add"), add)
-    m.put(List("origin", "sub"), sub)
-    m.put(List("origin", "sub", "mul"), div)
-    m.put(List("mul"), mul)
-    m.put(List("div"), div)
+    m.put(Set("origin", "add"), add)
+    m.put(Set("origin", "sub"), sub)
+    m.put(Set("origin", "sub", "mul"), div)
+    m.put(Set("mul"), mul)
+    m.put(Set("div"), div)
 
     it ("returns specifed value") {
-      assertResult(Some(add)) { m.getWithAllMatch(List("add", "origin")) }
-      assertResult(Some(div)) { m.getWithAllMatch(List("div")) }
-      assertResult(None) { m.getWithAllMatch(List("mul", "foo")) }
+      assertResult(Some(add)) { m.getWithAllMatch(Set("add", "origin")) }
+      assertResult(Some(div)) { m.getWithAllMatch(Set("div")) }
+      assertResult(None) { m.getWithAllMatch(Set("mul", "foo")) }
     }
 
-    def assertParseResult(tag: List[String], in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.getWithAllMatch(tag).map { parseAll(_, in).get }) {
+    def assertParseResult(tag: Set[String], in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.getWithAllMatch(tag).map { parseAll(_, in).get }) {
       Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get }
     }
 
     it ("returns mutiple Parsers") {
-      assertParseResult(List("origin", "sub"), "-", sub | div)
-      assertParseResult(List("origin", "sub"), "/", sub | div)
+      assertParseResult(Set("origin", "sub"), "-", sub | div)
+      assertParseResult(Set("origin", "sub"), "/", sub | div)
 
       withClue("does not returns if can't parse") {
         intercept[java.lang.RuntimeException] {
-          assertParseResult(List("origin", "sub"), "&", sub | div)
+          assertParseResult(Set("origin", "sub"), "&", sub | div)
         }
       }
     }

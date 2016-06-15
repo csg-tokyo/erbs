@@ -29,7 +29,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
     case list ~ tags => Syntax(tags.getOrElse(Map.empty), list)
   }
   protected lazy val opSemantics: PackratParser[Expr] = "{" ~> stmnt <~ "}"
-  protected lazy val opTags: PackratParser[List[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v} }
+  protected lazy val opTags: PackratParser[Set[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v}.toSet }
   protected lazy val opDefinition: PackratParser[(Syntax, Expr)] = opSyntax ~ ("=>" ~> opSemantics) ^^ { case syntax ~ body => (syntax, body) }
   protected lazy val defop: PackratParser[Operators] = "operator_with" ~> opTags ~ opDefinition.+ <~ "end" ^^ {
     case tags ~ definitions =>
@@ -54,7 +54,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   protected def findParser(cond: Expr): Option[PackratParser[Expr]] = cond match {
     case Binary(OR(), l, r) => for (e1 <- findParser(l); e2 <- findParser(r)) yield { e1 | e2 }
-    case e@Binary(AND(), _, _) => flattenAndForm(e) match {
+    case e@Binary(AND(), _, _) => collectTags(e) match {
       case List(DEFAULT_TAG) => Some(stmnt)
       case x => pmap.getWithAllMatch(x)
     }
@@ -62,9 +62,9 @@ class ExtendableParser extends RubyParser with OperatorToken {
     case x => println(x); throw new Exception // TODO FIX
   }
 
-  protected def flattenAndForm(e: Expr): List[String] = e match {
-    case Binary(AND(), e1, e2)=> flattenAndForm(e1) ++ flattenAndForm(e2)
-    case LVar(e) => List(e)
+  protected def collectTags(e: Expr): Set[String] = e match {
+    case Binary(AND(), e1, e2)=> collectTags(e1) ++ collectTags(e2)
+    case LVar(e) => Set(e)
     case _ => throw new Exception()
   }
 
@@ -85,18 +85,19 @@ class ExtendableParser extends RubyParser with OperatorToken {
     def empty[T, S] = new ParserMap[T, S]()
   }
 
-  class ParserMap[T, S] (m: MMap[List[T], PackratParser[S]] = MMap.empty[List[T], PackratParser[S]]) {
+  class ParserMap[T, S] (m: MMap[Set[T], PackratParser[S]] = MMap.empty[Set[T], PackratParser[S]]) {
     def get(k: T) = searchBy(_.contains(k))
 
-    def getWithAllMatch(k: List[T]) = searchBy { key => k.forall(key.contains(_)) }
 
-    def put(key: List[T], value: PackratParser[S]) = m.get(key) match {
+    def getWithAllMatch(k: Set[T]) = searchBy(k.subsetOf(_))
+
+    def put(key: Set[T], value: PackratParser[S]) = m.get(key) match {
       case None => m.put(key, value)
       case Some(parser) => m.put(key, value | parser)
     }
 
-    def searchBy(cond: List[T] => Boolean): Option[PackratParser[S]] =
-      m.keys.toList.filter(cond).map(m(_)).reduceLeftOption { (acc, v) => acc | v }
+    private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
+      m.filterKeys(cond).values.reduceLeftOption { (acc, v) => acc | v }
   }
 }
 
