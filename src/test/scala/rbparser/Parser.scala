@@ -278,8 +278,8 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
       parse("a1._call(10)") { v => assert(v == Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(IntLit(10)))), None)) }
       parse("a1._calL?(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(IntLit(10)))), None)) }
       parse("a1._calL!(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), "call", None, None)) }
-      parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), "call", None, None), IntLit(10))) }
+      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List())), None)) }
+      parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), "call", Some(ActualArgs(List())), None), IntLit(10))) }
       parse("a1.call(10, true)") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) }
     }
 
@@ -287,10 +287,12 @@ end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
       parse("""if  true
   1 + 2
 end""") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) }
-
       parse("""if a(10)
   b
 end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
+    parse("""unless a(10)
+  b
+end""") { v => assert(v == UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
     }
 
     it ("parses class") {
@@ -321,10 +323,10 @@ end""") { v => assert(v == DefExpr("ASDF?", None, Stmnts(List())))}
 end""") { v => assert(v == DefExpr("_a?", None, Stmnts(List())))}
 
       parse("""def a?()
-end""") { v => assert(v == DefExpr("a?", None, Stmnts(List())))}
+end""") { v => assert(v == DefExpr("a?", Some(FormalArgs(Nil)), Stmnts(List())))}
 
       parse("""def a()
-end""") { v => assert(v == DefExpr("a", None, Stmnts(List())))}
+end""") { v => assert(v == DefExpr("a", Some(FormalArgs(Nil)), Stmnts(List())))}
 
       parse("""def a(opt)
 end""") { v => assert(v == DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(List())))}
@@ -338,8 +340,7 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
 
       parse("""def value=(v)
   @value = v
-end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))),
-      Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
+end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
     }
   }
 
@@ -385,32 +386,81 @@ end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""
   describe ("Extendable") {
     it ("pares operator_with") {
       parse("""operator_with(mod, origin)
-  { x -> y } where { x: origin, y: mod } => { y = x }
+  { x -> y } where { x: origin, y: origin } => { y = x }
 end""") { v => assert(v == Operators(List(
-    Operator(List("mod", "origin"),
-      Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
-      Assign(LVar("y"), LVar("x"), EQ())))))
+  Operator(Set("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
+    Assign(LVar("y"), LVar("x"), EQ())))))
+      }
+    }
+
+    describe ("when ellipsis where cond") {
+      it ("pares operator_with") {
+        assertParseResult(Operators(List(Operator(Set("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
+          """operator_with(origin)
+  { % }  => { 100 }
+end"""
+        }
+
       }
     }
 
     describe ("when mutiple defition in operator_with") {
       it ("parses") {
         parse("""operator_with(mod, origin)
-  { x -> y } where { x: origin, y: mod } => { y = x }
-  { x <- y } where { x: origin, y: mod } => { x = y }
+  { x -> y } where { x: origin, y: origin } => { y = x }
+  { x <- y } where { x: origin, y: origin } => { x = y }
 end
 """) { v => assert(v == Operators(List(
-  Operator(List("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "->", "y")),
+  Operator(Set("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
     Assign(LVar("y"), LVar("x"), EQ())),
-  Operator(List("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("mod")), List("x", "<-", "y")),
+  Operator(Set("mod", "origin"),
+    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
     Assign(LVar("x"), LVar("y"), EQ())))))
+        }
+      }
+    }
+
+    describe ("when tag has condition") {
+      it ("pares and, or, !") {
+        assertResult(Operators(List(
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
+        ))) {
+          val parser = new Parser()
+          parser.parse("""operator_with(mod, origin)
+  { x <- 1 } where { x: origin } => { x = 1 }
+end
+
+operator_with(origin)
+  { x <- 1 } where { x: origin || mod } => { x = 1 }
+  { x <- y } where { x: origin || (origin && mod), y: origin && mod } => { x = y }
+end""" + "\n") match {
+            case Right(Stmnts(x)) => x(1)
+            case Left(s) => throw new Exception(s)
+          }
         }
       }
     }
   }
 
+  def assertParseResult(expect: Expr, cule: String = "")(body: String) = {
+    val parser = new Parser()
+    assertResult(Stmnts(List(expect))) {
+      parser.parse(body + "\n") match {
+        case Right(x) => x
+        case Left(s) => throw new ParsingError(s)
+      }
+    }
+  }
+
+  protected class ParsingError(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
+
+  def parse2(in: String): Expr = (new Parser).parse(in + "\n") match {
+    case Right(Stmnts(x)) => x.last
+    case Left(s) => LVar(s)
+  }
 
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()
