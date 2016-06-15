@@ -55,18 +55,23 @@ class ExtendableParser extends RubyParser with OperatorToken {
   protected def findParser(cond: Expr): Option[PackratParser[Expr]] = cond match {
     case Binary(OR(), l, r) => for (e1 <- findParser(l); e2 <- findParser(r)) yield { e1 | e2 }
     case e@Binary(AND(), _, _) => collectTags(e) match {
-      case List(DEFAULT_TAG) => Some(stmnt)
-      case x => pmap.getWithAllMatch(x)
+      case (t, nt) if t == Set(DEFAULT_TAG) && nt == Set() => Some(stmnt)
+      case (t, nt) => pmap.getWithAllMatch(t, nt)
     }
+    case Unary(EXT(), LVar(e)) => pmap.getNot(e)
     case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else pmap.get(key)
     case x => println(x); throw new Exception // TODO FIX
   }
 
-  protected def collectTags(e: Expr): Set[String] = e match {
-    case Binary(AND(), e1, e2)=> collectTags(e1) ++ collectTags(e2)
-    case LVar(e) => Set(e)
-    case _ => throw new Exception()
+  protected def collectTags(e: Expr): (Set[String], Set[String]) = e match {
+    case Binary(AND(), e1, e2)=> (collectTags(e1), collectTags(e2)) match {
+      case ((l, r), (l2, r2)) => (l ++ l2, r ++ r2)
+    }
+    case Unary(EXT(), LVar(e)) => (Set(), Set(e))
+    case LVar(e) => (Set(e), Set())
+    case _ => (Set(), Set())
   }
+
 
   protected def buildParser(op: Operator): PackratParser[Expr] = {
     val parsers = op.syntax.body.map { term =>
@@ -91,6 +96,8 @@ class ExtendableParser extends RubyParser with OperatorToken {
     def getNot(k: T) = searchBy(!_.contains(k))
 
     def getWithAllMatch(k: Set[T]) = searchBy(k.subsetOf(_))
+
+    def getWithAllMatch(k: Set[T], exceptKey: Set[T]) = searchBy { key => k.subsetOf(key) && exceptKey.forall { !key.contains(_) } }
 
     def put(key: Set[T], value: PackratParser[S]) = m.get(key) match {
       case None => m.put(key, value)

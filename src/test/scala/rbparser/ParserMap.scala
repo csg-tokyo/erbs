@@ -75,7 +75,6 @@ class ParserMapTest extends FunSpec {
     }
   }
 
-
   describe("#getWithAllMatch") {
     val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
@@ -97,6 +96,31 @@ class ParserMapTest extends FunSpec {
       withClue("does not returns if can't parse") {
         intercept[java.lang.RuntimeException] {
           assertParseResult("&") { sub | div } { m.getWithAllMatch(Set("origin", "sub")) }
+        }
+      }
+    }
+  }
+
+  describe("#getWithAllMatch with execept key") {
+    val m = ParserMap.empty[String, Char]
+    m.put(Set("origin", "sub"), sub)
+    m.put(Set("origin", "sub", "mul"), div)
+    m.put(Set("origin", "add", "mul"), add)
+    m.put(Set("origin", "add"), mul)
+
+    it ("returns specifed value") {
+      assertResult(Some(sub)) { m.getWithAllMatch(Set("origin", "sub"), Set("mul")) }
+      assertResult(Some(mul)) { m.getWithAllMatch(Set("origin", "add"), Set("mul")) }
+      assertResult(None) { m.getWithAllMatch(Set("origin", "add"), Set("mul", "add")) }
+    }
+
+    it ("returns mutiple Parsers") {
+      assertParseResult("-") { sub | mul } { m.getWithAllMatch(Set("origin"), Set("mul")) }
+      assertParseResult("*") { sub | mul } { m.getWithAllMatch(Set("origin"), Set("mul")) }
+
+      withClue("does not returns if can't parse") {
+        intercept[java.lang.RuntimeException] {
+          assertParseResult("/") { sub | mul } { m.getWithAllMatch(Set("origin"), Set("mul")) }
         }
       }
     }
