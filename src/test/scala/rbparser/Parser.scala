@@ -423,7 +423,7 @@ end
     }
 
     describe ("when tag has condition") {
-      it ("pares and, or, !") {
+      it ("parses and, or") {
         assertResult(Operators(List(
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
@@ -440,6 +440,26 @@ end""" + "\n") match {
             case Right(Stmnts(x)) => x(1)
             case Left(s) => throw new Exception(s)
           }
+        }
+      }
+
+      it ("parses Not(!)") {
+        assertResult(Cmd(None, "resources", Some(ActualArgs(List(StringLit("aws")))), None)) {
+          parse2("""
+operator_with(resource_name)
+  { aws } => { "aws" }
+end
+
+operator_with(name)
+  { foo  } => { "foo" }
+end
+
+operator_with(origin)
+  { resources name  } where { name: !name && !origin } => { resources name }
+end
+
+resources aws
+""")
         }
       }
     }
