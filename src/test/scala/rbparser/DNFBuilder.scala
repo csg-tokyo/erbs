@@ -40,8 +40,6 @@ class DNFBuilderTest extends FunSpec {
   }
 
   describe("Not Predicate") {
-    // Binary(AND(),LVar(a),LVar(b))
-
     it ("returns DNF") {
       assetWithBuild(LVar("a"), "!(!a)") { Unary(EXT(), Unary(EXT(), LVar("a"))) }
       assetWithBuild(Binary(AND(), Unary(EXT(), LVar("a")), Unary(EXT(), LVar("b"))), "!(b || c)") {
@@ -56,8 +54,13 @@ class DNFBuilderTest extends FunSpec {
       assetWithBuild(Binary(OR(), Unary(EXT(), LVar("a")), Binary(AND(), Unary(EXT(), LVar("b")), Unary(EXT(), LVar("c")))), "!(a && (b || c))") {
         Unary(EXT(), Binary(AND(), LVar("a"), Binary(OR(), LVar("b"), LVar("c"))))
       }
-
-      // TODO adding more test case
+      assetWithBuild(Binary(OR(), Binary(AND(), Unary(EXT(),LVar("a")), Unary(EXT(), LVar("b"))), Binary(AND(), Unary(EXT(), LVar("a")), Unary(EXT(),LVar("c")))), "!(a || (b && c))") {
+        Unary(EXT(), Binary(OR(), LVar("a"), Binary(AND(), LVar("b"), LVar("c"))))
+      }
+      assetWithBuild(Binary(OR(), Binary(OR(), Binary(AND(), Unary(EXT(), LVar("a")), Binary(AND(), Unary(EXT(),LVar("b")), Unary(EXT(),LVar("d")))), Binary(AND(), Unary(EXT(), LVar("a")), Binary(AND(), Unary(EXT(), LVar("b")), Unary(EXT(), LVar("e"))))),Binary(OR(), Binary(AND(), Unary(EXT(), LVar("a")), Binary(AND(), Unary(EXT(), LVar("c")), Unary(EXT(), LVar("d")))), Binary(AND(), Unary(EXT(), LVar("a")), Binary(AND(), Unary(EXT(), LVar("c")), Unary(EXT(), LVar("e")))))),
+        "!(a || (b && c) || (d && e))") {
+        Unary(EXT(), Binary(OR(), LVar("a"), Binary(OR(), Binary(AND(), LVar("b"), LVar("c")), Binary(AND(), LVar("d"), LVar("e")))))
+      }
     }
   }
 }
