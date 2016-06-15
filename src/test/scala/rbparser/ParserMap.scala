@@ -1,7 +1,6 @@
 package rbparser
 
 import org.scalatest._
-import Matchers._
 
 import scala.util.parsing.combinator.{PackratParsers, RegexParsers}
 import scala.util.parsing.input.CharSequenceReader
@@ -19,7 +18,6 @@ class ParserMapTest extends FunSpec {
     lazy val sub: PackratParser[Elem] = elem('-')
     lazy val mul: PackratParser[Elem] = elem('*')
     lazy val div: PackratParser[Elem] = elem('/')
-
   }
 
   import MyParsers._
@@ -37,13 +35,23 @@ class ParserMapTest extends FunSpec {
     m.put(Set("mul"), mul)
 
     it ("returns specifed value") {
-      m.get("add") shouldBe Some(add)
-      m.get("mul") shouldBe Some(mul)
-      m.get("foo") shouldBe None
+      assertResult(Some(add)) { m.get("add") }
+      assertResult(Some(mul)) { m.get("mul") }
+      assertResult(None)      { m.get("foo") }
     }
 
-    def assertParseResult(tag: String, in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.get(tag).map { parseAll(_, in).get }) {
-      Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get }
+    it ("returns mutiple Parsers") {
+      assertParseResult("+") { add | sub } { m.get("origin") }
+      assertParseResult("-") { add | sub } { m.get("origin") }
+
+      withClue("does not returns if can't parse") {
+        intercept[java.lang.RuntimeException] {
+          assertParseResult("&") { add | sub } { m.get("origin") }
+        }
+      }
+    }
+  }
+
   describe("#getNot") {
     val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
@@ -67,6 +75,7 @@ class ParserMapTest extends FunSpec {
     }
   }
 
+
   describe("#getWithAllMatch") {
     val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
@@ -78,20 +87,16 @@ class ParserMapTest extends FunSpec {
     it ("returns specifed value") {
       assertResult(Some(add)) { m.getWithAllMatch(Set("add", "origin")) }
       assertResult(Some(div)) { m.getWithAllMatch(Set("div")) }
-      assertResult(None) { m.getWithAllMatch(Set("mul", "foo")) }
-    }
-
-    def assertParseResult(tag: Set[String], in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.getWithAllMatch(tag).map { parseAll(_, in).get }) {
-      Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get }
+      assertResult(None)      { m.getWithAllMatch(Set("mul", "foo")) }
     }
 
     it ("returns mutiple Parsers") {
-      assertParseResult(Set("origin", "sub"), "-", sub | div)
-      assertParseResult(Set("origin", "sub"), "/", sub | div)
+      assertParseResult("-") { sub | div } { m.getWithAllMatch(Set("origin", "sub")) }
+      assertParseResult("/") { sub | div } { m.getWithAllMatch(Set("origin", "sub")) }
 
       withClue("does not returns if can't parse") {
         intercept[java.lang.RuntimeException] {
-          assertParseResult(Set("origin", "sub"), "&", sub | div)
+          assertParseResult("&") { sub | div } { m.getWithAllMatch(Set("origin", "sub")) }
         }
       }
     }
