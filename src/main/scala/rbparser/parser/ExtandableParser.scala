@@ -88,6 +88,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
   class ParserMap[T, S] (m: MMap[Set[T], PackratParser[S]] = MMap.empty[Set[T], PackratParser[S]]) {
     def get(k: T) = searchBy(_.contains(k))
 
+    def getNot(k: T) = searchBy(!_.contains(k))
 
     def getWithAllMatch(k: Set[T]) = searchBy(k.subsetOf(_))
 

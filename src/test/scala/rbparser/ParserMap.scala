@@ -27,6 +27,9 @@ class ParserMapTest extends FunSpec {
   // cast implicitly for testing
   implicit def toAcceptableParser(p: MyParsers.PackratParser[Char]): A.PackratParser[Char] = p.asInstanceOf[A.PackratParser[Char]]
 
+  def assertParseResult(in: String)(p: MyParsers.PackratParser[Char])(parser: Option[A.PackratParser[Char]]) =
+    assertResult(parser.map { parseAll(_, in).get }) { Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get } }
+
   describe("#get") {
     val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
@@ -41,15 +44,24 @@ class ParserMapTest extends FunSpec {
 
     def assertParseResult(tag: String, in: String, p: MyParsers.PackratParser[Char]) = assertResult(m.get(tag).map { parseAll(_, in).get }) {
       Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get }
+  describe("#getNot") {
+    val m = ParserMap.empty[String, Char]
+    m.put(Set("origin", "add"), add)
+    m.put(Set("origin", "sub"), sub)
+    m.put(Set("mul", "sub"), mul)
+
+    it ("returns specifed value") {
+      assertResult(Some(mul)) { m.getNot("origin") }
+      assertResult(Some(add)) { m.getNot("sub") }
     }
 
     it ("returns mutiple Parsers") {
-      assertParseResult("origin", "+", add | sub)
-      assertParseResult("origin", "-", add | sub)
+      assertParseResult("-") { sub | mul } { m.getNot("add") }
+      assertParseResult("*") { sub | mul } { m.getNot("add") }
 
       withClue("does not returns if can't parse") {
         intercept[java.lang.RuntimeException] {
-          assertParseResult("origin", "&", add | sub)
+          assertParseResult("+") { sub | mul } { m.getNot("add") }
         }
       }
     }
