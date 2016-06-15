@@ -457,6 +457,11 @@ end""" + "\n") match {
 
   protected class ParsingError(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
 
+  def parse2(in: String): Expr = (new Parser).parse(in + "\n") match {
+    case Right(Stmnts(x)) => x.last
+    case Left(s) => LVar(s)
+  }
+
   def parse(x: String)(fn: Expr => Unit): Unit = {
     val parser = new Parser()
     parser.parse(x + "\n") match {
