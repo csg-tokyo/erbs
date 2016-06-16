@@ -3,7 +3,6 @@ package rbparser
 import org.scalatest._
 
 class ParserTest extends FunSpec {
-
   /*  I will implement someday, So now it does not work following exmaples.
    *
    * parse("a = a = 1 + 2") { v => assert(v == Assign(LVar("a"), Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2))))) }
@@ -15,82 +14,164 @@ class ParserTest extends FunSpec {
 
   describe ("Literal") {
     it ("parses Int Literal") {
-      parse("1") { v => assert(v == IntLit(1)) }
-      parse("100") { v => assert(v == IntLit(100)) }
+      assertResult(IntLit(1)) {
+        parse("1")
+      }
+      assertResult(IntLit(100)) {
+        parse("100")
+      }
     }
 
     it ("parses Double Literal") {
-      parse("3.14") { v => assert(v == DoubleLit(3.14)) }
-      parse("0.34") { v => assert(v == DoubleLit(0.34)) }
+      assertResult(DoubleLit(3.14)) {
+        parse("3.14")
+      }
+      assertResult(DoubleLit(0.34)) {
+        parse("0.34")
+      }
     }
 
     it ("parses Id Literal") {
-      parse("x") { v => assert(v == LVar("x")) }
-      parse("x2") { v => assert(v == LVar("x2")) }
-      parse("ends") { v => assert(v == LVar("ends")) }
-      parse("_end") { v => assert(v == LVar("_end")) }
-      parse("end_") { v => assert(v == LVar("end_")) }
+      assertResult(LVar("x")) {
+        parse("x")
+      }
+      assertResult(LVar("x2")) {
+        parse("x2")
+      }
+      assertResult(LVar("ends")) {
+        parse("ends")
+      }
+      assertResult(LVar("_end")) {
+        parse("_end")
+      }
+      assertResult(LVar("end_")) {
+        parse("end_")
+      }
     }
 
     it ("parses String Literal") {
-      parse(""""asdf"""") { v =>  assert(v == StringLit("\"asdf\"")) }
-      parse(""""asdf\n"""") { v =>  assert(v == StringLit("\"asdf\\n\"")) }
-      parse(""""as\ndf\n"""") { v =>  assert(v == StringLit("\"as\\ndf\\n\"")) }
-      parse(""""as\"df"""") { v =>  assert(v == StringLit("\"as\\\"df\"")) }
-      parse("""1 * "asdf" + "asdf2" * 2""") { v =>  assert(v == Binary(PLUS(),Binary(AST(),IntLit(1),StringLit("\"asdf\"")),Binary(AST(),StringLit("\"asdf2\""),IntLit(2))) ) }
+      assertResult(StringLit("\"asdf\"")) {
+        parse(""""asdf"""")
+      }
+      assertResult(StringLit("\"asdf\\n\"")) {
+        parse(""""asdf\n"""")
+      }
+      assertResult(StringLit("\"as\\\"df\"")) {
+        parse(""""as\"df"""")
+      }
+      assertResult(StringLit("\"as\\ndf\\n\"")) {
+        parse(""""as\ndf\n"""")
+      }
+      assertResult(Binary(PLUS(),Binary(AST(),IntLit(1),StringLit("\"asdf\"")),Binary(AST(),StringLit("\"asdf2\""),IntLit(2)))) {
+        parse("""1 * "asdf" + "asdf2" * 2""")
+      }
     }
 
     it ("parses String Literal with single quoate") {
-      parse("""'asdf'""") { v =>  assert(v == StringLit("'asdf'")) }
-      parse("""'as\ndf\n'""") { v =>  assert(v == StringLit("'as\\ndf\\n'")) }
-      parse("""'as"df'""") { v =>  assert(v == StringLit("'as\"df'")) }
-      parse("""'as\'df'""") { v =>  assert(v == StringLit("'as\\'df'")) }
+      assertResult(StringLit("'asdf'")) {
+        parse("'asdf'")
+      }
+      assertResult(StringLit("'as\\ndf\\n'")) {
+        parse("""'as\ndf\n'""")
+      }
+      assertResult(StringLit("'as\"df'")) {
+        parse("""'as"df'""")
+      }
+      assertResult(StringLit("'as\\'df'")) {
+        parse("""'as\'df'""")
+      }
     }
 
     it ("parses BoolLit wrapped value") {
-      parse("true") { v => assert(v == BoolLit(true)) }
+      assertResult(BoolLit(true)) {
+        parse("true")
+      }
+      assertResult(BoolLit(false)) {
+        parse("false")
+      }
     }
 
     it ("parses Const wrapped value") {
-      parse("ASDF") { v =>  assert(v == ConstLit("ASDF")) }
-      parse("ASDF2") { v => assert(v == ConstLit("ASDF2")) }
-      parse("Aasd") { v => assert(v == ConstLit("Aasd")) }
+      assertResult(ConstLit("ASDF")) {
+        parse("ASDF")
+      }
+      assertResult(ConstLit("ASDF2")) {
+        parse("ASDF2")
+      }
+      assertResult(ConstLit("Sample")) {
+        parse("Sample")
+      }
     }
 
     it ("parses symbol wrapped value") {
-      parse(":a") { v =>  assert(v == SymbolLit("a")) }
-      parse(":a1") { v =>  assert(v == SymbolLit("a1")) }
-      parse(":_a1") { v =>  assert(v == SymbolLit("_a1")) }
-      parse(":__a1") { v =>  assert(v == SymbolLit("__a1")) }
-      parse(":A") { v =>  assert(v == SymbolLit("A")) }
+      assertResult(SymbolLit("a"))    {
+        parse(":a")
+      }
+      assertResult(SymbolLit("_a1"))  {
+        parse(":_a1")
+      }
+      assertResult(SymbolLit("__a1")) {
+        parse(":__a1")
+      }
+      assertResult(SymbolLit("A")) {
+        parse(":A")
+      }
+      assertResult(SymbolLit("__A")) {
+        parse(":__A")
+      }
     }
 
     it ("parses instance variable wrapped value") {
-      parse("@a") { v =>  assert(v == IVar("a")) }
-      parse("@a1") { v =>  assert(v == IVar("a1")) }
-      parse("@_a") { v => assert(v == IVar("_a")) }
-      parse("@_a1") { v => assert(v == IVar("_a1")) }
-      parse("@__a1") { v => assert(v == IVar("__a1")) }
-      parse("@A") { v => assert(v == IVar("A")) }
+      assertResult(IVar("a")) {
+        parse("@a")
+      }
+      assertResult(IVar("a1")) {
+        parse("@a1")
+      }
+      assertResult(IVar("_a")) {
+        parse("@_a")
+      }
+      assertResult(IVar("_a1")) {
+        parse("@_a1")
+      }
+      assertResult(IVar("__a1")) {
+        parse("@__a1")
+      }
+      assertResult(IVar("A")) {
+        parse("@A")
+      }
     }
 
     it ("parses array value") {
-      parse("[]") { v =>  assert(v == Ary(Nil)) }
-      parse("[1]") { v =>  assert(v == Ary(List(IntLit(1)))) }
-      parse("""["asf",3]""") { v => assert(v == Ary(List(StringLit(""""asf""""), IntLit(3)))) }
+      assertResult(Ary(Nil)) {
+        parse("[]")
+      }
+      assertResult(Ary(List(IntLit(1)))) {
+        parse("[1]")
+      }
+      assertResult(Ary(List(StringLit(""""a""""), IntLit(3)))) {
+        parse("[\"a\", 3]")
+      }
     }
 
     it ("parses hash") {
-      parse("{}") { v =>  assert(v == Hash(Map.empty)) }
-      parse("{ :key => 1 }") { v =>  assert(v == Hash(Map(SymbolLit("key") -> IntLit(1)))) }
-      parse("""{ "key1" => 1, :key2 => 2 }""") {
-        v => assert(v == Hash(Map(StringLit("\"key1\"") -> IntLit(1), SymbolLit("key2") -> IntLit(2))))
+      assertResult(Hash(Map.empty)) {
+        parse("{}")
       }
-
-      parse("{ key: 1 }") { v =>  assert(v == Hash(Map(SymbolLit("key") -> IntLit(1)))) }
-      parse("""{ "key": 1 }""") { v =>  assert(v == Hash(Map(StringLit("\"key\"") -> IntLit(1)))) }
-      parse("""{ key1: "value1", key2: "value2" }""") { v =>
-        assert(v == Hash(Map(SymbolLit("key1") -> StringLit("\"value1\""), SymbolLit("key2") -> StringLit("\"value2\""))))
+      assertResult(Hash(Map(SymbolLit("key") -> IntLit(1)))) {
+        parse("{ :key => 1 }")
+      }
+      assertResult(Hash(Map(SymbolLit("key") -> IntLit(1)))) {
+        parse("{ key: 1 }")
+      }
+      assertResult(Hash(Map(StringLit("\"key\"") -> IntLit(1)))) {
+        parse("""{ "key": 1 }""")
+      }
+      assertResult(Hash(Map(StringLit("\"key1\"") -> IntLit(1), SymbolLit("key2") -> IntLit(2)))) {
+        parse("""{ "key1" => 1, :key2 => 2 }""")
+      }
+      assertResult(Hash(Map(SymbolLit("key1") -> StringLit("\"value1\""), SymbolLit("key2") -> StringLit("\"value2\"")))) {
+        parse("""{ key1: "value1", key2: "value2" }""")
       }
     }
   }
@@ -98,326 +179,482 @@ class ParserTest extends FunSpec {
   describe("stmnt") {
     describe("Assigns") {
       it ("parses simple assigns") {
-        parse("a = 1 + 2") { v => assert(v == Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) }
-        parse("@a = 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) }
-        parse("@a = :keyword") { v => assert(v == Assign(IVar("a"),SymbolLit("keyword"), EQ())) }
+        assertResult(Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) {
+          parse("a = 1 + 2")
+        }
+        assertResult(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ())) {
+          parse("@a = 1 + 2")
+        }
+        assertResult(Assign(IVar("a"),SymbolLit("keyword"), EQ())) {
+          parse("@a = :keyword")
+        }
       }
 
       it ("parses assings stmnt") {
-        parse("a = @a.call") { v => assert(v == Assign(LVar("a"), Cmd(Some(IVar("a")), "call", None, None), EQ())) }
-        parse("""@a.size = 10""") { v => assert(v == Assign(Cmd(Some(IVar("a")) ,"size", None, None), IntLit(10), EQ())) }
-        parse("""@a[i] = "asdf"""") { v => assert(v == Assign(ARef(IVar("a"), LVar("i")), StringLit(""""asdf""""), EQ())) }
-        parse("@a ||= 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) }
-        parse("@a += 1 + 2") { v => assert(v == Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ADDE())) }
+        assertResult(Assign(LVar("a"), Cmd(Some(IVar("a")), "call", None, None), EQ())) {
+          parse("a = @a.call")
+        }
+        assertResult(Assign(Cmd(Some(IVar("a")) ,"size", None, None), IntLit(10), EQ())) {
+          parse("@a.size = 10")
+        }
+        assertResult(Assign(ARef(IVar("a"), LVar("i")), StringLit(""""asdf""""), EQ())) {
+          parse("""@a[i] = "asdf"""")
+        }
+        assertResult(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE())) {
+          parse("@a ||= 1 + 2")
+        }
+        assertResult(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ADDE())) {
+          parse("@a += 1 + 2")
+        }
       }
     }
 
     it ("parses post modifier") {
-      parse("10 if true") { v => assert(v == IfModExpr(BoolLit(true), IntLit(10))) }
-      parse("return 10 if true") { v => assert(v == IfModExpr(BoolLit(true), Return(List(IntLit(10))))) }
-      parse("a[i] unless a.hash?") { v => assert(v == UnlessModExpr(Cmd(Some(LVar("a")), "hash?", None, None), ARef(LVar("a"), LVar("i")))) }
+      assertResult(IfModExpr(BoolLit(true), IntLit(10))) {
+        parse("10 if true")
+      }
+      assertResult(IfModExpr(BoolLit(true), Return(List(IntLit(10))))) {
+        parse("return 10 if true")
+      }
+      assertResult(UnlessModExpr(Cmd(Some(LVar("a")), "hash?", None, None), ARef(LVar("a"), LVar("i")))) {
+        parse("a[i] unless a.hash?")
+      }
     }
   }
 
-  describe("expr") {
+  describe ("Expr") {
     it ("parses return stmnt") {
-      parse("return") { v =>  assert(v == Return(Nil)) }
-      parse("return a") { v =>  assert(v == Return(List(LVar("a")))) }
-      parse("return a, 10") { v =>  assert(v == Return(List(LVar("a"), IntLit(10)))) }
-    }
-
-    it("parses command call") {
-      parse("A.new") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, None)) }
-      parse("@a.call") { v => assert(v == Cmd(Some(IVar("a")), "call", None, None)) }
-      parse("@a.call 10, 20") { v => assert(v == Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) }
-      parse("call 10") { v => assert(v == Cmd(None, "call", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("call 10 + 1") { v => assert(v == Cmd(None, "call", Some(ActualArgs(List(Binary(PLUS(), IntLit(10), IntLit(1))))), None)) }
-      parse("attr_reader :a, :b") { v => assert(v == Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) }
-    }
-
-    it("parses method call with { ~ } block") {
-      parse("""call(10) { |x| x + 1 }""") { v =>
-        assert(v == Call(
-          None,
-          "call",
-          Some(ActualArgs(List(IntLit(10)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(), LVar("x"),IntLit(1))))))))
+      assertResult(Return(Nil)) {
+        parse("return")
       }
+      assertResult(Return(List(LVar("a")))) {
+        parse("return a")
+      }
+      assertResult(Return(List(LVar("a"), IntLit(10)))) {
+        parse("return a, 10")
+      }
+    }
 
-      parse("""a.call(10,11) { |x| x + 1 }""") { v =>
-        assert(v == Call(
-          Some(LVar("a")),
-          "call",
-          Some(ActualArgs(List(IntLit(10), IntLit(11)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+    it ("parses command call") {
+      assertResult(Cmd(Some(ConstLit("A")), "new", None, None)) {
+        parse("A.new")
+      }
+      assertResult(Cmd(Some(IVar("a")), "call", None, None)) {
+        parse("@a.call")
+      }
+      assertResult(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) {
+        parse("@a.call 10, 20")
+      }
+      assertResult(Cmd(None, "call", Some(ActualArgs(List(IntLit(10)))), None)) {
+        parse("call 10")
+      }
+      assertResult(Cmd(None, "call", Some(ActualArgs(List(Binary(PLUS(), IntLit(10), IntLit(1))))), None)) {
+        parse("call 10 + 1")
+      }
+      assertResult(Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) {
+        parse("attr_reader :a, :b")
+      }
+    }
+
+    it ("parses method call with { ~ } block") {
+      assertResult(Call(None, "call",
+        Some(ActualArgs(List(IntLit(10)))),
+        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(), LVar("x"),IntLit(1)))))))) {
+        parse("""call(10) { |x| x + 1 }""")
+      }
+      assertResult(Call(Some(LVar("a")), "call",
+        Some(ActualArgs(List(IntLit(10), IntLit(11)))),
+        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) {
+        parse("""a.call(10,11) { |x| x + 1 }""")
       }
     }
 
     it("parses method call with do ~ end block") {
-      parse("""call(10, :symbol) do |x|
-x + 1
-end""") { v =>
-        assert(v == Call(
-          None,
-          "call",
-          Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
-        ))
+      assertResult(Call(None, "call",
+        Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
+        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1)))))))) {
+        parse("""
+call(10, :symbol) do |x|
+  x + 1
+end
+""")
       }
-
-      parse("""a.call(10) do |x|
-x + 1
-end""") { v =>
-        assert(v == Call(
-          Some(LVar("a")),
-          "call",
-          Some(ActualArgs(List(IntLit(10)))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
-        ))
+      assertResult(Call(Some(LVar("a")), "call",
+        Some(ActualArgs(List(IntLit(10)))),
+        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+      )) {
+        parse("""
+a.call(10) do |x|
+  x + 1
+end
+""")
       }
     }
 
-    it("parses command call with { ~ } block") {
-      parse("""call { |x| x + 1 }""") { v =>
-        assert(v == Cmd(
-          None,
-          "call",
-          None,
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+    it ("parses command call with { ~ } block") {
+      assertResult(Cmd(None, "call", None,
+        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) {
+        parse("""call { |x| x + 1 }""")
       }
-
-      parse("""call :aaa { |x| x + 1 }""") { v =>
-        assert(v == Cmd(
-          None,
-          "call",
-          Some(ActualArgs(List(SymbolLit("aaa")))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+      assertResult(Cmd(None, "call",
+        Some(ActualArgs(List(SymbolLit("aaa")))),
+        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) {
+        parse("""call :aaa { |x| x + 1 }""")
       }
     }
 
-    it("parses command call with do ~ end block") {
-      parse("""call do |x|
-x + 1
-end""") { v =>
-        assert(v == Cmd(
-          None,
-          "call",
-          None,
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+    it ("parses command call with do ~ end block") {
+      assertResult(Cmd(None, "call", None,
+        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1)))))))) {
+        parse("""
+call do |x|
+  x + 1
+end
+""")
       }
-
-      parse("""call :visual do |x|
-x + 1
-end""") { v =>
-        assert(v == Cmd(
-          None,
-          "call",
-          Some(ActualArgs(List(SymbolLit("visual")))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(), LVar("x"), IntLit(1))))))))
+      assertResult(Cmd(None, "call",
+        Some(ActualArgs(List(SymbolLit("visual")))),
+        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(), LVar("x"), IntLit(1)))))))) {
+        parse("""
+call :visual do |x|
+    x + 1
+    end
+""")
       }
-
-      parse("""[1,2].each do |x|
-a + 1
-end""") { v =>
-        assert(v == Cmd(
-          Some(Ary(List(IntLit(1), IntLit(2)))),
-          "each",
-          None,
-          Some(
-            DoBlock(Some(ActualArgs(List(LVar("x")))),
-              Stmnts(List(Binary(PLUS(), LVar("a"), IntLit(1))))))
-        ))
+      assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
+        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(), LVar("a"), IntLit(1))))))
+      )) { parse("""
+[1,2].each do |x|
+  a + 1
+end
+""")
       }
-
-      parse("""A.new do
-a + 1
-end""") { v => assert(v == Cmd(Some(ConstLit("A")), "new", None, Some(
-  DoBlock(None,Stmnts(List(Binary(PLUS(), LVar("a"),IntLit(1)))))))) }
+      assertResult(Cmd(Some(ConstLit("A")), "new", None,
+        Some(DoBlock(None,Stmnts(List(Binary(PLUS(), LVar("a"),IntLit(1)))))))) {
+        parse("""
+A.new do
+ a + 1
+end
+""")
+      }
     }
   }
 
-  describe("primary") {
+  describe ("primary") {
     it("parses exclamation prefix") {
-      parse("!@a") { v =>  assert(v == Unary(EXT(), IVar("a"))) }
-      parse("!true") { v =>  assert(v == Unary(EXT(), BoolLit(true))) }
-      parse("!a") { v =>  assert(v == Unary(EXT(), LVar("a"))) }
-      parse("!A") { v =>  assert(v == Unary(EXT(), ConstLit("A"))) }
-      parse("!a.call") { v =>  assert(v == Unary(EXT(), Cmd(Some(LVar("a")), "call", None, None))) }
-      parse("!(true && false)") { v =>  assert(v == Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false)))) }
-      parse("!true && false") { v =>  assert(v == Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false))) }
-      parse("!!a") { v =>  assert(v == Unary(EXT(), Unary(EXT(), LVar("a")))) }
+      assertResult(Unary(EXT(), IVar("a"))) {
+        parse("!@a")
+      }
+      assertResult(Unary(EXT(), BoolLit(true))) {
+        parse("!true")
+      }
+      assertResult(Unary(EXT(), LVar("a"))) {
+        parse("!a")
+      }
+      assertResult(Unary(EXT(), ConstLit("A"))) {
+        parse("!A")
+      }
+      assertResult(Unary(EXT(), Cmd(Some(LVar("a")), "call", None, None))) {
+        parse("!a.call")
+      }
+      assertResult(Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false)))) {
+        parse("!(true && false)")
+      }
+      assertResult(Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false))) {
+        parse("!true && false")
+      }
+      assertResult(Unary(EXT(), Unary(EXT(), LVar("a")))) {
+        parse("!!a")
+      }
     }
 
-    it("parese minus prefix") {
-      parse("-a") { v =>  assert(v == Unary(MINUS(), LVar("a"))) }
-      parse("-A") { v =>  assert(v == Unary(MINUS(), ConstLit("A"))) }
-      parse("-10") { v =>  assert(v == Unary(MINUS(), IntLit(10))) }
-      parse("-10.0") { v =>  assert(v == Unary(MINUS(), DoubleLit(10.0))) }
-      parse("-(1+2)") { v =>  assert(v == Unary(MINUS(), Binary(PLUS(), IntLit(1), IntLit(2)))) }
+    it ("parese minus prefix") {
+      assertResult(Unary(MINUS(), LVar("a"))) {
+        parse("-a")
+      }
+      assertResult(Unary(MINUS(), ConstLit("A"))) {
+        parse("-A")
+      }
+      assertResult(Unary(MINUS(), IntLit(10))) {
+        parse("-10")
+      }
+      assertResult(Unary(MINUS(), DoubleLit(10.0))){
+        parse("-10.0")
+      }
+      assertResult(Unary(MINUS(), Binary(PLUS(), IntLit(1), IntLit(2)))) {
+        parse("-(1+2)")
+      }
     }
 
-    it("parses array ref") {
-      parse("a[10]") { v =>  assert(v == ARef(LVar("a"), IntLit(10))) }
-      parse("@abc[10]") { v =>  assert(v == ARef(IVar("abc"), IntLit(10))) }
-      parse("@abc[i]") { v =>  assert(v == ARef(IVar("abc"), LVar("i"))) }
-      parse("[1,2].each") { v =>  assert(v == Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None, None)) }
+    it ("parses array ref") {
+      assertResult(ARef(LVar("a"), IntLit(10))) {
+        parse("a[10]")
+      }
+      assertResult(ARef(IVar("abc"), IntLit(10))) {
+        parse("@abc[10]")
+      }
+      assertResult(ARef(IVar("abc"), LVar("i"))) {
+        parse("@abc[i]")
+      }
+      assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None, None)) {
+        parse("[1,2].each")
+      }
     }
 
-    it("parses method call") {
-      parse("call(a)") { v => assert(v == Call(None, "call", Some(ActualArgs(List(LVar("a")))), None)) }
-      parse("call(a) + 1") { v => assert(v ==  Binary(PLUS(), Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) }
-      parse("b.call(a)") { v => assert(v == Call(Some(LVar("b")), "call", Some(ActualArgs(List(LVar("a")))), None)) }
-      parse("a1._call(10)") { v => assert(v == Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("a1._calL?(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("a1._calL!(10)") { v => assert(v == Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(IntLit(10)))), None)) }
-      parse("a1.call()") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List())), None)) }
-      parse("a.call() < 10") { v => assert(v == Binary(LT(), Call(Some(LVar("a")), "call", Some(ActualArgs(List())), None), IntLit(10))) }
-      parse("a1.call(10, true)") { v => assert(v == Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) }
+    it ("parses method call") {
+      assertResult(Call(None, "call", Some(ActualArgs(List(LVar("a")))), None)) {
+        parse("call(a)")
+      }
+      assertResult(Binary(PLUS(), Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) {
+        parse("call(a) + 1")
+      }
+      assertResult(Call(Some(LVar("b")), "call", Some(ActualArgs(List(LVar("a")))), None)) {
+        parse("b.call(a)")
+      }
+      assertResult(Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(IntLit(10)))), None)) {
+        parse("a1._call(10)")
+      }
+      assertResult(Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(IntLit(10)))), None)) {
+        parse("a1._calL?(10)")
+      }
+      assertResult(Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(IntLit(10)))), None)) {
+        parse("a1._calL!(10)")
+      }
+      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List())), None)) {
+        parse("a1.call()")
+      }
+      assertResult(Binary(LT(), Call(Some(LVar("a")), "call", Some(ActualArgs(List())), None), IntLit(10))) {
+        parse("a.call() < 10")
+      }
+      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) {
+        parse("a1.call(10, true)")
+      }
     }
 
     it ("parses if expression") {
-      parse("""if  true
+      assertResult(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) {
+        parse("""
+if  true
   1 + 2
-end""") { v => assert(v == IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) }
-      parse("""if a(10)
+end
+""")
+      }
+      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) {
+        parse("""
+if a(10)
   b
-end""") { v => assert(v == IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
-    parse("""unless a(10)
+end
+""")
+      }
+      assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) {
+        parse("""
+unless a(10)
   b
-end""") { v => assert(v == UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
+end
+""")
+      }
     }
 
     it ("parses class") {
-      parse("""class Sample
-end""") { v => assert(v == ClassExpr(ConstLit("Sample"), Stmnts(List()))) }
-
-      parse("""class A
+      assertResult(ClassExpr(ConstLit("Sample"), Stmnts(List()))) {
+        parse("""
+class Sample
+end
+""")
+      }
+      assertResult(ClassExpr(ConstLit("A"),
+        Stmnts(List(DefExpr("a", None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2))))))))) {
+        parse("""
+class A
   def a
     1 + 2
   end
 end
-  """) { v => assert(v == ClassExpr(ConstLit("A"), Stmnts(List(
-    DefExpr("a", None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))))
+""")
       }
     }
 
     it ("parses def") {
-      parse("""def a
-end""") { v => assert(v == DefExpr("a", None, Stmnts(List())))}
-
-      parse("""def a?
-end""") { v => assert(v == DefExpr("a?", None, Stmnts(List())))}
-
-      parse("""def ASDF?
-end""") { v => assert(v == DefExpr("ASDF?", None, Stmnts(List())))}
-
-      parse("""def _a?
-end""") { v => assert(v == DefExpr("_a?", None, Stmnts(List())))}
-
-      parse("""def a?()
-end""") { v => assert(v == DefExpr("a?", Some(FormalArgs(Nil)), Stmnts(List())))}
-
-      parse("""def a()
-end""") { v => assert(v == DefExpr("a", Some(FormalArgs(Nil)), Stmnts(List())))}
-
-      parse("""def a(opt)
-end""") { v => assert(v == DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(List())))}
-
-      parse("""def call(a, b)
-end""") { v => assert(v == DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar("b")))), Stmnts(List())))}
-
-      parse("""def call
-  "1+2"
-end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
-
-      parse("""def value=(v)
+      assertResult(DefExpr("a", None, Stmnts(List()))) {
+        parse("""
+def a
+end
+""")
+      }
+      assertResult(DefExpr("a?", None, Stmnts(List()))) {
+        parse("""
+def a?
+end
+""")
+      }
+      assertResult(DefExpr("ASDF?", None, Stmnts(List()))) {
+        parse("""
+def ASDF?
+end
+""")
+      }
+      assertResult(DefExpr("_a?", None, Stmnts(List()))) {
+        parse("""
+def _a?
+end
+""")
+      }
+      assertResult(DefExpr("a?", Some(FormalArgs(Nil)), Stmnts(List()))) {
+        parse("""
+def a?()
+end
+""")
+      }
+      assertResult(DefExpr("a", Some(FormalArgs(Nil)), Stmnts(List()))) {
+        parse("""
+def a()
+end
+""")
+      }
+      assertResult(DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(List()))) {
+        parse("""
+def a(opt)
+end
+""")
+      }
+      assertResult(DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar("b")))), Stmnts(List()))) {
+        parse("""
+def call(a, b)
+end
+""")
+      }
+      assertResult(DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) {
+        parse("""
+def call
+ "1+2"
+end
+""")
+      }
+      assertResult(DefExpr("value=", Some(FormalArgs(List(LVar("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) {
+        parse("""
+def value=(v)
   @value = v
-end""") { v => assert(v == DefExpr("value=", Some(FormalArgs(List(LVar("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ()))))) }
+end""")
+      }
     }
   }
 
-  describe("arg") {
-    it("parses Binary") {
-      parse("1 + 2") { v => assert(v == Binary(PLUS(), IntLit(1), IntLit(2))) }
-      parse("1 + -2") { v => assert(v == Binary(PLUS(), IntLit(1), Unary(MINUS(), IntLit(2)))) }
-      parse("-2 + 1") { v => assert(v == Binary(PLUS(), Unary(MINUS(), IntLit(2)), IntLit(1))) }
-      parse("1 + (2 + 2)") { v => assert(v == Binary(PLUS(), IntLit(1), Binary(PLUS(), IntLit(2), IntLit(2)))) }
-      parse("1 - 2") { v => assert(v == Binary(MINUS(), IntLit(1), IntLit(2))) }
-      parse("1 * 2") { v => assert(v == Binary(AST(), IntLit(1), IntLit(2))) }
-      parse("1 / 2") { v => assert(v == Binary(DIV(), IntLit(1), IntLit(2))) }
-      parse("i / 2") { v => assert(v == Binary(DIV(), LVar("i"), IntLit(2))) }
-      parse("@a / 2") { v => assert(v == Binary(DIV(), IVar("a"), IntLit(2))) }
-      parse("1 - 2 * 3") { v => assert(v == Binary(MINUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(3)))) }
-      parse("1 - 2 - 3") { v => assert(v == Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) }
-
-      parse("1 + 2 * 1 + 10") { v => assert(
-        v == Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10)))
+  describe ("arg") {
+    it ("parses Binary") {
+      assertResult(Binary(PLUS(), IntLit(1), IntLit(2))) {
+        parse("1 + 2")
+      }
+      assertResult(Binary(PLUS(), IntLit(1), Unary(MINUS(), IntLit(2)))) {
+        parse("1 + -2")
+      }
+      assertResult(Binary(PLUS(), Unary(MINUS(), IntLit(2)), IntLit(1))) {
+        parse("-2 + 1")
+      }
+      assertResult(Binary(PLUS(), IntLit(1), Binary(PLUS(), IntLit(2), IntLit(2)))) {
+        parse("1 + (2 + 2)")
+      }
+      assertResult(Binary(MINUS(), IntLit(1), IntLit(2))) {
+        parse("1 - 2")
+      }
+      assertResult(Binary(AST(), IntLit(1), IntLit(2))) {
+        parse("1 * 2")
+      }
+      assertResult(Binary(DIV(), IntLit(1), IntLit(2))) {
+        parse("1 / 2")
+      }
+      assertResult(Binary(DIV(), LVar("i"), IntLit(2))) {
+        parse("i / 2")
+      }
+      assertResult(Binary(DIV(), IVar("a"), IntLit(2))) {
+        parse("@a / 2")
+      }
+      assertResult(Binary(MINUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(3)))) {
+        parse("1 - 2 * 3")
+      }
+      assertResult(Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) {
+        parse("1 - 2 - 3")
+      }
+      assertResult(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10))) {
+        parse("1 + 2 * 1 + 10")
       }
     }
 
     it ("parses compare binary") {
-      parse("1 < 2") { v => assert(v == Binary(LT(), IntLit(1), IntLit(2))) }
-      parse("1 >= 2") { v => assert(v == Binary(GE(), IntLit(1), IntLit(2))) }
-      parse("1 + 2 >= 3") { v => assert(v == Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3))) }
+      assertResult(Binary(LT(), IntLit(1), IntLit(2))) {
+        parse("1 < 2")
+      }
+      assertResult(Binary(GE(), IntLit(1), IntLit(2))) {
+        parse("1 >= 2")
+      }
+      assertResult(Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3))) {
+        parse("1 + 2 >= 3")
+      }
     }
 
     it ("pares cond binary") {
-      parse("true && false") { v => assert(v == Binary(AND(), BoolLit(true), BoolLit(false))) }
-      parse("true || false && false") { v => assert(v == Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false)))) }
+      assertResult(Binary(AND(), BoolLit(true), BoolLit(false))) {
+        parse("true && false")
+      }
+      assertResult(Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false)))) {
+        parse("true || false && false")
+      }
     }
   }
 
   describe ("comment") {
     it ("ignore the code of following '#' ") {
-      parse("""def call
-  "1+2" # shoud be ingore
-end""") { v => assert(v == DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) }
+      assertResult(DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) {
+        parse("""
+def call
+ "1+2" # shoud be ingore
+end
+""")
+      }
     }
   }
 
   describe ("Extendable") {
     it ("pares operator_with") {
-      parse("""operator_with(mod, origin)
+      assertResult(Operators(
+        List(Operator(Set("mod", "origin"),
+          Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
+          Assign(LVar("y"), LVar("x"), EQ()))))) {
+        parse("""
+operator_with(mod, origin)
   { x -> y } where { x: origin, y: origin } => { y = x }
-end""") { v => assert(v == Operators(List(
-  Operator(Set("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
-    Assign(LVar("y"), LVar("x"), EQ())))))
+end
+""")
+
       }
     }
 
     describe ("when ellipsis where cond") {
       it ("pares operator_with") {
-        assertParseResult(Operators(List(Operator(Set("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
-          """operator_with(origin)
+        assertResult(Operators(List(Operator(Set("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
+          parse("""
+operator_with(origin)
   { % }  => { 100 }
-end"""
+end
+""")
         }
-
       }
     }
 
     describe ("when mutiple defition in operator_with") {
       it ("parses") {
-        parse("""operator_with(mod, origin)
+        assertResult(Operators(List(
+          Operator(Set("mod", "origin"),
+            Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
+            Assign(LVar("y"), LVar("x"), EQ())),
+          Operator(Set("mod", "origin"),
+            Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
+            Assign(LVar("x"), LVar("y"), EQ()))))) {
+          parse("""
+operator_with(mod, origin)
   { x -> y } where { x: origin, y: origin } => { y = x }
   { x <- y } where { x: origin, y: origin } => { x = y }
 end
-""") { v => assert(v == Operators(List(
-  Operator(Set("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
-    Assign(LVar("y"), LVar("x"), EQ())),
-  Operator(Set("mod", "origin"),
-    Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
-    Assign(LVar("x"), LVar("y"), EQ())))))
+""")
         }
       }
     }
@@ -428,24 +665,21 @@ end
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
         ))) {
-          val parser = new Parser()
-          parser.parse("""operator_with(mod, origin)
+          parse("""
+operator_with(mod, origin)
   { x <- 1 } where { x: origin } => { x = 1 }
 end
 
 operator_with(origin)
   { x <- 1 } where { x: origin || mod } => { x = 1 }
   { x <- y } where { x: origin || (origin && mod), y: origin && mod } => { x = y }
-end""" + "\n") match {
-            case Right(Stmnts(x)) => x(1)
-            case Left(s) => throw new Exception(s)
-          }
+end
+""")
         }
       }
-
       it ("parses Not(!)") {
-        assertResult(Cmd(None, "resources", Some(ActualArgs(List(StringLit("aws")))), None)) {
-          parse2("""
+        assertResult(Cmd(None, "resources", Some(ActualArgs(List(StringLit("\"aws\"")))), None)) {
+          parse("""
 operator_with(resource_name)
   { aws } => { "aws" }
 end
@@ -465,30 +699,8 @@ resources aws
     }
   }
 
-  def assertParseResult(expect: Expr, cule: String = "")(body: String) = {
-    val parser = new Parser()
-    assertResult(Stmnts(List(expect))) {
-      parser.parse(body + "\n") match {
-        case Right(x) => x
-        case Left(s) => throw new ParsingError(s)
-      }
-    }
-  }
-
-  protected class ParsingError(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
-
-  def parse2(in: String): Expr = (new Parser).parse(in + "\n") match {
+  def parse(in: String): Expr = (new Parser).parse(in + "\n") match {
     case Right(Stmnts(x)) => x.last
     case Left(s) => LVar(s)
-  }
-
-  def parse(x: String)(fn: Expr => Unit): Unit = {
-    val parser = new Parser()
-    parser.parse(x + "\n") match {
-      case Right(Stmnts(x)) => fn(x(0))
-      case Left(s) => throw new Exception(s)
-        // case Right(x) => assert(x == 0)
-        // case Left(s) => assert(s == "parsing fail")
-    }
   }
 }
