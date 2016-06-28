@@ -7,6 +7,25 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   // terminal -> MatchedAst
   protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
+  protected val omap: MMap[String, List[DefExpr]] =  MMap.empty[String, List[DefExpr]]
+
+  override def parse(in: String): Either[String, Stmnts] = {
+    parseAll(topStmnts, preprocess(in)) match {
+      case Success(d, next) => Right(d)
+      case NoSuccess(errorMsg, next) =>
+        Left(s"$errorMsg: in ${next.pos.line} at column ${next.pos.column}")
+    }
+  }
+
+  // Insert operator
+  def topStmnts: PackratParser[Stmnts] = stmnts.map {
+    _ match { case Stmnts(x) =>
+      println(x)
+      val module = OperatorBuilder.buildDefinintion(omap.toMap)
+      val Stmnts(s) = module.body
+      if (s.size == 0) Stmnts(x) else Stmnts(OperatorBuilder.buildDefinintion(omap.toMap) :: x)
+    }
+  }
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
   override def reserved = K_OPERATOR | K_WHERE | super.reserved
@@ -42,6 +61,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   protected def extendWith(op: Operator): Unit = {
     val tags = op.tags
+    register_operator(op)
     val newParser = buildParser(op)
     pmap.put(tags, newParser)
 
@@ -72,6 +92,10 @@ class ExtendableParser extends RubyParser with OperatorToken {
     case _ => (Set(), Set())
   }
 
+  protected def register_operator(op: Operator) = omap.get(op.className) match {
+    case Some(x) => omap.put(op.className, OperatorBuilder.build(op) :: x)
+    case None => omap.put(op.className, List(OperatorBuilder.build(op)))
+  }
 
   protected def buildParser(op: Operator): PackratParser[Expr] = {
     val parsers = op.syntax.body.map { term =>
@@ -82,7 +106,13 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
 
     parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ {
-      case map => MacroConverter.convert(op.body, map)
+      case map =>
+        val args = op.syntax.tags.keys.toList.map { map.get(_).get } match {
+          case Nil => None
+          case x => Some(ActualArgs(x))
+        }
+        val name = OperatorBuilder.callingName(op)
+        Call(None, name, args, None)
     }
   }
 
