@@ -1,3 +1,3 @@
 package rbparser
 
-class Parser extends parser.ExtendableParser {}
+class Parser extends parser.ExtendableParser
