@@ -7,7 +7,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   // terminal -> MatchedAst
   protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
-  protected val omap: MMap[String, List[DefExpr]] =  MMap.empty[String, List[DefExpr]]
+  protected val omap: MMap[String, List[Operator]] =  MMap.empty[String, List[Operator]]
 
   override def parse(in: String): Either[String, Stmnts] = {
     parseAll(topStmnts, preprocess(in)) match {
@@ -19,12 +19,9 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   // Insert operator
   def topStmnts: PackratParser[Stmnts] = stmnts.map {
-    _ match { case Stmnts(x) =>
-      println(x)
-      val module = OperatorBuilder.buildDefinintion(omap.toMap)
-      val Stmnts(s) = module.body
-      if (s.size == 0) Stmnts(x) else Stmnts(OperatorBuilder.buildDefinintion(omap.toMap) :: x)
-    }
+    case Stmnts(x) =>
+      val body = omap.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
+      Stmnts(if (body.size == 0) x else ModuleExpr(ConstLit("Operator"), Stmnts(body)) :: x)
   }
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
@@ -93,8 +90,8 @@ class ExtendableParser extends RubyParser with OperatorToken {
   }
 
   protected def register_operator(op: Operator) = omap.get(op.className) match {
-    case Some(x) => omap.put(op.className, OperatorBuilder.build(op) :: x)
-    case None => omap.put(op.className, List(OperatorBuilder.build(op)))
+    case Some(x) => omap.put(op.className, op :: x)
+    case None => omap.put(op.className, List(op))
   }
 
   protected def buildParser(op: Operator): PackratParser[Expr] = {
@@ -105,15 +102,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
       }
     }
 
-    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ {
-      case map =>
-        val args = op.syntax.tags.keys.toList.map { map.get(_).get } match {
-          case Nil => None
-          case x => Some(ActualArgs(x))
-        }
-        val name = OperatorBuilder.callingName(op)
-        Call(None, name, args, None)
-    }
+    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ { op.toMethodCall(_) }
   }
 
   object ParserMap {
