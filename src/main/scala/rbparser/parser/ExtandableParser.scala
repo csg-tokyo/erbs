@@ -7,6 +7,22 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   // terminal -> MatchedAst
   protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
+  protected val omap: MMap[String, List[Operator]] =  MMap.empty[String, List[Operator]]
+
+  override def parse(in: String): Either[String, Stmnts] = {
+    parseAll(topStmnts, preprocess(in)) match {
+      case Success(d, next) => Right(d)
+      case NoSuccess(errorMsg, next) =>
+        Left(s"$errorMsg: in ${next.pos.line} at column ${next.pos.column}")
+    }
+  }
+
+  // Insert operator
+  def topStmnts: PackratParser[Stmnts] = stmnts.map {
+    case Stmnts(x) =>
+      val body = omap.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
+      Stmnts(if (body.size == 0) x else ModuleExpr(ConstLit("Operator"), Stmnts(body)) :: x)
+  }
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
   override def reserved = K_OPERATOR | K_WHERE | super.reserved
@@ -42,6 +58,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
   protected def extendWith(op: Operator): Unit = {
     val tags = op.tags
+    register_operator(op)
     val newParser = buildParser(op)
     pmap.put(tags, newParser)
 
@@ -72,6 +89,10 @@ class ExtendableParser extends RubyParser with OperatorToken {
     case _ => (Set(), Set())
   }
 
+  protected def register_operator(op: Operator) = omap.get(op.className) match {
+    case Some(x) => omap.put(op.className, op :: x)
+    case None => omap.put(op.className, List(op))
+  }
 
   protected def buildParser(op: Operator): PackratParser[Expr] = {
     val parsers = op.syntax.body.map { term =>
@@ -81,9 +102,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
       }
     }
 
-    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ {
-      case map => MacroConverter.convert(op.body, map)
-    }
+    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ { op.toMethodCall(_) }
   }
 
   object ParserMap {

@@ -74,7 +74,10 @@ case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class ModuleExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
 case class Operators(ops: List[Operator]) extends Expr
-case class Operator(tags: Set[String], syntax: Syntax, body: Expr) extends Expr
+case class Operator(tags: Set[String], syntax: Syntax, body: Expr) extends Expr with MethodTranslate {
+  val syntaxBody: List[String] = syntax.body
+  val syntaxTags: Map[String, Expr] = syntax.tags
+}
 case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr

@@ -4,7 +4,35 @@ object Main {
   def main(args: Array[String]) {
     // test1
     // test2
-    test3
+    // test3
+    test4
+  }
+  def test4 = {
+    val p = new Parser
+    val v = p.parse("""
+operator_with(name)
+  { ec2_instance } => { "ec2_instance" }
+end
+
+operator_with(name)
+  { < } => { "eip" }
+end
+
+operator_with(name)
+  { eip } => { "eip" }
+end
+
+operator_with(origin, resources)
+  { resources e } where { e: name } => { puts("resources " + e) }
+end
+
+resources ec2_instance
+""") match {
+      case Right(x) => x
+      case _ => throw new Exception
+    }
+
+    PrettyPrinter.print(v)
   }
 
   def test3 = {

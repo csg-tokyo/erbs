@@ -678,7 +678,7 @@ end
         }
       }
       it ("parses Not(!)") {
-        assertResult(Cmd(None, "resources", Some(ActualArgs(List(StringLit("\"aws\"")))), None)) {
+        assertResult(Call(None, "Operator::Origin::op_resources_Name", Some(ActualArgs(List(Call(None, "Operator::Resource_name::op_aws", None, None)))), None)) {
           parse("""
 operator_with(resource_name)
   { aws } => { "aws" }

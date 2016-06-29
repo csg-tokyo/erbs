@@ -88,7 +88,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       writeln("class " + format(name))
       nested {
         for (i <- 0 until stmnts.length) {
-          val cr = if (i == stmnts.length-1) "\n"  else "\n\n"
+          val cr = if (i == stmnts.length-1) "\n" else "\n\n"
           indented_write(format(stmnts(i))+cr)
         }
       }
@@ -98,7 +98,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       writeln("module " + format(name))
       nested {
         for (i <- 0 until stmnts.length) {
-          val cr = if (i == stmnts.length-1) "\n"  else "\n\n"
+          val cr = if (i == stmnts.length-1) "\n" else "\n\n"
           indented_write(format(stmnts(i))+cr)
         }
       }
@@ -113,8 +113,9 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       val s = stmnts.size
       for (i <- 0 until s) {
         stmnts(i) match {
-          case Operator(_, _, _) | Syntax(_, _) => // noop
+          case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
           case stmnt if i == s => writeln(format(stmnt))
+          case stmnt@(ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
           case stmnt => write(format(stmnt))
         }
       }
