@@ -620,28 +620,17 @@ end
           Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
           Assign(LVar("y"), LVar("x"), EQ()))))) {
         parse("""
-operator_with(mod, origin)
-  { x -> y } where { x: origin, y: origin } => { y = x }
+Operator(mod, origin)
+  defs x -> y ( x: origin, y: origin)
+    y = x
+  end
 end
 """)
-
-      }
-    }
-
-    describe ("when ellipsis where cond") {
-      it ("pares operator_with") {
-        assertResult(Operators(List(Operator(Set("origin"), Syntax(Map(), List("%")), IntLit(100))))) {
-          parse("""
-operator_with(origin)
-  { % }  => { 100 }
-end
-""")
-        }
       }
     }
 
     describe ("when mutiple defition in operator_with") {
-      it ("parses") {
+      it ("parses(but this example is invalid)") {
         assertResult(Operators(List(
           Operator(Set("mod", "origin"),
             Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
@@ -650,9 +639,14 @@ end
             Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
             Assign(LVar("x"), LVar("y"), EQ()))))) {
           parse("""
-operator_with(mod, origin)
-  { x -> y } where { x: origin, y: origin } => { y = x }
-  { x <- y } where { x: origin, y: origin } => { x = y }
+Operator(mod, origin)
+  defs x -> y ( x: origin, y: origin)
+    y = x
+  end
+
+  defs x <- y ( x: origin, y: origin)
+    x = y
+  end
 end
 """)
         }
@@ -660,19 +654,26 @@ end
     }
 
     describe ("when tag has condition") {
-      it ("parses and, or") {
+      it ("parses and, or (but this example is invalid)") {
         assertResult(Operators(List(
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ())),
           Operator(Set("origin"), Syntax(Map("x" -> Binary(OR(), LVar("origin"), Binary(AND(), LVar("origin"), LVar("mod"))), "y" -> Binary(AND(), LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ()))
         ))) {
           parse("""
-operator_with(mod, origin)
-  { x <- 1 } where { x: origin } => { x = 1 }
+Operator(mod, origin)
+  defs x <- 1 (x: origin)
+    x = 1
+  end
 end
 
-operator_with(origin)
-  { x <- 1 } where { x: origin || mod } => { x = 1 }
-  { x <- y } where { x: origin || (origin && mod), y: origin && mod } => { x = y }
+Operator(origin)
+  defs x <- 1 (x: origin || mod)
+    x = 1
+  end
+
+  defs x <- y ( x: origin || (origin && mod), y: origin && mod )
+    x = y
+  end
 end
 """)
         }
@@ -680,16 +681,22 @@ end
       it ("parses Not(!)") {
         assertResult(Call(None, "Operator::Origin::op_resources_Name", Some(ActualArgs(List(Call(None, "Operator::Resource_name::op_aws", None, None)))), None)) {
           parse("""
-operator_with(resource_name)
-  { aws } => { "aws" }
+Operator(resource_name)
+  defs aws()
+    "aws"
+  end
 end
 
-operator_with(name)
-  { foo  } => { "foo" }
+Operator(name)
+  defs foo()
+    "foo"
+  end
 end
 
-operator_with(origin)
-  { resources name  } where { name: !name && !origin } => { resources name }
+Operator(origin)
+  defs resources name (name: !name && !origin)
+    resources name
+  end
 end
 
 resources aws
