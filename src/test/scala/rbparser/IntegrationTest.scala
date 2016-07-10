@@ -2,6 +2,7 @@ package rbparser
 
 import org.scalatest._
 import scala.io.Source
+import rbparser.parser.ast._
 
 class IntegrationTest extends FunSpec {
   it ("foo primitive") {
@@ -22,7 +23,7 @@ class IntegrationTest extends FunSpec {
     lines.mkString("\n")
   }
 
-  private def parse(x: String): ASTs = {
+  private def parse(x: String): AST = {
     val parser = new Parser()
     parser.parse(x + "\n") match {
       case Right(x) => x

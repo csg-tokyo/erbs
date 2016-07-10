@@ -1,6 +1,7 @@
-package rbparser
+package rbparser.parser.util
 
 import org.scalatest._
+import rbparser.parser.ast._
 
 class DNFBuilderTest extends FunSpec {
 

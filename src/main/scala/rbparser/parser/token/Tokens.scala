@@ -1,4 +1,4 @@
-package rbparser
+package rbparser.parser.token
 
 trait Tokens {
   val T_INT = """(0|[1-9][0-9]*)""".r

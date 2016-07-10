@@ -1,5 +1,7 @@
 package rbparser
 
+import rbparser.parser.ast._
+
 import org.scalatest._
 
 class ParserTest extends FunSpec {
@@ -62,7 +64,7 @@ class ParserTest extends FunSpec {
       assertResult(StringLit("\"as\\ndf\\n\"")) {
         parse(""""as\ndf\n"""")
       }
-      assertResult(Binary(PLUS(),Binary(AST(),IntLit(1),StringLit("\"asdf\"")),Binary(AST(),StringLit("\"asdf2\""),IntLit(2)))) {
+      assertResult(Binary(PLUS(), Binary(MUL(), IntLit(1), StringLit("\"asdf\"")), Binary(MUL(), StringLit("\"asdf2\""), IntLit(2)))) {
         parse("""1 * "asdf" + "asdf2" * 2""")
       }
     }
@@ -556,7 +558,7 @@ end""")
       assertResult(Binary(MINUS(), IntLit(1), IntLit(2))) {
         parse("1 - 2")
       }
-      assertResult(Binary(AST(), IntLit(1), IntLit(2))) {
+      assertResult(Binary(MUL(), IntLit(1), IntLit(2))) {
         parse("1 * 2")
       }
       assertResult(Binary(DIV(), IntLit(1), IntLit(2))) {
@@ -568,13 +570,13 @@ end""")
       assertResult(Binary(DIV(), IVar("a"), IntLit(2))) {
         parse("@a / 2")
       }
-      assertResult(Binary(MINUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(3)))) {
+      assertResult(Binary(MINUS(), IntLit(1), Binary(MUL(), IntLit(2), IntLit(3)))) {
         parse("1 - 2 * 3")
       }
       assertResult(Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3))) {
         parse("1 - 2 - 3")
       }
-      assertResult(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10))) {
+      assertResult(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(MUL(), IntLit(2), IntLit(1))), IntLit(10))) {
         parse("1 + 2 * 1 + 10")
       }
     }

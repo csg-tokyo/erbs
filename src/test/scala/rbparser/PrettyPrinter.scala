@@ -1,5 +1,7 @@
 package rbparser
 
+import rbparser.parser.ast._
+
 import org.scalatest._
 
 class PrettyPrinterTest extends FunSpec {
@@ -352,10 +354,10 @@ end""") {
           pp(Binary(PLUS(), Unary(MINUS(), IntLit(2)), IntLit(1)))
         }
         assertResult("1 * 2") {
-          pp(Binary(AST(), IntLit(1), IntLit(2)))
+          pp(Binary(MUL(), IntLit(1), IntLit(2)))
         }
         assertResult("1 + 2 * 1 + 10") {
-          pp(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(AST(), IntLit(2), IntLit(1))), IntLit(10)))
+          pp(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(MUL(), IntLit(2), IntLit(1))), IntLit(10)))
         }
         assertResult("1 - 2 - 3") {
           pp(Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3)))
@@ -385,5 +387,5 @@ end""") {
     }
   }
 
-  def pp(ast: ASTs): String = PrettyPrinter.call(ast)
+  def pp(ast: AST): String = PrettyPrinter.call(ast)
 }

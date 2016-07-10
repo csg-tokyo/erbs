@@ -1,12 +1,16 @@
 package rbparser
 package parser
+
 import scala.collection.mutable.{Map => MMap}
+import rbparser.parser.util._
+import rbparser.parser.ast._
+import rbparser.parser.token.OperatorToken
 
 class ExtendableParser extends RubyParser with OperatorToken {
   protected val DEFAULT_TAG = "origin"
 
   // terminal -> MatchedAst
-  protected val pmap: ParserMap[String, Expr] = new ParserMap[String, Expr]()
+  protected val pmap: ParserMap[String, Expr] = ParserMap.empty[String, Expr]
   protected val omap: MMap[String, List[Operator]] =  MMap.empty[String, List[Operator]]
 
   override def parse(in: String): Either[String, Stmnts] = {
@@ -25,7 +29,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
   }
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
-  override def reserved = K_OPERATOR | K_WHERE | super.reserved
+  override def reserved = K_OPERATOR | K_DEFS | super.reserved
   // Parse each item of syntax interleaved by '\s'
   protected lazy val v: PackratParser[String] = """[^()\s]+""".r ^^ identity
 
@@ -69,6 +73,13 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
   }
 
+  class NoSuchTags(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
+  class NoSuchParser(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
+
+  protected def dummyParser(op : Operator): PackratParser[Expr] = stmnt ^^^ {
+    throw new NoSuchTags(s"Calling dummpy parser in ${op.syntaxBody}")
+  }
+
   protected def findParser(cond: Expr): Option[PackratParser[Expr]] = cond match {
     case Binary(OR(), l, r) => for (e1 <- findParser(l); e2 <- findParser(r)) yield { e1 | e2 }
     case e@Binary(AND(), _, _) => collectTags(e) match {
@@ -77,7 +88,7 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
     case Unary(EXT(), LVar(e)) => pmap.getNot(e)
     case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else pmap.get(key)
-    case x => println(x); throw new Exception // TODO FIX
+    case x => throw new  NoSuchParser(x.toString()) // TODO FIX
   }
 
   protected def collectTags(e: Expr): (Set[String], Set[String]) = e match {
@@ -95,10 +106,13 @@ class ExtendableParser extends RubyParser with OperatorToken {
   }
 
   protected def buildParser(op: Operator): PackratParser[Expr] = {
-    val parsers = op.syntax.body.map { term =>
-      op.syntax.tags.get(term) match {
+    val parsers = op.syntaxBody.map { term =>
+      op.syntaxTags.get(term) match {
         case None => val v: PackratParser[Map[String, Expr]] = term ^^^ Map.empty[String, Expr]; v
-        case Some(cond) => findParser(cond).get ^^ { case ast => Map(term -> ast) } // TOFIX raise execption
+        case Some(cond) => findParser(cond) match {
+          case Some(p) => p ^^ { case ast => Map(term -> ast) }
+          case None => throw new NoSuchParser(s"$term (tags of ${PrettyPrinter.call(cond)}) in ${op.syntaxBody}")
+        }
       }
     }
 
@@ -118,6 +132,11 @@ class ExtendableParser extends RubyParser with OperatorToken {
 
     def getWithAllMatch(k: Set[T], exceptKey: Set[T]) = searchBy { key => k.subsetOf(key) && exceptKey.forall { !key.contains(_) } }
 
+    def init(key: Set[T], value: PackratParser[S]) = m.get(key) match {
+      case None => m.put(key, value)
+      case _ => // noop
+    }
+
     def put(key: Set[T], value: PackratParser[S]) = m.get(key) match {
       case None => m.put(key, value)
       case Some(parser) => m.put(key, value | parser)
@@ -126,9 +145,4 @@ class ExtendableParser extends RubyParser with OperatorToken {
     private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
       m.filterKeys(cond).values.reduceLeftOption { (acc, v) => acc | v }
   }
-}
-
-trait OperatorToken {
-  val K_OPERATOR =  """Operator\b""".r
-  val K_WHERE =  """where\b""".r
 }

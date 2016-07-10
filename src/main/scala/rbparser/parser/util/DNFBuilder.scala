@@ -1,5 +1,7 @@
 // Builder of Disjunctive Normal Form
-package rbparser
+package rbparser.parser.util
+
+import rbparser.parser.ast._
 
 object DNFBuilder {
   def build(e :Expr): Expr = e match {

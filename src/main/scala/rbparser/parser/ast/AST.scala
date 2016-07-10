@@ -1,9 +1,11 @@
-package rbparser
+package rbparser.parser.ast
+
+import rbparser.parser.ast.concerns.MethodTranslate
 
 sealed trait Op { val prec: Int = 0 }
 case class PLUS() extends Op  { override val prec: Int = 10 }
 case class MINUS() extends Op { override val prec: Int = 10 }
-case class AST() extends Op   { override val prec: Int = 11 }
+case class MUL() extends Op   { override val prec: Int = 11 }
 case class DIV() extends Op   { override val prec: Int = 11 }
 case class EXT() extends Op   { override val prec: Int = 20 } // !
 case class GT() extends Op    { override val prec: Int = 8 } // >
@@ -23,7 +25,7 @@ object Op {
   def stringfy(op: Op) = op match {
     case PLUS() => "+"
     case MINUS() => "-"
-    case AST() => "*"
+    case MUL() => "*"
     case DIV() => "/"
     case EXT() => "!"
     case GT() => ">"
@@ -41,10 +43,10 @@ object Op {
   }
 }
 
-case class FormalArgs(names: List[LVar]) extends ASTs
-case class ActualArgs(names: List[Expr]) extends ASTs
+case class FormalArgs(names: List[LVar]) extends AST
+case class ActualArgs(names: List[Expr]) extends AST
 
-sealed trait ASTs
+sealed trait AST
 sealed trait Literal extends Expr
 case class IntLit(v: Int) extends Literal
 case class DoubleLit(v: Double) extends Literal
@@ -56,7 +58,7 @@ case class LVar(v: String) extends Literal
 case class IVar(v: String) extends Literal
 case class Keyword(v: String) extends Literal
 
-sealed trait Expr extends ASTs
+sealed trait Expr extends AST
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
 case class Hash(v: Map[Expr, Expr]) extends Expr
@@ -73,17 +75,19 @@ case class Assign(target: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, body: Stmnts) extends Expr
 case class ModuleExpr(name: ConstLit, body: Stmnts) extends Expr
 case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
+
+sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
+case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
+case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
+
+case class Stmnts(v: List[Expr]) extends AST {
+  def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
+}
+
+// extendted
 case class Operators(ops: List[Operator]) extends Expr
 case class Operator(tags: Set[String], syntax: Syntax, body: Expr) extends Expr with MethodTranslate {
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
 }
 case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
-
-sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
-case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
-case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
-
-case class Stmnts(v: List[Expr]) extends ASTs {
-  def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
-}

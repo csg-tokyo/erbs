@@ -1,15 +1,17 @@
-package rbparser
-package parser
+package rbparser.parser
 
 import scala.util.matching.Regex
+import rbparser.parser.token.Tokens
+import rbparser.parser.ast._
 
-trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
+trait RubyParser extends BaseParser[Stmnts] with Tokens {
+
   override protected def commentLiteral = "#"
 
   protected lazy val EOL = opt('\r') <~ '\n'
   protected lazy val t_plus: PackratParser[PLUS] = "+" ^^^ PLUS()
   protected lazy val t_minus: PackratParser[MINUS] = "-" ^^^ MINUS()
-  protected lazy val t_ast: PackratParser[AST] = "*" ^^^ AST()
+  protected lazy val t_mul: PackratParser[MUL] = "*" ^^^ MUL()
   protected lazy val t_div: PackratParser[DIV] = "/" ^^^ DIV()
   protected lazy val t_and: PackratParser[AND] = "&&" ^^^ AND()
   protected lazy val t_or: PackratParser[OR] = "||"  ^^^ OR()
@@ -26,7 +28,7 @@ trait RubyParser extends BasicParser[Stmnts] with rbparser.Tokens {
 
   protected def reserved = reserved_value
   protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
-  protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_ast | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
+  protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { e => DoubleLit(e.toDouble) }
   protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit

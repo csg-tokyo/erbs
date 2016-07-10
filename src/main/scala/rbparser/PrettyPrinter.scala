@@ -1,11 +1,13 @@
 package rbparser
 
+import rbparser.parser.ast._
+
 object PrettyPrinter {
-  def print(ast: ASTs) = println(call(ast))
-  def call(ast: ASTs) = PrettyPrinter(ast, 0).call
+  def print(ast: AST) = println(call(ast))
+  def call(ast: AST) = PrettyPrinter(ast, 0).call
 }
 
-case class PrettyPrinter(ast: ASTs, private var depth: Int) {
+case class PrettyPrinter(ast: AST, private var depth: Int) {
   private val buffer = new StringBuilder
 
   def call: String = {
@@ -13,7 +15,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
     flush()
   }
 
-  def _write(ast: ASTs) = ast match {
+  def _write(ast: AST) = ast match {
     case IntLit(v) => write(v.toString)
     case DoubleLit(v) => write(v.toString)
     case BoolLit(v) => write(v.toString)
@@ -141,7 +143,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
     depth -= 1
   }
 
-  private def format(ast: ASTs): String = PrettyPrinter(ast, depth).call
+  private def format(ast: AST): String = PrettyPrinter(ast, depth).call
 
   private def joinWithComma(vars: List[Expr]): String = vars.map(format(_)).mkString(", ")
 }

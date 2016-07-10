@@ -1,10 +1,9 @@
-package rbparser
+package rbparser.parser
 
 import org.scalatest._
 
 import scala.util.parsing.combinator.{PackratParsers, RegexParsers}
 import scala.util.parsing.input.CharSequenceReader
-import parser.ExtendableParser
 import scala.language.implicitConversions
 
 class ParserMapTest extends FunSpec {
