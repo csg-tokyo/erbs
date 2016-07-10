@@ -4,8 +4,67 @@ object Main {
   def main(args: Array[String]) {
     // test1
     // test2
-    test3
+    // test3
+    test4
   }
+
+  def test4 = {
+    val p = new Parser
+    val v = p.parse("""
+Operator(provider, oneline)
+ defs access_key = e (e: origin)
+   "  access_key = " + e + "\n"
+ end
+
+ defs secret_key = e (e: origin)
+   "  secret_key = " + e + "\n"
+ end
+
+ defs region = e (e: origin)
+   "  region= " + e + "\n"
+ end
+end
+
+Operator(config_body, provider)
+  defs a b (a: provider && oneline, b: config_body && provider)
+    a + b
+  end
+
+  defs a (a: provider && oneline)
+    a
+  end
+end
+
+Operator(config, provider)
+  defs aws { body } (body: provider && config_body)
+    "aws " + "{\n" + body + "}"
+  end
+end
+
+Operator(origin, provider)
+  defs provider config (config: provider && config)
+    puts("provider " + config)
+  end
+end
+
+provider aws {
+  access_key = "your acess key"
+  secret_key = "your secret key"
+  region =  "us-east-1"
+}
+""") match {
+      case Right(x) => x
+      case Left(x) =>
+        println(x)
+        throw new Exception
+    }
+
+    println(v)
+
+    PrettyPrinter.print(v)
+  }
+
+
   def test3 = {
     val p = new Parser
     val v = p.parse("""
