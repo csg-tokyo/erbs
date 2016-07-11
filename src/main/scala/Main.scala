@@ -4,7 +4,6 @@ object Main {
   def main(args: Array[String]) {
     // test1
     // test2
-    // test3
     test4
   }
 
@@ -60,37 +59,6 @@ provider aws {
     }
 
     println(v)
-
-    PrettyPrinter.print(v)
-  }
-
-
-  def test3 = {
-    val p = new Parser
-    val v = p.parse("""
-Operator(name)
-  defs ec2_instance()
-    "ec2_instance"
-  end
-
-  defs eip()
-    "eip"
-  end
-end
-
-Operator(origin, resource)
-  defs resources e (e: name)
-    puts("resources" + e)
-  end
-end
-
-resources ec2_instance
-""") match {
-      case Right(x) => x
-      case Left(x) =>
-        println(x)
-        throw new Exception
-    }
 
     PrettyPrinter.print(v)
   }
