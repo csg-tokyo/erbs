@@ -6,11 +6,11 @@ import ast._
 import token.OperatorToken
 import scala.collection.mutable.{Map => MMap}
 
-class ExtendableParser extends RubyParser with OperatorToken {
+class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
   protected val DEFAULT_TAG = "origin"
 
   // terminal -> MatchedAst
-  protected val pmap: ParserMap[String, Expr] = ParserMap.empty[String, Expr]
+  protected val pmap: PMap[String, Expr] = PMap.empty[String, Expr]
   protected val omap: MMap[String, List[Operator]] =  MMap.empty[String, List[Operator]]
 
   override def parse(in: String): Either[String, Stmnts] = {
@@ -117,32 +117,5 @@ class ExtendableParser extends RubyParser with OperatorToken {
     }
 
     parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ { op.toMethodCall(_) }
-  }
-
-  object ParserMap {
-    def empty[T, S] = new ParserMap[T, S]()
-  }
-
-  class ParserMap[T, S] (m: MMap[Set[T], PackratParser[S]] = MMap.empty[Set[T], PackratParser[S]]) {
-    def get(k: T) = searchBy(_.contains(k))
-
-    def getNot(k: T) = searchBy(!_.contains(k))
-
-    def getWithAllMatch(k: Set[T]) = searchBy(k.subsetOf(_))
-
-    def getWithAllMatch(k: Set[T], exceptKey: Set[T]) = searchBy { key => k.subsetOf(key) && exceptKey.forall { !key.contains(_) } }
-
-    def init(key: Set[T], value: PackratParser[S]) = m.get(key) match {
-      case None => m.put(key, value)
-      case _ => // noop
-    }
-
-    def put(key: Set[T], value: PackratParser[S]) = m.get(key) match {
-      case None => m.put(key, value)
-      case Some(parser) => m.put(key, value | parser)
-    }
-
-    private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
-      m.filterKeys(cond).values.reduceLeftOption { (acc, v) => acc | v }
   }
 }
