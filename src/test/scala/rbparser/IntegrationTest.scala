@@ -19,6 +19,7 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("cat.rbx", "cat file_path")
       fileAssertEqual("cat_ruby.rbx", "cat rack.rb")
       fileAssertEqual("aws_provider.rbx", "provider aws { access_key = your acess key }")
+      fileAssertEqual("recurcive_define.rbx", "provider id1 id2 id1 id1")
     }
   }
 

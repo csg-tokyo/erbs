@@ -8,7 +8,7 @@ trait ParserMap extends PackratParsers {
     def empty[T, S] = new PMap[T, S]()
   }
 
-  class PMap[T, S] (m: MMap[Set[T], PackratParser[S]] = MMap.empty[Set[T], PackratParser[S]]) {
+  class PMap[T, S] (m: MMap[Set[T], () => PackratParser[S]] = MMap.empty[Set[T], () => PackratParser[S]]) {
     def get(k: T) = searchBy(_.contains(k))
 
     def getNot(k: T) = searchBy(!_.contains(k))
@@ -17,17 +17,12 @@ trait ParserMap extends PackratParsers {
 
     def getWithAllMatch(k: Set[T], exceptKey: Set[T]) = searchBy { key => k.subsetOf(key) && exceptKey.forall { !key.contains(_) } }
 
-    def init(key: Set[T], value: PackratParser[S]) = m.get(key) match {
-      case None => m.put(key, value)
-      case _ => // noop
-    }
-
-    def put(key: Set[T], value: PackratParser[S]) = m.get(key) match {
-      case None => m.put(key, value)
-      case Some(parser) => m.put(key, value | parser)
+    def put(key: Set[T], value:  => PackratParser[S]) = m.get(key) match {
+      case None => m.put(key, () => value)
+      case Some(parser) => m.put(key, () => value | parser())
     }
 
     private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
-      m.filterKeys(cond).values.reduceLeftOption { (acc, v) => acc | v }
+      m.filterKeys(cond).values.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
   }
 }

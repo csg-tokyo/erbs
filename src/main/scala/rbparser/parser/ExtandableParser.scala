@@ -22,10 +22,9 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
   }
 
   // Insert operator
-  def topStmnts: PackratParser[Stmnts] = stmnts.map {
-    case Stmnts(x) =>
-      val body = omap.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
-      Stmnts(if (body.size == 0) x else ModuleExpr(ConstLit("Operator"), Stmnts(body)) :: x)
+  def topStmnts: PackratParser[Stmnts] = stmnts.map { case Stmnts(x) =>
+    val body = omap.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
+    Stmnts(if (body.size == 0) x else ModuleExpr(ConstLit("Operator"), Stmnts(body)) :: x)
   }
 
   override def stmnts: PackratParser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
@@ -58,27 +57,27 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
       ops
   }
 
-  protected def extendWith(ops: Operators): Unit = ops match { case Operators(x) => x.foreach { x: Operator => extendWith(x) } }
+  protected def extendWith(ops: Operators): Unit = ops match { case Operators(x) =>
+    x.foreach { x: Operator => extendWith(x) }
+    // to delay building parser
+    x.foreach { x: Operator =>
+      if (x.tags.contains(DEFAULT_TAG)) {
+        pmap.getWithAllMatch(x.tags) match {
+          case Some(p) => val tmp = stmnt; stmnt = p | tmp
+          case None => // noop
+        }
+      }
+    }
+  }
 
   protected def extendWith(op: Operator): Unit = {
     val tags = op.tags
     register_operator(op)
-    val newParser = buildParser(op)
-    pmap.put(tags, newParser)
-
-    // Should extend default no terminal class stmnt
-    if (tags.contains(DEFAULT_TAG)) {
-      val tmp = stmnt
-      stmnt = newParser | tmp
-    }
+    pmap.put(tags, buildParser(op))
   }
 
-  class NoSuchTags(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
   class NoSuchParser(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
-
-  protected def dummyParser(op : Operator): PackratParser[Expr] = stmnt ^^^ {
-    throw new NoSuchTags(s"Calling dummpy parser in ${op.syntaxBody}")
-  }
+  class NoSuchCondition(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
 
   protected def findParser(cond: Expr): Option[PackratParser[Expr]] = cond match {
     case Binary(OR(), l, r) => for (e1 <- findParser(l); e2 <- findParser(r)) yield { e1 | e2 }
@@ -88,7 +87,7 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
     }
     case Unary(EXT(), LVar(e)) => pmap.getNot(e)
     case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else pmap.get(key)
-    case x => throw new  NoSuchParser(x.toString()) // TODO FIX
+    case x => throw new NoSuchCondition(x.toString())
   }
 
   protected def collectTags(e: Expr): (Set[String], Set[String]) = e match {
@@ -116,6 +115,6 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
       }
     }
 
-    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ { op.toMethodCall(_) }
+    parsers.reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ op.toMethodCall
   }
 }
