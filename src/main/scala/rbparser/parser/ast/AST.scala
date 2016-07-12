@@ -1,6 +1,6 @@
 package rbparser.parser.ast
 
-import rbparser.parser.ast.concerns.MethodTranslate
+import concerns.MethodTranslate
 
 sealed trait Op { val prec: Int = 0 }
 case class PLUS() extends Op  { override val prec: Int = 10 }

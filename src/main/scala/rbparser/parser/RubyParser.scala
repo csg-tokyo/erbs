@@ -1,8 +1,8 @@
 package rbparser.parser
 
 import scala.util.matching.Regex
-import rbparser.parser.token.Tokens
-import rbparser.parser.ast._
+import token.Tokens
+import ast._
 
 trait RubyParser extends BaseParser[Stmnts] with Tokens {
 

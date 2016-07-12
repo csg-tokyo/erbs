@@ -1,10 +1,10 @@
 package rbparser
 package parser
 
+import util._
+import ast._
+import token.OperatorToken
 import scala.collection.mutable.{Map => MMap}
-import rbparser.parser.util._
-import rbparser.parser.ast._
-import rbparser.parser.token.OperatorToken
 
 class ExtendableParser extends RubyParser with OperatorToken {
   protected val DEFAULT_TAG = "origin"
