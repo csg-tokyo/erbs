@@ -82,11 +82,13 @@ case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args
 
 case class Stmnts(v: List[Expr]) extends AST {
   def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
-  def addExpr(e: Option[Expr]) = Stmnts(e.map(x => x :: v).getOrElse(v))
+  def prependExpr(e: Option[Expr]) = Stmnts(e.map(_ :: v).getOrElse(v))
 }
 
 // extendted
-case class Operators(ops: List[Operator]) extends Expr
+case class Operators(ops: List[Operator]) extends Expr {
+  def foreach = ops.foreach _
+}
 case class Operator(tags: Set[String], syntax: Syntax, body: Expr) extends Expr with MethodTranslate {
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
