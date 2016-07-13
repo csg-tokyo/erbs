@@ -2,6 +2,7 @@ package rbparser.parser.util
 
 import scala.util.parsing.combinator.PackratParsers
 import scala.collection.mutable.{Map => MMap}
+import rbparser.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
 
 trait MapUtil extends PackratParsers {
   object ParserMap {
@@ -24,5 +25,21 @@ trait MapUtil extends PackratParsers {
 
     private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
       m.filterKeys(cond).values.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
+  }
+
+  object OperatorMap {
+    def empty = new OperatorMap
+  }
+
+  class OperatorMap (m: MMap[String, List[Operator]] = MMap.empty[String, List[Operator]]) {
+    def put(op: Operator) = m.get(op.className) match {
+      case Some(v) => m.put(op.className, op :: v)
+      case None => m.put(op.className, List(op))
+    }
+
+    def toModule: Option[ModuleExpr] = if (m.size == 0) None else {
+      val body = m.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
+      Some(ModuleExpr(ConstLit("Operator"), Stmnts(body)))
+    }
   }
 }
