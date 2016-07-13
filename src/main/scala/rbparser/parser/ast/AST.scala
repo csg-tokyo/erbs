@@ -3,43 +3,43 @@ package rbparser.parser.ast
 import concerns.MethodTranslate
 
 sealed trait Op { val prec: Int = 0 }
-case class PLUS() extends Op  { override val prec: Int = 10 }
-case class MINUS() extends Op { override val prec: Int = 10 }
-case class MUL() extends Op   { override val prec: Int = 11 }
-case class DIV() extends Op   { override val prec: Int = 11 }
-case class EXT() extends Op   { override val prec: Int = 20 } // !
-case class GT() extends Op    { override val prec: Int = 8 } // >
-case class GE() extends Op    { override val prec: Int = 8 } // >=
-case class LT() extends Op    { override val prec: Int = 8 } // <
-case class LE() extends Op    { override val prec: Int = 8 } // <=
-case class AND() extends Op   { override val prec: Int = 6 } // &&
-case class ANDE() extends Op   { override val prec: Int = 6 } // &&=
-case class OR() extends Op    { override val prec: Int = 5 } // ||
-case class ORE() extends Op    { override val prec: Int = 3 } // ||= TODO add assocative
-case class ADDE() extends Op    { override val prec: Int = 6 } // +=
-case class SUBE() extends Op    { override val prec: Int = 6 } // -=
-case class EQ() extends Op    { override val prec: Int = 6 } // =
-case class DOT() extends Op    { override val prec: Int = 30 }
+case object PLUS extends Op  { override val prec: Int = 10 }
+case object MINUS extends Op { override val prec: Int = 10 }
+case object MUL extends Op   { override val prec: Int = 11 }
+case object DIV extends Op   { override val prec: Int = 11 }
+case object EXT extends Op   { override val prec: Int = 20 } // !
+case object GT extends Op    { override val prec: Int = 8 } // >
+case object GE extends Op    { override val prec: Int = 8 } // >=
+case object LT extends Op    { override val prec: Int = 8 } // <
+case object LE extends Op    { override val prec: Int = 8 } // <=
+case object AND extends Op   { override val prec: Int = 6 } // &&
+case object ANDE extends Op   { override val prec: Int = 6 } // &&=
+case object OR extends Op    { override val prec: Int = 5 } // ||
+case object ORE extends Op    { override val prec: Int = 3 } // ||= TODO add assocative
+case object ADDE extends Op    { override val prec: Int = 6 } // +=
+case object SUBE extends Op    { override val prec: Int = 6 } // -=
+case object EQ extends Op    { override val prec: Int = 6 } // =
+case object DOT extends Op    { override val prec: Int = 30 }
 
 object Op {
   def stringfy(op: Op) = op match {
-    case PLUS() => "+"
-    case MINUS() => "-"
-    case MUL() => "*"
-    case DIV() => "/"
-    case EXT() => "!"
-    case GT() => ">"
-    case GE() => ">="
-    case LT() => "<"
-    case LE() => "<="
-    case AND() => "&&"
-    case OR() => "||"
-    case ORE() => "||="
-    case DOT() => "."
-    case ANDE() => "&&="
-    case ADDE() => "+="
-    case SUBE() => "-="
-    case EQ() => "="
+    case PLUS => "+"
+    case MINUS => "-"
+    case MUL => "*"
+    case DIV => "/"
+    case EXT => "!"
+    case GT => ">"
+    case GE => ">="
+    case LT => "<"
+    case LE => "<="
+    case AND => "&&"
+    case OR => "||"
+    case ORE => "||="
+    case DOT => "."
+    case ANDE => "&&="
+    case ADDE => "+="
+    case SUBE => "-="
+    case EQ => "="
   }
 }
 
@@ -82,6 +82,7 @@ case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args
 
 case class Stmnts(v: List[Expr]) extends AST {
   def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
+  def addExpr(e: Option[Expr]) = Stmnts(e.map(x => x :: v).getOrElse(v))
 }
 
 // extendted

@@ -103,25 +103,25 @@ class PrettyPrinterTest extends FunSpec {
   describe("stmnt") {
     it ("prints simple assign") {
       assertResult("a = 1 + 2") {
-        pp(Assign(LVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), EQ()))
+        pp(Assign(LVar("a"), Binary(PLUS, IntLit(1), IntLit(2)), EQ))
       }
       assertResult("@a = :keyword") {
-        pp(Assign(IVar("a"), SymbolLit("keyword"), EQ()))
+        pp(Assign(IVar("a"), SymbolLit("keyword"), EQ))
       }
     }
 
     it ("prints assings stmnt") {
       assertResult("a = @a.call") {
-        pp(Assign(LVar("a"), Cmd(Some(IVar("a")), "call", None, None), EQ()))
+        pp(Assign(LVar("a"), Cmd(Some(IVar("a")), "call", None, None), EQ))
       }
       assertResult("@a.size = 10") {
-        pp(Assign(Cmd(Some(IVar("a")) ,"size", None, None), IntLit(10), EQ()))
+        pp(Assign(Cmd(Some(IVar("a")) ,"size", None, None), IntLit(10), EQ))
       }
       assertResult("@a[i] = 10") {
-        pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10), EQ()))
+        pp(Assign(ARef(IVar("a"), LVar("i")), IntLit(10), EQ))
       }
       assertResult("@a ||= 1 + 2") {
-        pp(Assign(IVar("a"), Binary(PLUS(), IntLit(1), IntLit(2)), ORE()))
+        pp(Assign(IVar("a"), Binary(PLUS, IntLit(1), IntLit(2)), ORE))
       }
     }
 
@@ -167,12 +167,12 @@ class PrettyPrinterTest extends FunSpec {
       assertResult("""call(10) { |x| x + 1 }""") {
         pp(Call(None, "call",
           Some(ActualArgs(List(IntLit(10)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
       assertResult("""a.call(10, 11) { |x| x + 1 }""") {
         pp(Call(Some(LVar("a")), "call",
           Some(ActualArgs(List(IntLit(10), IntLit(11)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
     }
 
@@ -183,7 +183,7 @@ end""") {
         pp(
           Call(None, "call",
             Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
-            Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+            Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
           ))
       }
       assertResult("""a.call(10) do |x|
@@ -191,7 +191,7 @@ end""") {
 end""") {
         pp(Call(Some(LVar("a")), "call",
           Some(ActualArgs(List(IntLit(10)))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
     }
@@ -202,7 +202,7 @@ end""") {
 end""") {
         pp(Cmd(None, "call",
           Some(ActualArgs(List(SymbolLit("symbol")))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
 
@@ -211,7 +211,7 @@ end""") {
 end""") {
         pp(Cmd(None, "call", None,
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"), IntLit(1))))))
+            Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
 
@@ -220,7 +220,7 @@ end""") {
 end""") {
         pp(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
           Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(), LVar("x"), IntLit(1))))))
+            Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1))))))
         ))
       }
     }
@@ -229,54 +229,54 @@ end""") {
       assertResult("""call { |x| x + 1 }""") {
         pp(Cmd(None, "call", None,
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+            Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
 
       assertResult("""call :aaa { |x| x + 1 }""") {
         pp(Cmd(None, "call",
           Some(ActualArgs(List(SymbolLit("aaa")))),
           Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
-            Stmnts(List(Binary(PLUS(),LVar("x"),IntLit(1))))))))
+            Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
     }
 
     describe("primary") {
       it ("prints exclamation prefix") {
         assertResult("!@a") {
-          pp(Unary(EXT(), IVar("a")))
+          pp(Unary(EXT, IVar("a")))
         }
         assertResult("!true") {
-          pp(Unary(EXT(), BoolLit(true)))
+          pp(Unary(EXT, BoolLit(true)))
         }
         assertResult("!A") {
-          pp(Unary(EXT(), ConstLit("A")))
+          pp(Unary(EXT, ConstLit("A")))
         }
         assertResult("!a.call") {
-          pp(Unary(EXT(), Cmd(Some(LVar("a")), "call", None, None)))
+          pp(Unary(EXT, Cmd(Some(LVar("a")), "call", None, None)))
         }
         assertResult("!(true && false)") {
-          pp(Unary(EXT(), Binary(AND(), BoolLit(true), BoolLit(false))))
+          pp(Unary(EXT, Binary(AND, BoolLit(true), BoolLit(false))))
         }
         assertResult("!true && false") {
-          pp(Binary(AND(),Unary(EXT(),BoolLit(true)),BoolLit(false)))
+          pp(Binary(AND,Unary(EXT,BoolLit(true)),BoolLit(false)))
         }
         assertResult("!!a") {
-          pp(Unary(EXT(), Unary(EXT(), LVar("a"))))
+          pp(Unary(EXT, Unary(EXT, LVar("a"))))
         }
       }
 
       it ("prints minus prefix") {
         assertResult("-10") {
-          pp(Unary(MINUS(), IntLit(10)))
+          pp(Unary(MINUS, IntLit(10)))
         }
         assertResult("-a") {
-          pp(Unary(MINUS(), LVar("a")))
+          pp(Unary(MINUS, LVar("a")))
         }
         assertResult("-A") {
-          pp(Unary(MINUS(), ConstLit("A")))
+          pp(Unary(MINUS, ConstLit("A")))
         }
         assertResult("-(1 + 2)") {
-          pp(Unary(MINUS(), Binary(PLUS(), IntLit(1), IntLit(2))))
+          pp(Unary(MINUS, Binary(PLUS, IntLit(1), IntLit(2))))
         }
       }
 
@@ -300,7 +300,7 @@ end""") {
           pp(Call(None, "call", Some(ActualArgs(List(LVar("a")))), None))
         }
         assertResult("call(a) + 1") {
-          pp(Binary(PLUS(), Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1)))
+          pp(Binary(PLUS, Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1)))
         }
         assertResult("a1.call") {
           pp(Call(Some(LVar("a1")), "call", None, None))
@@ -313,7 +313,7 @@ end""") {
       it ("prints if expression") {
         assertResult("""if true
   1 + 2
-end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS(),IntLit(1),IntLit(2)))))) }
+end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))))) }
         assertResult("""unless a(10)
   b
 end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
@@ -321,26 +321,26 @@ end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None
 
       it ("print class expr") {
         assertResult("""class A
-end""") { pp(ClassExpr(ConstLit("A"), Stmnts(List()))) }
+end""") { pp(ClassExpr(ConstLit("A"), Stmnts(Nil))) }
         assertResult("""class A
   def a
     1 + 2
   end
 end""") {
           pp(ClassExpr(ConstLit("A"), Stmnts(List(
-            DefExpr(("a"), None, Stmnts(List(Binary(PLUS(), IntLit(1), IntLit(2)))))))))
+            DefExpr(("a"), None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2)))))))))
         }
       }
 
       it ("print def expr") {
         assertResult("""def a
 end""") {
-          pp(DefExpr(("a"), None, Stmnts(List())))
+          pp(DefExpr(("a"), None, Stmnts(Nil)))
         }
 
         assertResult("""def a(opt)
 end""") {
-          pp(DefExpr(("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(List())))
+          pp(DefExpr(("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(Nil)))
         }
       }
     }
@@ -348,41 +348,41 @@ end""") {
     describe("arg") {
       it ("prints binary expr") {
         assertResult("1 + 2") {
-          pp(Binary(PLUS(), IntLit(1), IntLit(2)))
+          pp(Binary(PLUS, IntLit(1), IntLit(2)))
         }
         assertResult("-2 + 1") {
-          pp(Binary(PLUS(), Unary(MINUS(), IntLit(2)), IntLit(1)))
+          pp(Binary(PLUS, Unary(MINUS, IntLit(2)), IntLit(1)))
         }
         assertResult("1 * 2") {
-          pp(Binary(MUL(), IntLit(1), IntLit(2)))
+          pp(Binary(MUL, IntLit(1), IntLit(2)))
         }
         assertResult("1 + 2 * 1 + 10") {
-          pp(Binary(PLUS(), Binary(PLUS(), IntLit(1), Binary(MUL(), IntLit(2), IntLit(1))), IntLit(10)))
+          pp(Binary(PLUS, Binary(PLUS, IntLit(1), Binary(MUL, IntLit(2), IntLit(1))), IntLit(10)))
         }
         assertResult("1 - 2 - 3") {
-          pp(Binary(MINUS(), Binary(MINUS(), IntLit(1), IntLit(2)), IntLit(3)))
+          pp(Binary(MINUS, Binary(MINUS, IntLit(1), IntLit(2)), IntLit(3)))
         }
       }
 
       it ("prints compare binary") {
         assertResult("1 < 2") {
-          pp(Binary(LT(), IntLit(1), IntLit(2)))
+          pp(Binary(LT, IntLit(1), IntLit(2)))
         }
         assertResult("1 >= 2") {
-          pp(Binary(GE(), IntLit(1), IntLit(2)))
+          pp(Binary(GE, IntLit(1), IntLit(2)))
         }
         assertResult("1 + 2 >= 3") {
-          pp(Binary(GE(), Binary(PLUS(), IntLit(1), IntLit(2)), IntLit(3)))
+          pp(Binary(GE, Binary(PLUS, IntLit(1), IntLit(2)), IntLit(3)))
         }
       }
 
       it ("prints cond binary") {
         assertResult("true && false") {
-          pp(Binary(AND(), BoolLit(true), BoolLit(false)))
+          pp(Binary(AND, BoolLit(true), BoolLit(false)))
         }
       }
       assertResult("true || false && false") {
-        pp(Binary(OR(), BoolLit(true), Binary(AND(), BoolLit(false), BoolLit(false))))
+        pp(Binary(OR, BoolLit(true), Binary(AND, BoolLit(false), BoolLit(false))))
       }
     }
   }

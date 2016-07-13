@@ -9,21 +9,21 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   override protected def commentLiteral = "#"
 
   protected lazy val EOL = opt('\r') <~ '\n'
-  protected lazy val t_plus: PackratParser[PLUS] = "+" ^^^ PLUS()
-  protected lazy val t_minus: PackratParser[MINUS] = "-" ^^^ MINUS()
-  protected lazy val t_mul: PackratParser[MUL] = "*" ^^^ MUL()
-  protected lazy val t_div: PackratParser[DIV] = "/" ^^^ DIV()
-  protected lazy val t_and: PackratParser[AND] = "&&" ^^^ AND()
-  protected lazy val t_or: PackratParser[OR] = "||"  ^^^ OR()
-  protected lazy val t_gt: PackratParser[GT] = ">" ^^^ GT()
-  protected lazy val t_ge: PackratParser[GE] = ">=" ^^^ GE()
-  protected lazy val t_lt: PackratParser[LT] = "<" ^^^ LT()
-  protected lazy val t_le: PackratParser[LE] = "<=" ^^^ LE()
-  protected lazy val t_eq: PackratParser[EQ] = "=" ^^^ EQ()
-  protected lazy val t_adde: PackratParser[ADDE] = "+=" ^^^ ADDE()
-  protected lazy val t_sube: PackratParser[SUBE] = "-=" ^^^ SUBE()
-  protected lazy val t_ande: PackratParser[ANDE] = "&&=" ^^^ ANDE()
-  protected lazy val t_ore: PackratParser[ORE] = "||=" ^^^ ORE()
+  protected lazy val t_plus: PackratParser[Op] = "+" ^^^ PLUS
+  protected lazy val t_minus: PackratParser[Op] = "-" ^^^ MINUS
+  protected lazy val t_mul: PackratParser[Op] = "*" ^^^ MUL
+  protected lazy val t_div: PackratParser[Op] = "/" ^^^ DIV
+  protected lazy val t_and: PackratParser[Op] = "&&" ^^^ AND
+  protected lazy val t_or: PackratParser[Op] = "||"  ^^^ OR
+  protected lazy val t_gt: PackratParser[Op] = ">" ^^^ GT
+  protected lazy val t_ge: PackratParser[Op] = ">=" ^^^ GE
+  protected lazy val t_lt: PackratParser[Op] = "<" ^^^ LT
+  protected lazy val t_le: PackratParser[Op] = "<=" ^^^ LE
+  protected lazy val t_eq: PackratParser[Op] = "=" ^^^ EQ
+  protected lazy val t_adde: PackratParser[Op] = "+=" ^^^ ADDE
+  protected lazy val t_sube: PackratParser[Op] = "-=" ^^^ SUBE
+  protected lazy val t_ande: PackratParser[Op] = "&&=" ^^^ ANDE
+  protected lazy val t_ore: PackratParser[Op] = "||=" ^^^ ORE
   protected lazy val t_space: PackratParser[String] = customLiteral(" ")
 
   protected def reserved = reserved_value
@@ -40,8 +40,8 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val trueValue: PackratParser[BoolLit] = "true" ^^^ BoolLit(true)
   protected lazy val bool: PackratParser[BoolLit] = trueValue | falseValue
   protected lazy val symbol: PackratParser[SymbolLit] = ":" ~> T_SYMBOL ^^ SymbolLit
-  protected lazy val valWithNot: PackratParser[Unary] = "!" ~> (bool | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { Unary(EXT(), _) }
-  protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS(), _) }
+  protected lazy val valWithNot: PackratParser[Unary] = "!" ~> (bool | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { Unary(EXT, _) }
+  protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS, _) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
   protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
   protected lazy val ret: PackratParser[Expr] = "return" ~> aArgs.? ^^ { args => Return(args.getOrElse(Nil)) }
@@ -86,7 +86,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val reciverMethodCall: PackratParser[Call] = (primary <~ ".") ~ T_MNAME ~ actualArgs2 ~ block.? ^^ { case recv ~ name ~ args ~ block => Call(Some(recv), name, Some(args), block) }
   protected lazy val simpleMethodCall: PackratParser[Call] = lvar ~ actualArgs2  ~ block.? ^^ { case LVar(name) ~ args ~ block => Call(None, name, Some(args), block) }
   protected lazy val methodCall: PackratParser[Call] = simpleMethodCall | reciverMethodCall
-  protected lazy val methodCallNot: PackratParser[Unary] = "!" ~> methodCall ^^ { Unary(EXT(), _) }
+  protected lazy val methodCallNot: PackratParser[Unary] = "!" ~> methodCall ^^ { Unary(EXT, _) }
 
   // Command call
   protected lazy val commandArgs: PackratParser[ActualArgs] = aArgs ^^ ActualArgs
@@ -105,13 +105,13 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))
   } | command
-  protected lazy val CommadCallNot: PackratParser[Unary] = "!" ~> commadCall ^^ { Unary(EXT(), _) }
+  protected lazy val CommadCallNot: PackratParser[Unary] = "!" ~> commadCall ^^ { Unary(EXT, _) }
 
   protected lazy val exprR: PackratParser[(Op, Expr)] = operator ~ primary ^^ { case op ~ f => (op, f) }
 
   protected lazy val lhs: PackratParser[Expr] = aref | (primary <~ ".") ~ (T_MNAME | const) ^^ {
     case rev ~ ConstLit(c) => Cmd(Some(rev), c, None, None)
-    case rev ~ name => Cmd(Some(rev), name.toString(), None, None)
+    case rev ~ name => Cmd(Some(rev), name.toString, None, None)
   }  | userVar
 
   // Ignore double assign
@@ -140,7 +140,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {
       case (Nil, expr) => expr
-      case (e, expr) => throw new Exception(e.toString())
+      case (e, expr) => throw new Exception(e.toString)
     }
   }
 
