@@ -28,7 +28,7 @@ class ParserMapTest extends FunSpec {
     assertResult(parser.map { parseAll(_, in).get }) { Some(p).map { x => (MyParsers.phrase(x)(new CharSequenceReader(in))).get } }
 
   describe("#get") {
-    val m = PMap.empty[String, Char]
+    val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
     m.put(Set("origin", "sub"), sub)
     m.put(Set("mul"), mul)
@@ -52,7 +52,7 @@ class ParserMapTest extends FunSpec {
   }
 
   describe("#getNot") {
-    val m = PMap.empty[String, Char]
+    val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
     m.put(Set("origin", "sub"), sub)
     m.put(Set("mul", "sub"), mul)
@@ -75,7 +75,7 @@ class ParserMapTest extends FunSpec {
   }
 
   describe("#getWithAllMatch") {
-    val m = PMap.empty[String, Char]
+    val m =  ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
     m.put(Set("origin", "sub"), sub)
     m.put(Set("origin", "sub", "mul"), div)
@@ -101,7 +101,7 @@ class ParserMapTest extends FunSpec {
   }
 
   describe("#getWithAllMatch with execept key") {
-    val m = PMap.empty[String, Char]
+    val m = ParserMap.empty[String, Char]
     m.put(Set("origin", "sub"), sub)
     m.put(Set("origin", "sub", "mul"), div)
     m.put(Set("origin", "add", "mul"), add)

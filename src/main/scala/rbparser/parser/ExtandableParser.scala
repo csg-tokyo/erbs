@@ -6,11 +6,11 @@ import ast._
 import token.OperatorToken
 import scala.collection.mutable.{Map => MMap}
 
-class ExtendableParser extends RubyParser with OperatorToken with ParserMap {
+class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
   protected val DEFAULT_TAG = "origin"
+  protected val pmap: ParserMap[String, Expr] = ParserMap.empty[String, Expr]
 
   // terminal -> MatchedAst
-  protected val pmap: PMap[String, Expr] = PMap.empty[String, Expr]
   protected val omap: MMap[String, List[Operator]] =  MMap.empty[String, List[Operator]]
 
   override def parse(in: String): Either[String, Stmnts] = {
