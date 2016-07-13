@@ -1,4 +1,5 @@
-package rbparser
+package rbparser.parser.ast
+package concerns
 
 import org.scalatest._
 

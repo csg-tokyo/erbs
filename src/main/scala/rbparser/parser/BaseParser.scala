@@ -1,11 +1,10 @@
-package rbparser
-package parser
+package rbparser.parser
 
 import scala.util.parsing.combinator.{RegexParsers, PackratParsers}
 
-trait BasicParser[T] extends RegexParsers with PackratParsers {
+trait BaseParser[T] extends RegexParsers with PackratParsers {
   protected def commentLiteral: String
-  protected def stmnts: PackratParser[T]
+  protected def stmnts: Parser[T]
 
   def parse(in: String): Either[String, T] = {
     parseAll(stmnts, preprocess(in)) match {

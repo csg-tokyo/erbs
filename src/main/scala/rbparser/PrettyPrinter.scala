@@ -1,11 +1,14 @@
 package rbparser
 
+import parser.ast._
+
 object PrettyPrinter {
-  def print(ast: ASTs) = println(call(ast))
-  def call(ast: ASTs) = PrettyPrinter(ast, 0).call
+  def print(ast: AST) = println(call(ast))
+  def call(ast: AST) = PrettyPrinter(ast, 0).call
 }
 
-case class PrettyPrinter(ast: ASTs, private var depth: Int) {
+case class PrettyPrinter(ast: AST, private var depth: Int) {
+  private var classDepth = 0;
   private val buffer = new StringBuilder
 
   def call: String = {
@@ -13,7 +16,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
     flush()
   }
 
-  def _write(ast: ASTs) = ast match {
+  def _write(ast: AST) = ast match {
     case IntLit(v) => write(v.toString)
     case DoubleLit(v) => write(v.toString)
     case BoolLit(v) => write(v.toString)
@@ -84,7 +87,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       case Nil => ()
       case _ => write(joinWithComma(vars))
     }
-    case ClassExpr(name, Stmnts(stmnts)) => {
+    case ClassExpr(name, Stmnts(stmnts)) => classNested {
       writeln("class " + format(name))
       nested {
         for (i <- 0 until stmnts.length) {
@@ -94,7 +97,7 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
       }
       indented_write("end")
     }
-    case ModuleExpr(name, Stmnts(stmnts)) => {
+    case ModuleExpr(name, Stmnts(stmnts)) => classNested {
       writeln("module " + format(name))
       nested {
         for (i <- 0 until stmnts.length) {
@@ -111,18 +114,26 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
     }
     case Stmnts(stmnts) => {
       val s = stmnts.size
-      for (i <- 0 until s) {
-        stmnts(i) match {
-          case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
-          case stmnt if i == s => writeln(format(stmnt))
-          case stmnt@(ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
-          case stmnt => write(format(stmnt))
+      if (classDepth > 0) {
+        for (i <- 0 until s) {
+          stmnts(i) match {
+            case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
+            case stmnt if i == s => writeln(format(stmnt))
+            case stmnt@(ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
+            case stmnt => write(format(stmnt))
+          }
+        }
+      } else {
+        for (i <- 0 until s) {
+          stmnts(i) match {
+            case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
+            case stmnt@(DefExpr(_, _, _) | ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
+            case stmnt => writeln(format(stmnt))
+          }
         }
       }
     }
-    case Operators(_) => // noop
-    case Operator(_, _, _) => // noop
-    case Syntax(_, _) => // noop
+    case _ => // noop
   }
 
   private def flush(): String = buffer.toString()
@@ -135,13 +146,19 @@ case class PrettyPrinter(ast: ASTs, private var depth: Int) {
 
   private def indented: String = "  " * depth
 
+  private def classNested(fn: => Unit) = {
+    classDepth += 1
+    fn
+    classDepth -= 1
+  }
+
   private def nested(fn: => Unit) = {
     depth += 1
     fn
     depth -= 1
   }
 
-  private def format(ast: ASTs): String = PrettyPrinter(ast, depth).call
+  private def format(ast: AST): String = PrettyPrinter(ast, depth).call
 
   private def joinWithComma(vars: List[Expr]): String = vars.map(format(_)).mkString(", ")
 }

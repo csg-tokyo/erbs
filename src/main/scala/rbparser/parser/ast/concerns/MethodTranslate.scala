@@ -1,4 +1,5 @@
-package rbparser
+package rbparser.parser.ast
+package concerns
 
 trait MethodTranslate {
   val MODULE_NAME = "Operator"

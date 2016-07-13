@@ -1,13 +1,12 @@
-package rbparser
+package rbparser.parser
 
 import org.scalatest._
 
 import scala.util.parsing.combinator.{PackratParsers, RegexParsers}
 import scala.util.parsing.input.CharSequenceReader
-import parser.ExtendableParser
 import scala.language.implicitConversions
 
-class ParserMapTest extends FunSpec {
+class MapUtilTest extends FunSpec {
   // Hack: A exnteds extendableParser and import A._ to test ParserMap
   object A extends ExtendableParser
   import A._
@@ -76,7 +75,7 @@ class ParserMapTest extends FunSpec {
   }
 
   describe("#getWithAllMatch") {
-    val m = ParserMap.empty[String, Char]
+    val m =  ParserMap.empty[String, Char]
     m.put(Set("origin", "add"), add)
     m.put(Set("origin", "sub"), sub)
     m.put(Set("origin", "sub", "mul"), div)
