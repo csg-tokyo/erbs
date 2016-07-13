@@ -135,7 +135,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val stmnt_value: PackratParser[Expr] = postModifier | assign | expr
   protected var stmnt: PackratParser[Expr] = stmnt_value
 
-  override protected def stmnts: PackratParser[Stmnts] = (stmnt <~ (EOL | ";")).* ^^ Stmnts
+  override protected def stmnts: Parser[Stmnts] = (stmnt <~ (EOL | ";")).* ^^ Stmnts
 
   protected def makeBin(lh: Expr, rh: List[(Op, Expr)]): Expr = {
     innerMakeBin(lh, rh, 0) match {
