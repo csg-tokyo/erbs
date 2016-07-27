@@ -14,7 +14,8 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
   protected val pmap: ParserMap[String, Expr] = ParserMap.empty[String, Expr]
   protected val omap: OperatorMap =  OperatorMap.empty
 
-  override def stmnts: Parser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ { Stmnts(_).prependExpr(omap.toModule) }
+  override def stmnts: Parser[Stmnts] = midStatmnts ^^ { _.prependExpr(omap.toModule) }
+  protected def midStatmnts: Parser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
   override def reserved = K_OPERATOR | K_DEFS | super.reserved
   // Parse each item of syntax interleaved by '\s'
   protected lazy val v: PackratParser[String] = """[^()\s]+""".r ^^ identity
@@ -31,9 +32,9 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
 
   protected lazy val opTagPredicate: PackratParser[Map[String, Expr]] = "(" ~> tagHashBody.? <~ ")" ^^ { _.getOrElse(Map.empty) }
   protected lazy val opSyntax: PackratParser[Syntax] =  v.+ ~ opTagPredicate.? ^^ { case list ~ tags => Syntax(tags.getOrElse(Map.empty), list) }
-  protected lazy val opSemantics: PackratParser[Expr] = stmnt
+  protected lazy val opSemantics: PackratParser[Stmnts] = midStatmnts
   protected lazy val opTags: PackratParser[Set[String]] = formalArgs ^^ { case FormalArgs(args) => args.map { case LVar(v) => v}.toSet }
-  protected lazy val opDefinition: PackratParser[(Syntax, Expr)] = "defs" ~> opSyntax ~ opSemantics <~ "end" ^^ { case syntax ~ body => (syntax, body) }
+  protected lazy val opDefinition: PackratParser[(Syntax, Stmnts)] = "defs" ~> opSyntax ~ opSemantics <~ "end" ^^ { case syntax ~ body => (syntax, body) }
 
   protected lazy val defop: PackratParser[Operators] = "Operator" ~> opTags ~ opDefinition.+ <~ "end" ^^ { case tags ~ definitions =>
     val ops = Operators( definitions.map { case (syntax, body) => Operator(tags, syntax, body) } )

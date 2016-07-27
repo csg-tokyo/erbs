@@ -16,6 +16,7 @@ class IntegrationTest extends FunSpec {
 
   describe ("Extend Parser") {
     it ("should return value of ruby") {
+      fileAssertEqual("pipe.rbx", ".ensime_cache/")
       fileAssertEqual("cat.rbx", "cat file_path")
       fileAssertEqual("cat_ruby.rbx", "cat rack.rb")
       fileAssertEqual("aws_provider.rbx", "provider aws { access_key = your acess key }")
