@@ -89,7 +89,7 @@ case class Stmnts(v: List[Expr]) extends AST {
 case class Operators(ops: List[Operator]) extends Expr {
   def foreach = ops.foreach _
 }
-case class Operator(tags: Set[String], syntax: Syntax, body: Expr) extends Expr with MethodTranslate {
+case class Operator(tags: Set[String], syntax: Syntax, body: Stmnts) extends Expr with MethodTranslate {
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
 }

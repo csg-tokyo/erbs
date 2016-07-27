@@ -623,7 +623,7 @@ end
       assertResult(Operators(
         List(Operator(Set("mod", "origin"),
           Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
-          Assign(LVar("y"), LVar("x"), EQ))))) {
+          Stmnts(List(Assign(LVar("y"), LVar("x"), EQ))))))) {
         parse("""
 Operator(mod, origin)
   defs x -> y ( x: origin, y: origin)
@@ -639,10 +639,10 @@ end
         assertResult(Operators(List(
           Operator(Set("mod", "origin"),
             Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "->", "y")),
-            Assign(LVar("y"), LVar("x"), EQ)),
+            Stmnts(List(Assign(LVar("y"), LVar("x"), EQ)))),
           Operator(Set("mod", "origin"),
             Syntax(Map("x" -> LVar("origin"), "y" -> LVar("origin")), List("x", "<-", "y")),
-            Assign(LVar("x"), LVar("y"), EQ))))) {
+            Stmnts(List(Assign(LVar("x"), LVar("y"), EQ))))))) {
           parse("""
 Operator(mod, origin)
   defs x -> y ( x: origin, y: origin)
@@ -661,9 +661,9 @@ end
     describe ("when tag has condition") {
       it ("parses and, or (but this example is invalid)") {
         assertResult(Operators(List(
-          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR, LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Assign(LVar("x"), IntLit(1), EQ)),
-          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR, LVar("origin"), Binary(AND, LVar("origin"), LVar("mod"))), "y" -> Binary(AND, LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Assign(LVar("x"), LVar("y"), EQ))
-        ))) {
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR, LVar("origin"), LVar("mod"))), List("x", "<-", "1")), Stmnts(List(Assign(LVar("x"), IntLit(1), EQ)))),
+          Operator(Set("origin"), Syntax(Map("x" -> Binary(OR, LVar("origin"), Binary(AND, LVar("origin"), LVar("mod"))), "y" -> Binary(AND, LVar("origin"), LVar("mod"))), List("x", "<-", "y")), Stmnts(List(Assign(LVar("x"), LVar("y"), EQ)))
+        )))) {
           parse("""
 Operator(mod, origin)
   defs x <- 1 (x: origin)
