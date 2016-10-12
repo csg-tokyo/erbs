@@ -1,6 +1,6 @@
-package rbparser
+package erbs
 
-import rbparser.parser.ast._
+import erbs.parser.ast._
 
 import org.scalatest._
 

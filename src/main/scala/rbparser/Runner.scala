@@ -1,4 +1,4 @@
-package rbparser
+package erbs
 
 object Runner {
   def main(args: Array[String]): Unit = {

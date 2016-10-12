@@ -1,4 +1,4 @@
-package rbparser.parser.ast
+package erbs.parser.ast
 
 import concerns.MethodTranslate
 
