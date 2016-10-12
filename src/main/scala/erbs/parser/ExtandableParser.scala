@@ -43,7 +43,7 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
   }
 
   protected def extendWith(operators: Operators): Unit = {
-    register_operators(operators)
+    registerOperators(operators)
     for (op <- operators.ops if op.tags.contains(DEFAULT_TAG)) {
       pmap.getWithAllMatch(op.tags).foreach { p =>
         val tmp = stmnt
@@ -52,7 +52,7 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
     }
   }
 
-  protected def register_operators(ops: Operators) = ops.foreach { op =>
+  protected def registerOperators(ops: Operators) = ops.foreach { op =>
     omap.put(op)
     pmap.put(op.tags, buildParser(op))
   }
