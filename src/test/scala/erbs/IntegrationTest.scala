@@ -1,10 +1,10 @@
-package rbparser
+package erbs
 
 import org.scalatest._
 import scala.io.Source
 import java.io._
 import scala.sys.process._
-import rbparser.parser.ast._
+import erbs.parser.ast._
 
 class IntegrationTest extends FunSpec {
   describe ("Pretty Print") {

@@ -1,4 +1,4 @@
-package rbparser.parser.token
+package erbs.parser.token
 
 trait OperatorToken {
   val K_OPERATOR =  """Operator\b""".r

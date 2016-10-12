@@ -1,8 +1,8 @@
-package rbparser.parser.util
+package erbs.parser.util
 
 import scala.util.parsing.combinator.PackratParsers
 import scala.collection.mutable.{Map => MMap}
-import rbparser.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
+import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
 
 trait MapUtil extends PackratParsers {
   object ParserMap {

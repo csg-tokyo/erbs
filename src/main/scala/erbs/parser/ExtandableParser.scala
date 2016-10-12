@@ -1,4 +1,4 @@
-package rbparser
+package erbs
 package parser
 
 import util._

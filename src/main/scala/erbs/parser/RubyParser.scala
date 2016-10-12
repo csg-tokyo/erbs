@@ -1,4 +1,4 @@
-package rbparser.parser
+package erbs.parser
 
 import scala.util.matching.Regex
 import token.Tokens

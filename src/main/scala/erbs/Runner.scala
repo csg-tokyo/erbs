@@ -1,11 +1,11 @@
-import rbparser._
+package erbs
 
-object Main {
+object Runner {
   def main(args: Array[String]): Unit = {
-    // test1
+    // example1
   }
 
-  def test1 = {
+  def example1 = {
     val p = new Parser
     println(p.parse("@a.call + 10\n"))
     println(p.parse("!a1._calL?(10)\n"))

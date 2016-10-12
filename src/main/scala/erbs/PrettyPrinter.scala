@@ -1,6 +1,6 @@
-package rbparser
+package erbs
 
-import parser.ast._
+import erbs.parser.ast._
 
 object PrettyPrinter {
   def print(ast: AST) = println(call(ast))
