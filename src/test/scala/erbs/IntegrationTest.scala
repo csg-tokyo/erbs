@@ -27,6 +27,13 @@ class IntegrationTest extends FunSpec {
   secret_key = your secret key
   region= us-east-1
 }""")
+
+      // fileAssertEqual("git_co.rbx", "git checkout master")
+      // fileAssertEqual("cat2.rbx", "git checkout master")
+      // fileAssertEqual("cat2.rbx", "git checkout master")
+      // fileAssertEqual("redirect_cat.rbx", "")
+      //       fileAssertEqual("sql.rbx", "access users and get name")
+      //       fileAssertEqual("redirect_cat.rbx", "")
     }
   }
 

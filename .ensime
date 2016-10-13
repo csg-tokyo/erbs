@@ -5,6 +5,7 @@
  :name "erbs"
  :java-home "/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home"
  :java-flags ("-Xss2m" "-Xms1024m" "-Xmx1024m" "-XX:ReservedCodeCacheSize=128m" "-XX:MaxMetaspaceSize=256m")
+ :java-compiler-args nil
  :reference-source-roots ("/Library/Java/JavaVirtualMachines/jdk1.8.0_102.jdk/Contents/Home/src.zip")
  :scala-version "2.11.8"
  :compiler-args ("-feature" "-deprecation" "-Xlint" "-Yinline-warnings" "-Yno-adapted-args" "-Ywarn-dead-code" "-Ywarn-numeric-widen" "-Xfuture" "-Ywarn-unused-import" "-Ymacro-expand:discard")

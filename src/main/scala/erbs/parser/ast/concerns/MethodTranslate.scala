@@ -36,7 +36,7 @@ trait MethodTranslate {
   }
 
   private def normalizeSymbol(str: String): String = str.map {
-    case x if (x >= '0' && x <= '9') || (x >= 'a' && x <= 'z') || (x >= 'A' &&  x <= 'Z') || x == '_' || x == '_' => x
+    case x if (x >= '0' && x <= '9') || (x >= 'a' && x <= 'z') || (x >= 'A' &&  x <= 'Z') || x == '_' => x
     case x =>  x.toInt.toString
   }.mkString("")
 }

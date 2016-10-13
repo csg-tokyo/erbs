@@ -4,7 +4,6 @@ Operator(provider, oneline)
   end
 end
 
-
 Operator(config, provider)
   defs aws { body } (body: provider && oneline)
     "aws " + "{ " + body + " }"
