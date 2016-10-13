@@ -56,6 +56,7 @@ case class SymbolLit(v: String) extends Literal
 case class StringLit(v: String) extends Literal
 case class LVar(v: String) extends Literal
 case class IVar(v: String) extends Literal
+case class ATToken(v: String) extends Literal // @token
 case class Keyword(v: String) extends Literal
 
 sealed trait Expr extends AST

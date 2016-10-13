@@ -16,15 +16,16 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
 
   override def stmnts: Parser[Stmnts] = midStatmnts ^^ { _.prependExpr(omap.toModule) }
   protected def midStatmnts: Parser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
-  override def reserved = K_OPERATOR | K_DEFS | super.reserved
+  override def reserved = K_OPERATOR | K_DEFS | K_AT_TOKEN | super.reserved
   // Parse each item of syntax interleaved by '\s'
   protected lazy val v: PackratParser[String] = """[^()\s]+""".r ^^ identity
 
   protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => DNFBuilder.build(makeBin(f, e)) }
   protected lazy val tagExprR: PackratParser[(Op, Expr)] = tagOp ~ tagExpr ^^ { case op ~ f => (op, f) }
   protected lazy val tagOp: PackratParser[Op] = t_and | t_or
-  protected lazy val tagExLVar: PackratParser[Expr] = "!" ~> lvar ^^ { Unary(EXT, _) }
-  protected lazy val tagExpr: PackratParser[Expr] = tagExLVar | lvar  | "(" ~> tagBinary <~ ")"
+  protected lazy val tagLVar: PackratParser[Expr] = ("@token(" ~> lvar <~ ")") ^^ { case LVar(x) => ATToken(x) } |  lvar
+  protected lazy val tagExLVar: PackratParser[Expr] = "!" ~> tagLVar ^^ { Unary(EXT, _) }
+  protected lazy val tagExpr: PackratParser[Expr] = tagExLVar | tagLVar  | "(" ~> tagBinary <~ ")"
 
   protected lazy val tagSymbolKey: PackratParser[String] = lvar <~ ":" ^^ { case LVar(v) => v }
   protected lazy val tagKeyValue: PackratParser[Map[String, Expr]] = tagSymbolKey ~ tagBinary ^^ { case k ~ v => Map(k -> v) }
@@ -79,7 +80,11 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
     }
     case Unary(EXT, LVar(e)) => pmap.getNot(e)
     case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else pmap.get(key)
-    case x => throw new InvalidCondition(x.toString())
+    case ATToken(key) => Some(s"$key" ^^ LVar) // Create a new parser
+    case x => {
+      println(x)
+      throw new InvalidCondition(x.toString())
+    }
   }
 
   protected def collectTags(e: Expr): (Set[String], Set[String]) = e match {

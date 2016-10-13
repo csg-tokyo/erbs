@@ -709,6 +709,23 @@ resources aws
         }
       }
     }
+
+    describe ("when using @token") {
+      it ("parses @token") {
+        assertResult(Operators(
+          List(Operator(Set("mod", "origin"),
+            Syntax(Map("x" -> ATToken("abcd")), List("x", "->")),
+            Stmnts(List(LVar("x"))))))) {
+          parse("""
+Operator(mod, origin)
+  defs x -> (x: @token(abcd))
+    x
+  end
+end
+""")
+        }
+      }
+    }
   }
 
   def parse(in: String): Expr = (new Parser).parse(in + "\n") match {
