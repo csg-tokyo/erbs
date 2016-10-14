@@ -14,24 +14,25 @@ trait BaseParser[T] extends RegexParsers with PackratParsers {
     }
   }
 
-  protected def preprocess(body: String) = {
-    val lines = body.split("\n").toSeq.map {
-      line => trimSpace(removeComment(line))
-    }
-    removeEmptyLine(lines).mkString("\n") + "\n"
+  private def preprocess(body: String) =
+    body.lines
+      .map(trimComment.andThen(trimSpace).andThen(addNewLine))
+      .filter(_ != "\n").mkString
+
+  private val addNewLine: String => String = _ + "\n"
+
+  private val trimSpace: String => String = _.trim
+
+  private val trimComment =  { l: String =>
+    val i = l.indexOf(commentLiteral)
+    if (i != -1) l.take(i) else l
   }
 
-  protected def removeEmptyLine(lines: Seq[String]): Seq[String] = lines.filter(_.size > 0)
-
-  protected def removeComment(line: String) = {
-    val i = line.indexOf(commentLiteral)
-    if (i >= 0) line.take(i) else line
-  }
-
-  protected def trimSpace(line: String) = line.trim
-
-  // Avoid consuming whitespace from RegexParser
-  // if you write `customLiteral(" ")`, this space is needed as literal
+  /*
+   * RegexParser consumes space characters automaticaly (https://github.com/scala/scala-parser-combinators/blob/1.0.x/shared/src/main/scala/scala/util/parsing/combinator/RegexParsers.scala#L74).
+   * customLiteral is used in order to avoid consuming space charactors.
+   * `customLiteral(' ') #=> eed a space charactor`
+   */
   protected def customLiteral(s: String): Parser[String] = new Parser[String] {
     def apply(in: Input) = {
       val source = in.source
