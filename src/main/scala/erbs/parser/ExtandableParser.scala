@@ -6,10 +6,8 @@ import ast._
 import token.OperatorToken
 import scala.collection.mutable.{Map => MMap}
 
-class ExtendableParser extends RubyParser with OperatorToken with MapUtil {
-  private class NoSuchParser(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
-  private class InvalidCondition(message :String = null, cause :Throwable = null) extends RuntimeException(message, cause)
 
+class ExtendableParser extends RubyParser with OperatorToken with MapUtil with ParserErrors {
   protected val DEFAULT_TAG = "origin"
   protected val pmap: ParserMap[String, Expr] = ParserMap.empty[String, Expr]
   protected val omap: OperatorMap =  OperatorMap.empty
