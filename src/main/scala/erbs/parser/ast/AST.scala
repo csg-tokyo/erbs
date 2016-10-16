@@ -101,5 +101,11 @@ case class Operators(ops: Seq[Operator]) extends Expr {
 case class Operator(tags: Set[String], syntax: Syntax, body: Stmnts) extends Expr with MethodTranslate {
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
+
+  def hasToken(token: String) = syntax.terminals.contains(token)
 }
-case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
+
+case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr {
+  lazy val terminals = body.filter(!_.contains(nonTerminals))
+  lazy val nonTerminals = tags.keys
+}

@@ -711,18 +711,49 @@ resources aws
     }
 
     describe ("when using @token") {
-      it ("parses @token") {
-        assertResult(Operators(
-          List(Operator(Set("mod", "origin"),
-            Syntax(Map("x" -> ATToken("abcd")), List("x", "->")),
-            Stmnts(List(LVar("x"))))))) {
-          parse("""
+
+      val src = """
+Operator(foo)
+ defs fn a ^(a: baz)
+    a
+ end
+end
+
 Operator(mod, origin)
-  defs x -> (x: @token(abcd))
+  defs x -> (x: foo && @token(fn))
     x
   end
 end
-""")
+
+fn fn 10 ^ ^ ->
+"""
+
+      it ("parses @token") {
+        assertResult(
+          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
+            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
+              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
+                List(IntLit(10)))), None)))), None)))), None))
+        {
+          parse("""
+Operator(baz)
+  defs fn b ^(b: origin)
+    b
+  end
+end
+""" + src)
+        }
+      }
+
+      it ("fail to parses @token") {
+        assertThrows[parser.ParserErrors$NoSuchParser] {
+          parse("""
+Operator(baz)
+  defs fnn b ^(b: origin)
+    b
+  end
+end
+""" + src)
         }
       }
     }

@@ -27,19 +27,64 @@ trait MapUtil extends PackratParsers {
       m.filterKeys(cond).values.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
   }
 
-  object OperatorMap {
-    def empty = new OperatorMap
+  object Hoge {
+    def apply[T](op: Operator, p: => PackratParser[T]) = new Hoge(List(op), List(() => p))
   }
 
-  class OperatorMap (m: MMap[String, List[Operator]] = MMap.empty[String, List[Operator]]) {
-    def put(op: Operator) = m.get(op.className) match {
-      case Some(v) => m.put(op.className, op :: v)
-      case None => m.put(op.className, List(op))
+  case class Hoge[T](val operators: List[Operator], parsers: List[() => PackratParser[T]]) {
+    def isEmpty = operators.isEmpty || parsers.isEmpty
+
+    // TODO Should be able to receive multiple tokens
+    def selectByToken(token: String): Hoge[T] = {
+      val (o,p) = operators.zip(parsers).filter { case (o, p) => o.hasToken(token) }.unzip
+      Hoge(o, p)
     }
 
-    def toModule: Option[ModuleExpr] = if (m.size == 0) None else {
-      val body = m.toList.map { case (k, v) => ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod))) }
-      Some(ModuleExpr(ConstLit("Operator"), Stmnts(body)))
-    }
+    def renew(op: Operator, p: => PackratParser[T]) = Hoge(op :: operators , (() => p) :: parsers)
+
+    def toParser: Option[PackratParser[T]] =
+      parsers.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
   }
+
+  type Tag = String
+  type Tags = Set[Tag]
+
+  class HogeMap[T](storage: MMap[Tags, Hoge[T]] = MMap.empty[Tags, Hoge[T]]) {
+    // TODO implement "bulk save"
+
+    def put(tags: Tags, op: Operator, p: => PackratParser[T]) =
+      storage.get(tags) match {
+        case None =>  storage.put(tags, Hoge(op, p))
+        case Some(h) => storage.put(tags, h.renew(op, p))
+      }
+
+    def get(ts: Tag) = searchBy(_.contains(ts))
+
+    def getNot(ts: Tag) = searchBy(!_.contains(ts))
+
+    def getWithAllMatch(ts: Tags) = searchBy(ts.subsetOf(_))
+
+    def getWithAllMatch(ts: Tags, exceptKey: Tags) = searchBy {
+      tags => ts.subsetOf(tags) && exceptKey.forall(!tags.contains(_))
+    }
+
+    def getParsers(ts: Tags, exceptTags: Tags): Iterable[Hoge[T]] =
+      storage.filterKeys{ tags => ts.subsetOf(tags) && exceptTags.forall(!tags.contains(_)) }.values
+
+    def toModule: Option[ModuleExpr] = if (storage.size == 0) None else {
+      val opss = storage.values.flatMap(_.operators)
+      val body = opss.groupBy(_.className).map { case (k, v) =>
+        ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod).toList))
+      }
+      Some(ModuleExpr(ConstLit("Operator"), Stmnts(body.toList)))
+    }
+
+    private def searchBy(cond: Tags => Boolean): Option[PackratParser[T]] =
+      storage.filterKeys(cond).values.flatMap(_.toParser).reduceLeftOption { (acc, v) => acc | v }
+  }
+
+  // def rebuild(k: Tags, exceptKey: Tags, c: String) = {
+  //   val hs = getParsers(k, exceptKey).map { _.selectByToken(c) }.filter(!_.isEmpty)
+  //   for (h <- hs) { h.rebuild(c) }
+  // }
 }
