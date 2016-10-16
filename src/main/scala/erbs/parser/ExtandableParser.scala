@@ -4,8 +4,6 @@ package parser
 import util._
 import ast._
 import token.OperatorToken
-import scala.collection.mutable.{Map => MMap}
-
 
 class ExtendableParser extends RubyParser with OperatorToken with MapUtil with ParserErrors {
   protected val DEFAULT_TAG = "origin"

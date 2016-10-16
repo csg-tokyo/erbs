@@ -1,6 +1,5 @@
 package erbs.parser
 
-import scala.util.matching.Regex
 import token.Tokens
 import ast._
 

@@ -2,7 +2,7 @@ package erbs.parser
 
 import org.scalatest._
 
-import scala.util.parsing.combinator.{PackratParsers, RegexParsers}
+import scala.util.parsing.combinator.{PackratParsers}
 import scala.util.parsing.input.CharSequenceReader
 import scala.language.implicitConversions
 
