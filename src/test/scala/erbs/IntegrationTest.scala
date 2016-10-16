@@ -24,6 +24,7 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("recurcive_define.rbx", "provider id1 id2 id1 id1")
       fileAssertEqual("git_co.rbx", "git checkout master")
       fileAssertEqual("sql.rbx", "access users and get name")
+      fileAssertEqual("token_test1.rbx", "10")
       fileAssertEqual("cat2.rbx", """contents of hello.c
 contents of hello2.c""")
       fileAssertEqual("terraform.rbx", """provider aws {

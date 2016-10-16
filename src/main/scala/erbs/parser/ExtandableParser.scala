@@ -18,7 +18,7 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil with P
   protected lazy val tagBinary: PackratParser[Expr] = tagExpr ~ tagExprR.* ^^ { case f ~ e => DNFBuilder.build(makeBin(f, e)) }
   protected lazy val tagExprR: PackratParser[(Op, Expr)] = tagOp ~ tagExpr ^^ { case op ~ f => (op, f) }
   protected lazy val tagOp: PackratParser[Op] = t_and | t_or
-  protected lazy val tagLVar: PackratParser[Expr] = "@token(" ~> lvar <~ ")" ^^  (ATToken(_)) | lvar
+  protected lazy val tagLVar: PackratParser[Expr] = "@token(" ~> v <~ ")" ^^  (ATToken(_)) | lvar
   protected lazy val tagExLVar: PackratParser[Expr] = "!" ~> tagLVar ^^ (Unary(EXT, _))
   protected lazy val tagExpr: PackratParser[Expr] = tagExLVar | tagLVar  | "(" ~> tagBinary <~ ")"
 

@@ -768,32 +768,19 @@ fn fnn 10 ^ ^ ->
         }
       }
 
-      it ("when mutiple @token") {
+      it ("parses !@token") {
         assertResult(
-          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
-            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
-              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
-                List(IntLit(10)))), None)))), None)))), None)) {
+          Operators(List(
+            Operator(Set("origin"),
+              Syntax(Map("x" -> Binary(AND, LVar("origin"), Unary(EXT, ATToken("fn")))), List("fn", "x")),
+              Stmnts(List(LVar("x")))))))
+        {
           parse("""
-Operator(foo)
- defs fn a ^(a: baz)
-    a
- end
-end
-
-Operator(mod, origin)
-  defs x -> (x: foo && @token(fn))
+Operator(origin)
+  defs fn x(x: origin && !@token(fn))
     x
   end
 end
-
-Operator(baz)
-  defs fn b ^(b: origin && @token(fn))
-    b
-  end
-end
-
-fn fn 10 ^ ^ ->
 """)
         }
       }
