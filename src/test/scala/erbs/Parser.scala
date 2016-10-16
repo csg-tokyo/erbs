@@ -711,8 +711,14 @@ resources aws
     }
 
     describe ("when using @token") {
-
-      val src = """
+      it ("parses @token") {
+        assertResult(
+          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
+            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
+              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
+                List(IntLit(10)))), None)))), None)))), None))
+        {
+          parse("""
 Operator(foo)
  defs fn a ^(a: baz)
     a
@@ -725,23 +731,14 @@ Operator(mod, origin)
   end
 end
 
-fn fn 10 ^ ^ ->
-"""
-
-      it ("parses @token") {
-        assertResult(
-          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
-            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
-              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
-                List(IntLit(10)))), None)))), None)))), None))
-        {
-          parse("""
 Operator(baz)
   defs fn b ^(b: origin)
     b
   end
 end
-""" + src)
+
+fn fn 10 ^ ^ ->
+""")
         }
       }
 
@@ -753,7 +750,51 @@ Operator(baz)
     b
   end
 end
-""" + src)
+
+Operator(foo)
+ defs fn a ^(a: baz)
+    a
+ end
+end
+
+Operator(mod, origin)
+  defs x -> (x: foo && @token(fn))
+    x
+  end
+end
+
+fn fnn 10 ^ ^ ->
+""" )
+        }
+      }
+
+      it ("when mutiple @token") {
+        assertResult(
+          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
+            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
+              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
+                List(IntLit(10)))), None)))), None)))), None)) {
+          parse("""
+Operator(foo)
+ defs fn a ^(a: baz)
+    a
+ end
+end
+
+Operator(mod, origin)
+  defs x -> (x: foo && @token(fn))
+    x
+  end
+end
+
+Operator(baz)
+  defs fn b ^(b: origin && @token(fn))
+    b
+  end
+end
+
+fn fn 10 ^ ^ ->
+""")
         }
       }
     }

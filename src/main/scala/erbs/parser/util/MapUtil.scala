@@ -2,7 +2,7 @@ package erbs.parser.util
 
 import scala.util.parsing.combinator.PackratParsers
 import scala.collection.mutable.{Map => MMap}
-import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
+import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr, ATToken, EXT, Binary, Expr, AND, Unary}
 
 trait MapUtil extends PackratParsers {
   object ParserMap {
@@ -27,6 +27,22 @@ trait MapUtil extends PackratParsers {
       m.filterKeys(cond).values.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
   }
 
+  case class Context(
+    val ok: Set[String] = Set(),
+    val ng: Set[String] = Set()
+  ) {
+    lazy val isEmpty = ok.isEmpty && ng.isEmpty
+
+    lazy val contextList: Seq[Expr] = ok.toList.map(ATToken(_)) ++ ng.toList.map { e => Unary(EXT, ATToken(e)) }
+    lazy val allContext: Expr = contextList.reduceLeft{ (acc, e) => Binary(AND, acc, e) }
+
+    def fold[T](default: T)(fn: Expr => T) = if (isEmpty) default else fn(allContext)
+
+    def createNewContext(c: (Set[String], Set[String])) = c match {
+      case (nok, nng) =>  Context(nok ++ ok, nng ++ ng)
+    }
+  }
+
   object Hoge {
     def apply[T](op: Operator, p: => PackratParser[T]) = new Hoge(List(op), List(() => p))
   }
@@ -37,6 +53,13 @@ trait MapUtil extends PackratParsers {
     // TODO Should be able to receive multiple tokens
     def selectByToken(token: String): Hoge[T] = {
       val (o,p) = operators.zip(parsers).filter { case (o, p) => o.hasToken(token) }.unzip
+      Hoge(o, p)
+    }
+
+    def selectByContext(context: Context): Hoge[T] = {
+      val (o,p) = operators.zip(parsers).filter { case (o, p) =>
+        context.ok.forall(o.hasToken(_)) && context.ng.forall(!o.hasToken(_))
+      }.unzip
       Hoge(o, p)
     }
 
