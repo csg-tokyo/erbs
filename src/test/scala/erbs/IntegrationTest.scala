@@ -22,18 +22,16 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("cat_ruby.rbx", "cat rack.rb")
       fileAssertEqual("aws_provider.rbx", "provider aws { access_key = your acess key }")
       fileAssertEqual("recurcive_define.rbx", "provider id1 id2 id1 id1")
+      fileAssertEqual("git_co.rbx", "git checkout master")
+      fileAssertEqual("sql.rbx", "access users and get name")
+      fileAssertEqual("cat2.rbx", """contents of hello.c
+contents of hello2.c""")
       fileAssertEqual("terraform.rbx", """provider aws {
   access_key = your acess key
   secret_key = your secret key
   region= us-east-1
 }""")
-
-      // fileAssertEqual("git_co.rbx", "git checkout master")
-      // fileAssertEqual("cat2.rbx", "git checkout master")
-      // fileAssertEqual("cat2.rbx", "git checkout master")
       // fileAssertEqual("redirect_cat.rbx", "")
-      //       fileAssertEqual("sql.rbx", "access users and get name")
-      //       fileAssertEqual("redirect_cat.rbx", "")
     }
   }
 
