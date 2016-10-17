@@ -15,7 +15,8 @@ class IntegrationTest extends FunSpec {
   }
 
   describe ("Extend Parser") {
-    it ("should return value of ruby") {
+    it ("should return ruby value") {
+      fileAssertEqual("token_test2.rbx", "abcdefghijkl")
       fileAssertEqual("pipe.rbx", ".ensime_cache/")
       fileAssertEqual("cat.rbx", "cat file_path")
       fileAssertEqual("tag.rbx", "ruby-lang and haskell-lang are awesome")

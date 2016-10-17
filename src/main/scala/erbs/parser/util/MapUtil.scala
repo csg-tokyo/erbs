@@ -91,6 +91,9 @@ trait MapUtil extends PackratParsers {
       tags => ts.subsetOf(tags) && exceptKey.forall(!tags.contains(_))
     }
 
+    def getParsers(contxt: Context, ts: Tags, exceptTags: Tags): Iterable[Hoge[T]] =
+      getParsers(ts, exceptTags).map { _.selectByContext(contxt) }.filter(!_.isEmpty)
+
     def getParsers(ts: Tags, exceptTags: Tags): Iterable[Hoge[T]] =
       storage.filterKeys{ tags => ts.subsetOf(tags) && exceptTags.forall(!tags.contains(_)) }.values
 
