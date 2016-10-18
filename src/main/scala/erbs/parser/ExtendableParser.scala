@@ -2,7 +2,7 @@ package erbs
 package parser
 
 import ast._
-import util.DNFBuilder
+import util._
 import token.OperatorToken
 
 class ExtendableParser extends RubyParser with OperatorToken with ParserMap with ParserErrors {
@@ -57,8 +57,8 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
     }
   }
 
-  protected def buildParser(op: Operator): PackratParser[Expr] =
-    opToParsers(op, new Context()).reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ op.toMethodCall
+  protected def buildParser(op: Operator, context: Context = new Context()): PackratParser[Expr] =
+    opToParsers(op, context).reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ op.toMethodCall
 
   protected def opToParsers(op : Operator, context: Context) = op.terms.map {
     case Right(term) => term ^^^ Map.empty[String, Expr]
@@ -68,65 +68,44 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
     }
   }
 
-  object EmptySet {
-    def unapply(s: Set[String]): Boolean = s.isEmpty
-  }
+  object OnlyDefaultSet { def unapply(s: Set[String]): Boolean = s == Set(DEFAULT_TAG) }
 
   protected def findParser(cond: Expr, context: Context): Option[PackratParser[Expr]] =
     context.fold(cond)(e => DNFBuilder.build(Binary(AND, cond, e))) match {
-      case Binary(OR, l, r) => for (e1 <- findParser(l, context); e2 <- findParser(r, context)) yield { e1 | e2 }
+      case ATToken(key)        => None
+      case LVar(DEFAULT_TAG)   => Some(stmnt)
+      case LVar(key)           => hmap.get(key)
       case Unary(EXT, LVar(e)) => hmap.getNot(e)
-      case LVar(key) => if (DEFAULT_TAG == key) Some(stmnt) else { hmap.get(key) } // TODO fix else clause
-      case ATToken(key) => None // OK?
+      case Binary(OR, l, r)    => for (e1 <- findParser(l, context); e2 <- findParser(r, context)) yield { e1 | e2 }
       case e@Binary(AND, _, _) => collectTags(e) match {
-        case (EmptySet(), EmptySet()) => None // OK?
-        case (t, nt) if t == Set(DEFAULT_TAG) && nt == Set() => {
-          if (context.isEmpty) {
-            Some(stmnt)
-          } else {
-            // build new host parser
-            val ep = new ExtendableParser()
-
-            // Now, new parser can't used extend rule
-            // hmap.get(DEFAULT_TAG) match {
-            //   case Some(p) => {
-            //     val v:  PackratParser[Expr] = p | ep.stmnt.asInstanceOf[PackratParser[Expr]]
-            //     ep.stmnt = v.asInstanceOf[ep.PackratParser[Expr]]
-            //   }
-            //   case None => throw new NoSuchParser("")
-            // }
-
-            val n: Map[String, PackratParser[Op]] = (context.ok, context.ng) match {
-              case (EmptySet(), n) => HOST_OPERATORS.filter(e => !n.contains(e._1))
-              case (o, EmptySet()) => HOST_OPERATORS.filter(e => o.contains(e._1))
-              case (o, n) => HOST_OPERATORS.filter(e => !n.contains(e._1)).filter(e => o.contains(e._1))
-              case _ => Map()
-            }
-            ep.operator = n.values.reduceLeft { (acc, e) => acc | e }.asInstanceOf[ep.PackratParser[Op]]
-            Some(ep.stmnt.asInstanceOf[PackratParser[Expr]])
-          }
-        }
+        case (OnlyDefaultSet(), EmptySet()) => if (context.isEmpty) Some(stmnt) else buildNewStmnt(context)
         case (t, nt) => (collectTokens(e), context.isEmpty) match {
           case ((EmptySet(), EmptySet()), true) => hmap.getWithAllMatch(t, nt)
-          case (c, true) => { // New tokens appear, so we attach new context
+          case (c, empty) => {
             val newContxt = context.cloneWith(c)
-            //TODO cached
-            hmap.getParsers(newContxt, t, nt).map { p =>
-              val op = p.operator
-              val x: PackratParser[Expr] = opToParsers(op, newContxt).reduceLeft {
-                (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 }
-              } ^^ op.toMethodCall
-              x
-            }.reduceLeftOption { (acc, v) => acc | v }
+            val hs = hmap.getParsers(newContxt, t, nt)
+            val v = if (empty) hs.map { p => buildParser(p.operator, newContxt) } else hs.map(_.parser())
+            v.reduceLeftOption { (acc, v) =>  acc | v }
           }
-          case (c, false) => {
-            val hs = hmap.getParsers(context.cloneWith(c), t, nt)
-            hs.map { case Hoge(_, par) => par }.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
-          }
+          case invalid => throw new InvalidCondition(s"Tag requires at least one:  ${invalid.toString}")
         }
       }
-      case invalid => throw new InvalidCondition(invalid.toString())
+      case invalid => throw new InvalidCondition(s"Invalid tag conditions: ${invalid.toString}")
     }
+
+  private def buildNewStmnt(context: Context) = {
+    val ep = new ExtendableParser()
+    // Now, new parser can't used an existed rule
+    // hmap.get(DEFAULT_TAG) match {
+    //   case Some(p) => {
+    //     val v:  PackratParser[Expr] = p | ep.stmnt.asInstanceOf[PackratParser[Expr]]
+    //     ep.stmnt = v.asInstanceOf[ep.PackratParser[Expr]]
+    //   }
+    //   case None => throw new NoSuchParser("")
+    // }
+    ep.operator = context.collect(HOST_OPERATORS).values.reduceLeft { (acc, e) => acc | e }.asInstanceOf[ep.PackratParser[Op]]
+    Some(ep.stmnt.asInstanceOf[PackratParser[Expr]])
+  }
 
   protected def collectTokens(e: Expr): (Set[String], Set[String]) = e match {
     case Binary(AND, e1, e2) => (collectTokens(e1), collectTokens(e2)) match {
