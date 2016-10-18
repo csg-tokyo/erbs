@@ -112,7 +112,7 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil with P
         case (t, nt) => (collectTokens(e), context.isEmpty) match {
           case ((EmptySet(), EmptySet()), true) => hmap.getWithAllMatch(t, nt)
           case (c, true) => { // New tokens appear, so we attach new context
-            val newContxt = context.createNewContext(c)
+            val newContxt = context.cloneWith(c)
             //TODO cached
             hmap.getParsers(newContxt, t, nt).flatMap {
               _.operators.map { op =>
@@ -124,7 +124,7 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil with P
             }.reduceLeftOption { (acc, v) => acc | v }
           }
           case (c, false) => {
-            val hs = hmap.getParsers(context.createNewContext(c), t, nt)
+            val hs = hmap.getParsers(context.cloneWith(c), t, nt)
             hs.flatMap { case Hoge(_, par) => par }.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
           }
         }

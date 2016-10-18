@@ -1,8 +1,9 @@
-package erbs.parser.util
+package erbs.parser
+package util
 
 import scala.util.parsing.combinator.PackratParsers
 import scala.collection.mutable.{Map => MMap}
-import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr, ATToken, EXT, Binary, Expr, AND, Unary}
+import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
 
 trait MapUtil extends PackratParsers {
   object ParserMap {
@@ -25,22 +26,6 @@ trait MapUtil extends PackratParsers {
 
     private def searchBy(cond: Set[T] => Boolean): Option[PackratParser[S]] =
       m.filterKeys(cond).values.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
-  }
-
-  case class Context(
-    val ok: Set[String] = Set(),
-    val ng: Set[String] = Set()
-  ) {
-    lazy val isEmpty = ok.isEmpty && ng.isEmpty
-
-    lazy val contextList: Seq[Expr] = ok.toList.map(ATToken(_)) ++ ng.toList.map { e => Unary(EXT, ATToken(e)) }
-    lazy val allContext: Expr = contextList.reduceLeft{ (acc, e) => Binary(AND, acc, e) }
-
-    def fold[T](default: T)(fn: Expr => T) = if (isEmpty) default else fn(allContext)
-
-    def createNewContext(c: (Set[String], Set[String])) = c match {
-      case (nok, nng) =>  Context(nok ++ ok, nng ++ ng)
-    }
   }
 
   object Hoge {
