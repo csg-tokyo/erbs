@@ -43,7 +43,7 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
     val operators = Operators(tags, definitions)
 
     // register
-    for (op <- operators.ops) { hmap.put(op.tags, op, buildParser(op)) }
+    for (op <- operators.ops) { hmap.put(op.tags, Hoge(op, () => buildParser(op))) }
 
     // This method should be call after calling registerOperators
     extendHostRule(operators.ops.filter(_.tags.contains(DEFAULT_TAG)))
@@ -114,18 +114,17 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
           case (c, true) => { // New tokens appear, so we attach new context
             val newContxt = context.cloneWith(c)
             //TODO cached
-            hmap.getParsers(newContxt, t, nt).flatMap {
-              _.operators.map { op =>
-                val x: PackratParser[Expr] = opToParsers(op, newContxt).reduceLeft {
-                  (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 }
-                } ^^ op.toMethodCall
-                x
-              }
+            hmap.getParsers(newContxt, t, nt).map { p =>
+              val op = p.operator
+              val x: PackratParser[Expr] = opToParsers(op, newContxt).reduceLeft {
+                (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 }
+              } ^^ op.toMethodCall
+              x
             }.reduceLeftOption { (acc, v) => acc | v }
           }
           case (c, false) => {
             val hs = hmap.getParsers(context.cloneWith(c), t, nt)
-            hs.flatMap { case Hoge(_, par) => par }.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
+            hs.map { case Hoge(_, par) => par }.reduceLeftOption { (acc, v) => () => acc() | v() }.map(_())
           }
         }
       }
