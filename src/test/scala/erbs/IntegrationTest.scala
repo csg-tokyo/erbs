@@ -26,6 +26,7 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("git_co.rbx", "git checkout master")
       fileAssertEqual("sql.rbx", "access users and get name")
       fileAssertEqual("token_test1.rbx", "10")
+      fileAssertEqual("redirect_cat.rbx", "redirect build.sbt to tmp")
       fileAssertEqual("cat2.rbx", """contents of hello.c
 contents of hello2.c""")
       fileAssertEqual("terraform.rbx", """provider aws {
@@ -33,7 +34,6 @@ contents of hello2.c""")
   secret_key = your secret key
   region= us-east-1
 }""")
-      // fileAssertEqual("redirect_cat.rbx", "")
     }
   }
 
