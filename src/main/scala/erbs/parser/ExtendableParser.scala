@@ -1,11 +1,11 @@
 package erbs
 package parser
 
-import util._
 import ast._
+import util.DNFBuilder
 import token.OperatorToken
 
-class ExtendableParser extends RubyParser with OperatorToken with MapUtil with ParserErrors {
+class ExtendableParser extends RubyParser with OperatorToken with ParserMap with ParserErrors {
   protected val DEFAULT_TAG = "origin"
   protected val hmap: HogeMap[Expr] = new HogeMap
   private val HOST_OPERATORS = Map(

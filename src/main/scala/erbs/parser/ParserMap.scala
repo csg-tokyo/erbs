@@ -1,11 +1,10 @@
 package erbs.parser
-package util
 
 import scala.util.parsing.combinator.PackratParsers
 import scala.collection.mutable.{Map => MMap}
 import erbs.parser.ast.{Operator, Stmnts, ClassExpr, ConstLit, ModuleExpr}
 
-trait MapUtil extends PackratParsers {
+trait ParserMap extends PackratParsers {
   object ParserMap {
     def empty[T, S] = new ParserMap[T, S]
   }

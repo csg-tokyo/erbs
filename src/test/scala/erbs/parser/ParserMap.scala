@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.{PackratParsers}
 import scala.util.parsing.input.CharSequenceReader
 import scala.language.implicitConversions
 
-class MapUtilTest extends FunSpec {
+class ParserMapTest extends FunSpec {
   // Hack: A exnteds extendableParser and import A._ to test ParserMap
   object A extends ExtendableParser
   import A._
