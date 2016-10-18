@@ -8,6 +8,12 @@ import token.OperatorToken
 class ExtendableParser extends RubyParser with OperatorToken with MapUtil with ParserErrors {
   protected val DEFAULT_TAG = "origin"
   protected val hmap: HogeMap[Expr] = new HogeMap
+  private val HOST_OPERATORS = Map(
+    "+" -> t_plus, "-" -> t_minus, "*" -> t_mul, "/" -> t_div,
+    "&&" -> t_and, "||" -> t_or,
+    ">=" -> t_ge, ">" -> t_gt,
+    "<=" -> t_le, "<" -> t_lt
+  )
 
   override def stmnts: Parser[Stmnts] = midStatmnts ^^ { _.prependExpr(hmap.toModule) }
   protected def midStatmnts: Parser[Stmnts] = ((defop | stmnt) <~ (EOL | ";")).* ^^ Stmnts
@@ -69,13 +75,6 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil with P
     def unapply(s: Set[String]): Boolean = s.isEmpty
   }
 
-  val hostOperators = Map(
-    "+" -> t_plus, "-" -> t_minus, "*" -> t_mul, "/" -> t_div,
-    "&&" -> t_and, "||" -> t_or,
-    ">=" -> t_ge, ">" -> t_gt,
-    "<=" -> t_le, "<" -> t_lt
-  )
-
   protected def findParser(cond: Expr, context: Context): Option[PackratParser[Expr]] =
     context.fold(cond)(e => DNFBuilder.build(Binary(AND, cond, e))) match {
       case Binary(OR, l, r) => for (e1 <- findParser(l, context); e2 <- findParser(r, context)) yield { e1 | e2 }
@@ -101,9 +100,9 @@ class ExtendableParser extends RubyParser with OperatorToken with MapUtil with P
             // }
 
             val n: Map[String, PackratParser[Op]] = (context.ok, context.ng) match {
-              case (EmptySet(), n) => hostOperators.filter(e => !n.contains(e._1))
-              case (o, EmptySet()) => hostOperators.filter(e => o.contains(e._1))
-              case (o, n) => hostOperators.filter(e => !n.contains(e._1)).filter(e => o.contains(e._1))
+              case (EmptySet(), n) => HOST_OPERATORS.filter(e => !n.contains(e._1))
+              case (o, EmptySet()) => HOST_OPERATORS.filter(e => o.contains(e._1))
+              case (o, n) => HOST_OPERATORS.filter(e => !n.contains(e._1)).filter(e => o.contains(e._1))
               case _ => Map()
             }
             ep.operator = n.values.reduceLeft { (acc, e) => acc | e }.asInstanceOf[ep.PackratParser[Op]]
