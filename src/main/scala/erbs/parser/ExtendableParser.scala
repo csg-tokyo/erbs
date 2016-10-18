@@ -60,16 +60,13 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
   protected def buildParser(op: Operator): PackratParser[Expr] =
     opToParsers(op, new Context()).reduceLeft { (acc, v) => acc ~ v ^^ { case m1 ~ m2 => m1 ++ m2 } } ^^ op.toMethodCall
 
-  protected def opToParsers(op : Operator, context: Context): List[Parser[Map[String, Expr]]] =
-    op.syntaxBody.map { term =>
-      op.syntaxTags.get(term) match {
-        case None => term ^^^ Map.empty[String, Expr]
-        case Some(cond) => findParser(cond, context) match {
-          case None => throw new NoSuchParser(s"$term (tags of ${PrettyPrinter.call(cond)}) in ${op.syntaxBody}")
-          case Some(p) => p ^^ { ast => Map(term -> ast) }
-        }
-      }
+  protected def opToParsers(op : Operator, context: Context) = op.terms.map {
+    case Right(term) => term ^^^ Map.empty[String, Expr]
+    case Left((name, nonTerm)) => findParser(nonTerm, context) match {
+      case Some(p) => p ^^ { ast => Map(name -> ast) }
+      case None => throw new NoSuchParser(s"$nonTerm (tags of ${PrettyPrinter.call(nonTerm)}) in ${op.syntaxBody}")
     }
+  }
 
   object EmptySet {
     def unapply(s: Set[String]): Boolean = s.isEmpty

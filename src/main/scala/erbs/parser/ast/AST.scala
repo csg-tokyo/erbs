@@ -102,6 +102,13 @@ case class Operator(tags: Set[String], syntax: Syntax, body: Stmnts) extends Exp
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
 
+  def terms: Seq[Either[(String, Expr), String]] = syntax.body.map { term =>
+    syntaxTags.get(term) match {
+      case Some(expr) => Left((term, expr))
+      case None => Right(term)
+    }
+  }
+
   def hasToken(token: String) = syntax.terminals.contains(token)
 }
 
