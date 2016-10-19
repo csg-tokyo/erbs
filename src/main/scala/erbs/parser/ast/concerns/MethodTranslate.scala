@@ -11,7 +11,7 @@ trait MethodTranslate {
 
   def toMethodCall(map: Map[String, Expr]): Call = Call(None, callingName, toCallingArgs(map), None)
 
-  def toMethod: DefExpr = DefExpr(s"self.${methodName}", formalArgs, body)
+  def toMethodDefinition: DefExpr = DefExpr(s"self.${methodName}", formalArgs, body)
 
   lazy val className: String = tags.map(_.capitalize).toList.sorted.reduceLeft(_ + _)
 

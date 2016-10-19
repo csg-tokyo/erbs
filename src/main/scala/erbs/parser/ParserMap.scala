@@ -32,15 +32,11 @@ trait ParserMap extends PackratParsers {
 
   // This class represents an Erbs operator and its parser
   case class ErbsOperator[T](val operator: Operator, val parser: () => PackratParser[T]) {
-    def isEmpty = (operator == null) && (parser == null)
-
     def inContext(context: Context) =
       context.ok.forall(operator.hasToken(_)) && context.ng.forall(!operator.hasToken(_))
   }
 
   class ErbsOpMap[T](storage: MMap[Tags, List[ErbsOperator[T]]] = MMap.empty[Tags, List[ErbsOperator[T]]]) {
-    // TODO implement "bulk save"
-
     def put(tags: Tags, value: ErbsOperator[T]) =
       storage.get(tags) match {
         case None =>  storage.put(tags, List(value))
@@ -70,13 +66,9 @@ trait ParserMap extends PackratParsers {
     def toModule: Option[ModuleExpr] = if (storage.size == 0) None else {
       val opss = storage.values.flatMap { v => v.map(_.operator) }
       val body = opss.groupBy(_.className).map { case (k, v) =>
-        ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethod).toList))
+        ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethodDefinition).toList))
       }
       Some(ModuleExpr(ConstLit("Operator"), Stmnts(body.toList)))
     }
   }
-  // def rebuild(k: Tags, exceptKey: Tags, c: String) = {
-  //   val hs = getParsers(k, exceptKey).map { _.selectByToken(c) }.filter(!_.isEmpty)
-  //   for (h <- hs) { h.rebuild(c) }
-  // }
 }

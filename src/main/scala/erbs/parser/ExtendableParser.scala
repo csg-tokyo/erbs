@@ -10,9 +10,7 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
   protected val hmap: ErbsOpMap[Expr] = new ErbsOpMap
   private val HOST_OPERATORS = Map(
     "+" -> t_plus, "-" -> t_minus, "*" -> t_mul, "/" -> t_div,
-    "&&" -> t_and, "||" -> t_or,
-    ">=" -> t_ge, ">" -> t_gt,
-    "<=" -> t_le, "<" -> t_lt
+    "&&" -> t_and, "||" -> t_or, ">=" -> t_ge, ">" -> t_gt, "<=" -> t_le, "<" -> t_lt
   )
 
   override def stmnts: Parser[Stmnts] = midStatmnts ^^ { _.prependExpr(hmap.toModule) }

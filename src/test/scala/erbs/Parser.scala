@@ -319,8 +319,8 @@ end
         Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
         parse("""
 call :visual do |x|
-    x + 1
-    end
+  x + 1
+end
 """)
       }
       assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
@@ -335,7 +335,7 @@ end
         Some(DoBlock(None,Stmnts(List(Binary(PLUS, LVar("a"),IntLit(1)))))))) {
         parse("""
 A.new do
- a + 1
+  a + 1
 end
 """)
       }
