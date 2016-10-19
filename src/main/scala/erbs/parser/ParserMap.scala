@@ -30,17 +30,18 @@ trait ParserMap extends PackratParsers {
   type Tag = String
   type Tags = Set[Tag]
 
-  case class Hoge[T](val operator: Operator, val parser: () => PackratParser[T]) {
+  // This class represents an Erbs operator and its parser
+  case class ErbsOperator[T](val operator: Operator, val parser: () => PackratParser[T]) {
     def isEmpty = (operator == null) && (parser == null)
 
     def inContext(context: Context) =
       context.ok.forall(operator.hasToken(_)) && context.ng.forall(!operator.hasToken(_))
   }
 
-  class HogeMap[T](storage: MMap[Tags, List[Hoge[T]]] = MMap.empty[Tags, List[Hoge[T]]]) {
+  class ErbsOpMap[T](storage: MMap[Tags, List[ErbsOperator[T]]] = MMap.empty[Tags, List[ErbsOperator[T]]]) {
     // TODO implement "bulk save"
 
-    def put(tags: Tags, value: Hoge[T]) =
+    def put(tags: Tags, value: ErbsOperator[T]) =
       storage.get(tags) match {
         case None =>  storage.put(tags, List(value))
         case Some(items) => storage.put(tags, value :: items)
@@ -59,10 +60,10 @@ trait ParserMap extends PackratParsers {
     private def searchBy(cond: Tags => Boolean): Option[PackratParser[T]] =
       storage.filterKeys(cond).values.flatMap { p => p.map(_.parser()) }.reduceLeftOption { (acc, v) => acc | v }
 
-    def getParsers(context: Context, ts: Tags, exceptTags: Tags): Iterable[Hoge[T]] =
+    def getParsers(context: Context, ts: Tags, exceptTags: Tags): Iterable[ErbsOperator[T]] =
       getParsers(ts, exceptTags).filter(_.inContext(context))
 
-    def getParsers(ts: Tags, exceptTags: Tags): Iterable[Hoge[T]] =
+    def getParsers(ts: Tags, exceptTags: Tags): Iterable[ErbsOperator[T]] =
       storage.filterKeys { tags => ts.subsetOf(tags) && exceptTags.forall(!tags.contains(_)) }
         .values.flatMap(identity(_))
 

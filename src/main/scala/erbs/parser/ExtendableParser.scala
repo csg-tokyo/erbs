@@ -7,7 +7,7 @@ import token.OperatorToken
 
 class ExtendableParser extends RubyParser with OperatorToken with ParserMap with ParserErrors {
   protected val DEFAULT_TAG = "origin"
-  protected val hmap: HogeMap[Expr] = new HogeMap
+  protected val hmap: ErbsOpMap[Expr] = new ErbsOpMap
   private val HOST_OPERATORS = Map(
     "+" -> t_plus, "-" -> t_minus, "*" -> t_mul, "/" -> t_div,
     "&&" -> t_and, "||" -> t_or,
@@ -43,7 +43,7 @@ class ExtendableParser extends RubyParser with OperatorToken with ParserMap with
     val operators = Operators(tags, definitions)
 
     // register
-    for (op <- operators.ops) { hmap.put(op.tags, Hoge(op, () => buildParser(op))) }
+    for (op <- operators.ops) { hmap.put(op.tags, ErbsOperator(op, () => buildParser(op))) }
 
     // This method should be call after calling registerOperators
     extendHostRule(operators.ops.filter(_.tags.contains(DEFAULT_TAG)))
