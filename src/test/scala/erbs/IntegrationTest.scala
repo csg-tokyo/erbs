@@ -15,25 +15,24 @@ class IntegrationTest extends FunSpec {
   }
 
   describe ("Extend Parser") {
-    it ("should return value of ruby") {
+    it ("should return ruby value") {
+      fileAssertEqual("token_test1.rbx", "10")
+      fileAssertEqual("token_test2.rbx", "abcdefghijkl")
       fileAssertEqual("pipe.rbx", ".ensime_cache/")
       fileAssertEqual("cat.rbx", "cat file_path")
       fileAssertEqual("tag.rbx", "ruby-lang and haskell-lang are awesome")
       fileAssertEqual("cat_ruby.rbx", "cat rack.rb")
       fileAssertEqual("aws_provider.rbx", "provider aws { access_key = your acess key }")
       fileAssertEqual("recurcive_define.rbx", "provider id1 id2 id1 id1")
+      fileAssertEqual("git_co.rbx", "git checkout master")
+      fileAssertEqual("sql.rbx", "access users and get name")
+      fileAssertEqual("redirect_cat.rbx", "redirect build.sbt to tmp")
+      fileAssertEqual("cat2.rbx", """contents of hello.c and contents of hello2.c""")
       fileAssertEqual("terraform.rbx", """provider aws {
   access_key = your acess key
   secret_key = your secret key
   region= us-east-1
 }""")
-
-      // fileAssertEqual("git_co.rbx", "git checkout master")
-      // fileAssertEqual("cat2.rbx", "git checkout master")
-      // fileAssertEqual("cat2.rbx", "git checkout master")
-      // fileAssertEqual("redirect_cat.rbx", "")
-      //       fileAssertEqual("sql.rbx", "access users and get name")
-      //       fileAssertEqual("redirect_cat.rbx", "")
     }
   }
 

@@ -43,8 +43,8 @@ object Op {
   }
 }
 
-case class FormalArgs(names: List[LVar]) extends AST
-case class ActualArgs(names: List[Expr]) extends AST
+case class FormalArgs(val args: List[LVar]) extends AST
+case class ActualArgs(val args: List[Expr]) extends AST
 
 sealed trait AST
 sealed trait Literal extends Expr
@@ -54,8 +54,13 @@ case class BoolLit(v: Boolean) extends Literal
 case class ConstLit(v: String) extends Literal
 case class SymbolLit(v: String) extends Literal
 case class StringLit(v: String) extends Literal
-case class LVar(v: String) extends Literal
+case class LVar(val v: String) extends Literal
 case class IVar(v: String) extends Literal
+case class ATToken(v: String) extends Literal // @token
+object ATToken {
+  def apply(l: LVar) = new ATToken(l.v)
+}
+
 case class Keyword(v: String) extends Literal
 
 sealed trait Expr extends AST
@@ -85,12 +90,29 @@ case class Stmnts(v: List[Expr]) extends AST {
   def prependExpr(e: Option[Expr]) = Stmnts(e.map(_ :: v).getOrElse(v))
 }
 
-// extendted
-case class Operators(ops: List[Operator]) extends Expr {
+object Operators  {
+  def apply(tags: Set[String], defis: Seq[(Syntax, Stmnts)]): Operators =
+    Operators(defis.map { case (syn, smn) => Operator(tags, syn, smn) })
+}
+
+case class Operators(ops: Seq[Operator]) extends Expr {
   def foreach = ops.foreach _
 }
 case class Operator(tags: Set[String], syntax: Syntax, body: Stmnts) extends Expr with MethodTranslate {
   val syntaxBody: List[String] = syntax.body
   val syntaxTags: Map[String, Expr] = syntax.tags
+
+  def terms: Seq[Either[(String, Expr), String]] = syntax.body.map { term =>
+    syntaxTags.get(term) match {
+      case Some(expr) => Left((term, expr))
+      case None => Right(term)
+    }
+  }
+
+  def hasToken(token: String) = syntax.terminals.contains(token)
 }
-case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr
+
+case class Syntax(tags: Map[String, Expr], body: List[String]) extends Expr {
+  lazy val terminals = body.filter(!_.contains(nonTerminals))
+  lazy val nonTerminals = tags.keys
+}

@@ -1,6 +1,5 @@
 package erbs.parser
 
-import scala.util.matching.Regex
 import token.Tokens
 import ast._
 
@@ -28,7 +27,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
 
   protected def reserved = reserved_value
   protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
-  protected lazy val operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
+  var operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { e => DoubleLit(e.toDouble) }
   protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit

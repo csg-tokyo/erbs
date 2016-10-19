@@ -4,9 +4,8 @@ import org.scalatest._
 import erbs.parser.ast._
 
 class DNFBuilderTest extends FunSpec {
-
-  describe ("Primitive Form") {
-    it ("returns same as a input") {
+  describe ("when a primitive value") {
+    it ("returns as it is") {
       assertResult(LVar("a")) {
         DNFBuilder.build(LVar("a"))
       }
@@ -19,8 +18,8 @@ class DNFBuilderTest extends FunSpec {
     }
   }
 
-  describe ("And From") {
-    it ("retutrn DNF") {
+  describe ("when a value formed with '&' has passed") {
+    it ("returns a value formed with DNF") {
       assertResult(Binary(OR, Binary(AND, LVar("a"), LVar("c")), Binary(AND, LVar("b"), LVar("c"))), "(a || b) && c") {
         DNFBuilder.build(Binary(AND, Binary(OR, LVar("a"), LVar("b")), LVar("c")))
       }
@@ -42,8 +41,8 @@ class DNFBuilderTest extends FunSpec {
     }
   }
 
-  describe("Not Predicate") {
-    it ("returns DNF") {
+  describe("when a value incluing not(!) pridicate") {
+    it ("returns a value formed with DNF") {
       assertResult(LVar("a"), "!(!a)") {
         DNFBuilder.build(Unary(EXT, Unary(EXT, LVar("a"))))
       }

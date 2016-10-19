@@ -319,8 +319,8 @@ end
         Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
         parse("""
 call :visual do |x|
-    x + 1
-    end
+  x + 1
+end
 """)
       }
       assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
@@ -335,7 +335,7 @@ end
         Some(DoBlock(None,Stmnts(List(Binary(PLUS, LVar("a"),IntLit(1)))))))) {
         parse("""
 A.new do
- a + 1
+  a + 1
 end
 """)
       }
@@ -705,6 +705,82 @@ Operator(origin)
 end
 
 resources aws
+""")
+        }
+      }
+    }
+
+    describe ("when using @token") {
+      it ("parses @token") {
+        assertResult(
+          Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
+            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
+              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
+                List(IntLit(10)))), None)))), None)))), None))
+        {
+          parse("""
+Operator(foo)
+ defs fn a ^(a: baz)
+    a
+ end
+end
+
+Operator(mod, origin)
+  defs x -> (x: foo && @token(fn))
+    x
+  end
+end
+
+Operator(baz)
+  defs fn b ^(b: origin)
+    b
+  end
+end
+
+fn fn 10 ^ ^ ->
+""")
+        }
+      }
+
+      it ("fail to parses @token") {
+        assertThrows[parser.ParserErrors$NoSuchParser] {
+          parse("""
+Operator(baz)
+  defs fnn b ^(b: origin)
+    b
+  end
+end
+
+Operator(foo)
+ defs fn a ^(a: baz)
+    a
+ end
+end
+
+Operator(mod, origin)
+  defs x -> (x: foo && @token(fn))
+    x
+  end
+end
+
+fn fnn 10 ^ ^ ->
+""" )
+        }
+      }
+
+      it ("parses !@token") {
+        assertResult(
+          Operators(List(
+            Operator(Set("origin"),
+              Syntax(Map("x" -> Binary(AND, LVar("origin"), Unary(EXT, ATToken("fn")))), List("fn", "x")),
+              Stmnts(List(LVar("x")))))))
+        {
+          parse("""
+Operator(origin)
+  defs fn x(x: origin && !@token(fn))
+    x
+  end
+end
 """)
         }
       }

@@ -4,8 +4,8 @@ package concerns
 import org.scalatest._
 
 class MethodTranslateTest extends FunSpec {
-  describe ("toMethodCall") {
-    it ("convert methodcall with simple function") {
+  describe ("#toMethodCall") {
+    it ("converts operator to an AST of the function call") {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("a", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
@@ -14,7 +14,7 @@ class MethodTranslateTest extends FunSpec {
       }
     }
 
-    it ("convert methodcall with name including symbol") {
+    it ("converts operator to an AST of the function even if a function name has a symbol") {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("<=", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
@@ -24,13 +24,13 @@ class MethodTranslateTest extends FunSpec {
     }
   }
 
-  describe ("toMethod") {
+  describe ("#toMethodDefinition") {
     it ("converts operator to method") {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("<=", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
       assertResult(DefExpr("self.op_6061_B", Some(FormalArgs(List(LVar("b")))), Stmnts(List(IntLit(10))))) {
-        op.toMethod
+        op.toMethodDefinition
       }
     }
   }
