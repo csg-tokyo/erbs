@@ -34,6 +34,10 @@ class IntegrationTest extends FunSpec {
   region= us-east-1
 }""")
     }
+
+    it ("should work with terraform example") {
+      fileAssertEqual("terraform/docker.rbx", "provider docker_image 'ubuntu' {  secret_key = ubuntu:latest] }")
+    }
   }
 
   private def fileAssertEqual(filename: String, v: Any) = {
