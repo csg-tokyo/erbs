@@ -28,6 +28,7 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("sql.rbx", "access users and get name")
       fileAssertEqual("redirect_cat.rbx", "redirect build.sbt to tmp")
       fileAssertEqual("cat2.rbx", """contents of hello.c and contents of hello2.c""")
+      fileAssertEqual("eng.rbx", "yes")
       fileAssertEqual("help.rbx", """diff --help
 git --help""")
       fileAssertEqual("terraform.rbx", """provider aws {
@@ -38,7 +39,9 @@ git --help""")
     }
 
     it ("should work with terraform example") {
-      fileAssertEqual("terraform/docker.rbx", "provider docker_image 'ubuntu' {  secret_key = ubuntu:latest] }")
+      fileAssertEqual("terraform/docker.rbx", """provider docker { host = tcp://127.0.0.1:2376/ }
+provider docker_container 'foo' {  access_key = ${docker_image.ubuntu.latest} secret_key = foo }
+provider docker_image 'ubuntu' {  secret_key = ubuntu:latest }""")
     }
   }
 
