@@ -594,6 +594,9 @@ end""")
       assertResult(Binary(GE, Binary(PLUS, IntLit(1), IntLit(2)), IntLit(3))) {
         parse("1 + 2 >= 3")
       }
+      assertResult(Binary(EEQ, Binary(PLUS, IntLit(1), IntLit(2)), IntLit(3))) {
+        parse("1 + 2 == 3")
+      }
     }
 
     it ("pares cond binary") {

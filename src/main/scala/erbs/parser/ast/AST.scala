@@ -19,6 +19,7 @@ case object ORE extends Op    { override val prec: Int = 3 } // ||= TODO add ass
 case object ADDE extends Op    { override val prec: Int = 6 } // +=
 case object SUBE extends Op    { override val prec: Int = 6 } // -=
 case object EQ extends Op    { override val prec: Int = 6 } // =
+case object EEQ extends Op    { override val prec: Int = 6 } // ==
 case object DOT extends Op    { override val prec: Int = 30 }
 
 object Op {
@@ -39,6 +40,7 @@ object Op {
     case ANDE => "&&="
     case ADDE => "+="
     case SUBE => "-="
+    case EEQ => "=="
     case EQ => "="
   }
 }

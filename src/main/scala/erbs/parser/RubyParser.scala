@@ -14,6 +14,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val t_div: PackratParser[Op] = "/" ^^^ DIV
   protected lazy val t_and: PackratParser[Op] = "&&" ^^^ AND
   protected lazy val t_or: PackratParser[Op] = "||"  ^^^ OR
+  protected lazy val t_eeq: PackratParser[Op] = "==" ^^^ EEQ
   protected lazy val t_gt: PackratParser[Op] = ">" ^^^ GT
   protected lazy val t_ge: PackratParser[Op] = ">=" ^^^ GE
   protected lazy val t_lt: PackratParser[Op] = "<" ^^^ LT
@@ -27,7 +28,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
 
   protected def reserved = reserved_value
   protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
-  var operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt
+  var operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt | t_eeq
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { e => DoubleLit(e.toDouble) }
   protected lazy val string: PackratParser[StringLit] = (T_STRING | T_STRING_SINGLE) ^^ StringLit
@@ -57,6 +58,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolKey | rocketKey) ~ arg ^^ { case k ~ v => Map(k -> v) }
 
   // TODO add inheritace
+  // TODO else
   protected lazy val classExpr: PackratParser[ClassExpr] = "class" ~> const ~ stmnts <~ "end" ^^ { case name ~ body => ClassExpr(name, body) }
   protected lazy val moduleExpr: PackratParser[ModuleExpr] = "module" ~> const ~ stmnts <~ "end" ^^ { case name ~ body => ModuleExpr(name, body) }
   protected lazy val defExpr: PackratParser[DefExpr] = "def" ~> T_DEFMNAME ~ formalArgs.? ~ stmnts <~ "end" ^^ { case name ~ args ~ body => DefExpr(name, args, body) }
