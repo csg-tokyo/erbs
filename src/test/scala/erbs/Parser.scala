@@ -437,21 +437,21 @@ end
     }
 
     it ("parses if expression") {
-      assertResult(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))))) {
+      assertResult(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), None)) {
         parse("""
 if  true
   1 + 2
 end
 """)
       }
-      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) {
+      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) {
         parse("""
 if a(10)
   b
 end
 """)
       }
-      assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) {
+      assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) {
         parse("""
 unless a(10)
   b

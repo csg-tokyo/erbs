@@ -313,10 +313,10 @@ end""") {
       it ("prints if expression") {
         assertResult("""if true
   1 + 2
-end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))))) }
+end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), None)) }
         assertResult("""unless a(10)
   b
-end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))))) }
+end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) }
       }
 
       it ("print class expr") {

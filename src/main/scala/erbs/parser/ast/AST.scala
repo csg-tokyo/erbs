@@ -69,9 +69,9 @@ sealed trait Expr extends AST
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
 case class Hash(v: Map[Expr, Expr]) extends Expr
-case class IfExpr(cond: Expr, t_body: Stmnts) extends Expr
+case class IfExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
-case class UnlessExpr(cond: Expr, t_body: Stmnts) extends Expr
+case class UnlessExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
 case class Return(args: List[Expr]) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr

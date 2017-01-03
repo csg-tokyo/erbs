@@ -69,8 +69,8 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val actualArgs: PackratParser[ActualArgs] =  "(" ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral("(") ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
-  protected lazy val ifExpr: PackratParser[IfExpr] = "if" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => IfExpr(cond, body) }
-  protected lazy val unlessExpr: PackratParser[UnlessExpr] = "unless" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => UnlessExpr(cond, body) }
+  protected lazy val ifExpr: PackratParser[IfExpr] = "if" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => IfExpr(cond, body, None) }
+  protected lazy val unlessExpr: PackratParser[UnlessExpr] = "unless" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => UnlessExpr(cond, body, None) }
   protected lazy val branchExpr: PackratParser[Expr] = ifExpr | unlessExpr
 
   protected lazy val blockParamDef: PackratParser[ActualArgs] = "|" ~> fArgs <~ "|" ^^ ActualArgs
