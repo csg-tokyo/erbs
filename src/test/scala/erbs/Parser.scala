@@ -451,6 +451,17 @@ if a(10)
 end
 """)
       }
+      assertResult(IfExpr(BoolLit(true),
+          Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))),
+          Some(Stmnts(List(Binary(PLUS, IntLit(2), IntLit(3))))))) {
+        parse("""
+if true
+  1 + 2
+else
+  2 + 3
+end
+""")
+      }
       assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) {
         parse("""
 unless a(10)
