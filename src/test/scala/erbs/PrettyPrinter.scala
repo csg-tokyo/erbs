@@ -317,6 +317,11 @@ end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))
         assertResult("""unless a(10)
   b
 end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) }
+        assertResult("""if a(10)
+  b
+else
+  c
+end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Some((Stmnts(List(LVar("c"))))))) }
       }
 
       it ("print class expr") {
@@ -383,6 +388,24 @@ end""") {
       }
       assertResult("true || false && false") {
         pp(Binary(OR, BoolLit(true), Binary(AND, BoolLit(false), BoolLit(false))))
+      }
+    }
+
+    describe("nested") {
+      it ("prints valid intended code") {
+        assertResult("""class A
+  def a
+    if true
+      b
+    else
+      c
+    end
+  end
+end""") { pp(ClassExpr(ConstLit("A"),
+  Stmnts(List(DefExpr(("a"), None, Stmnts(
+    List(IfExpr(BoolLit(true), Stmnts(List(LVar("b"))), Some((Stmnts(List(LVar("c"))))))))
+  )))))
+        }
       }
     }
   }

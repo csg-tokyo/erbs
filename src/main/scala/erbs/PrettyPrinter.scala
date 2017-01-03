@@ -34,10 +34,15 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       val kvs = maps.map { kv => format(kv._1) + " => " + format(kv._2) }.mkString(", ")
       if (maps.size == 0) write("{}") else write("{ " + kvs + " }")
     }
-    case IfExpr(cond, Stmnts(stmnts), f_body) => {
+    case IfExpr(cond, Stmnts(stmnts), fBody) => {
       writeln("if " + format(cond))
       nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
-      val v = f_body.fold("")("else"+"\n"+format(_))
+      fBody match {
+        case Some(Stmnts(s)) =>
+          indentedWrite("else"+"\n")
+          nested { s.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+        case _ => // nothing
+      }
       indentedWrite("end")
     }
     case UnlessExpr(cond, Stmnts(stmnts), f_body) => {
