@@ -36,14 +36,14 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
     }
     case IfExpr(cond, Stmnts(stmnts), f_body) => {
       writeln("if " + format(cond))
-      nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
-      // val v = f_body.fold("")("else"+"\n"+format(_))
-      indented_write("end")
+      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      val v = f_body.fold("")("else"+"\n"+format(_))
+      indentedWrite("end")
     }
     case UnlessExpr(cond, Stmnts(stmnts), f_body) => {
       writeln("unless " + format(cond))
-      nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
-      indented_write("end")
+      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      indentedWrite("end")
     }
     case IfModExpr(cond, expr) => write(format(expr) + " if " + format(cond))
     case UnlessModExpr(cond, expr) => write(format(expr) + " unless " + format(cond))
@@ -65,8 +65,8 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
     }
     case DoBlock(args, Stmnts(stmnts)) => {
       writeln(" do" + args.fold("") (" |" + format(_) + "|"))
-      nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
-      indented_write("end")
+      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      indentedWrite("end")
     }
     case BraceBlock(args, Stmnts(stmnts)) => {
       if (stmnts.size < 2) {
@@ -75,8 +75,8 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
         write(" }")
       } else {
         writeln(" {" + args.fold("") (" |" + format(_) + "|"))
-        nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
-        indented_write("}")
+        nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+        indentedWrite("}")
       }
     }
     case Unary(op, expr) => {
@@ -93,25 +93,25 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       nested {
         for (i <- 0 until stmnts.length) {
           val cr = if (i == stmnts.length-1) "\n" else "\n\n"
-          indented_write(format(stmnts(i))+cr)
+          indentedWrite(format(stmnts(i))+cr)
         }
       }
-      indented_write("end")
+      indentedWrite("end")
     }
     case ModuleExpr(name, Stmnts(stmnts)) => classNested {
       writeln("module " + format(name))
       nested {
         for (i <- 0 until stmnts.length) {
           val cr = if (i == stmnts.length-1) "\n" else "\n\n"
-          indented_write(format(stmnts(i))+cr)
+          indentedWrite(format(stmnts(i))+cr)
         }
       }
-      indented_write("end")
+      indentedWrite("end")
     }
     case DefExpr(name, args, Stmnts(stmnts)) => {
       writeln("def "+ name + args.fold("") ("(" + format(_) + ")"))
-      nested { stmnts.foreach { stmnt => indented_write(format(stmnt)+"\n") } }
-      indented_write("end")
+      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      indentedWrite("end")
     }
     case Stmnts(stmnts) => {
       val s = stmnts.size
@@ -143,7 +143,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
 
   private def writeln(text: String) = write(text+"\n")
 
-  private def indented_write(txt: String) = write(indented+txt)
+  private def indentedWrite(txt: String) = write(indented+txt)
 
   private def indented: String = "  " * depth
 
