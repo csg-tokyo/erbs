@@ -66,7 +66,7 @@ trait ParserMap extends PackratParsers {
     def toModule: Option[ModuleExpr] = if (storage.size == 0) None else {
       val opss = storage.values.flatMap { v => v.map(_.operator) }
       val body = opss.groupBy(_.className).map { case (k, v) =>
-        ClassExpr(ConstLit(k), Stmnts(v.map(_.toMethodDefinition).toList))
+        ClassExpr(ConstLit(k), None, Stmnts(v.map(_.toMethodDefinition).toList))
       }
       Some(ModuleExpr(ConstLit("Operator"), Stmnts(body.toList)))
     }

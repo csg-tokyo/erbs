@@ -331,13 +331,23 @@ end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), S
 
       it ("print class expr") {
         assertResult("""class A
-end""") { pp(ClassExpr(ConstLit("A"), Stmnts(Nil))) }
+end""") { pp(ClassExpr(ConstLit("A"), None, Stmnts(Nil))) }
+        assertResult("""class A < B
+end""") { pp(ClassExpr(ConstLit("A"), Some(ConstLit("B")), Stmnts(Nil))) }
         assertResult("""class A
   def a
     1 + 2
   end
 end""") {
-          pp(ClassExpr(ConstLit("A"), Stmnts(List(
+          pp(ClassExpr(ConstLit("A"), None, Stmnts(List(
+            DefExpr(("a"), None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2)))))))))
+        }
+        assertResult("""class A < B
+  def a
+    1 + 2
+  end
+end""") {
+          pp(ClassExpr(ConstLit("A"), Some(ConstLit("B")), Stmnts(List(
             DefExpr(("a"), None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2)))))))))
         }
       }
@@ -406,7 +416,7 @@ end""") {
       c
     end
   end
-end""") { pp(ClassExpr(ConstLit("A"),
+end""") { pp(ClassExpr(ConstLit("A"), None,
   Stmnts(List(DefExpr(("a"), None, Stmnts(
     List(IfExpr(BoolLit(true), Stmnts(List(LVar("b"))), Nil, Some((Stmnts(List(LVar("c"))))))))
   )))))

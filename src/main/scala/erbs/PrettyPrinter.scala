@@ -98,8 +98,8 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       case Nil => ()
       case _ => write(joinWithComma(vars))
     }
-    case ClassExpr(name, Stmnts(stmnts)) => classNested {
-      writeln("class " + format(name))
+    case ClassExpr(name, parent, Stmnts(stmnts)) => classNested {
+      writeln("class " + format(name) + parent.fold("")(" < "+format(_)) )
       nested {
         for (i <- 0 until stmnts.length) {
           val cr = if (i == stmnts.length-1) "\n" else "\n\n"
@@ -130,7 +130,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
           stmnts(i) match {
             case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
             case stmnt if i == s => writeln(format(stmnt))
-            case stmnt@(ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
+            case stmnt@(ClassExpr(_, _, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
             case stmnt => write(format(stmnt))
           }
         }
@@ -138,7 +138,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
         for (i <- 0 until s) {
           stmnts(i) match {
             case Operators(_) | Operator(_, _, _) | Syntax(_, _) => // noop
-            case stmnt@(DefExpr(_, _, _) | ClassExpr(_, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
+            case stmnt@(DefExpr(_, _, _) | ClassExpr(_, _, _) | ModuleExpr(_, _)) => writeln(format(stmnt)+"\n")
             case stmnt => writeln(format(stmnt))
           }
         }
