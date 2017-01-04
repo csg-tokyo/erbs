@@ -27,7 +27,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val t_space: PackratParser[String] = customLiteral(" ")
 
   protected def reserved = reserved_value
-  protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS
+  protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS | K_ELSIF
   var operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt | t_eeq
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { e => DoubleLit(e.toDouble) }
@@ -69,8 +69,12 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val actualArgs: PackratParser[ActualArgs] =  "(" ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral("(") ~> aArgs.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 
-  protected lazy val ifExpr: PackratParser[IfExpr] = "if" ~> expr ~ stmnts ~ ("else" ~> stmnts).? <~ "end" ^^ { case cond ~ trueBody ~ falseBody => IfExpr(cond, trueBody, falseBody) }
+  protected lazy val ifExpr: PackratParser[IfExpr] = "if" ~> expr ~ stmnts ~ elseifBodies ~ ("else" ~> stmnts).? <~ "end" ^^ {
+    case cond ~ trueBody ~ eb ~ falseBody => IfExpr(cond, trueBody, eb, falseBody)
+  }
   protected lazy val unlessExpr: PackratParser[UnlessExpr] = "unless" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => UnlessExpr(cond, body, None) }
+  protected lazy val elseifBody: PackratParser[ElsifBody] = "elsif" ~> expr ~ stmnts ^^ { case cond ~ body => ElsifBody(cond, body) }
+  protected lazy val elseifBodies: PackratParser[List[ElsifBody]] = elseifBody.* ^^ { case b => b }
   protected lazy val branchExpr: PackratParser[Expr] = ifExpr | unlessExpr
 
   protected lazy val blockParamDef: PackratParser[ActualArgs] = "|" ~> fArgs <~ "|" ^^ ActualArgs

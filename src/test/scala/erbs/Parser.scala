@@ -437,14 +437,14 @@ end
     }
 
     it ("parses if expression") {
-      assertResult(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), None)) {
+      assertResult(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), Nil, None)) {
         parse("""
-if  true
+if true
   1 + 2
 end
 """)
       }
-      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) {
+      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Nil, None)) {
         parse("""
 if a(10)
   b
@@ -452,12 +452,44 @@ end
 """)
       }
       assertResult(IfExpr(BoolLit(true),
-          Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))),
-          Some(Stmnts(List(Binary(PLUS, IntLit(2), IntLit(3))))))) {
+        Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))),
+        Nil,
+        Some(Stmnts(List(Binary(PLUS, IntLit(2), IntLit(3))))))) {
         parse("""
 if true
   1 + 2
 else
+  2 + 3
+end
+""")
+      }
+      assertResult(IfExpr(BoolLit(false),
+        Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))),
+        List(ElsifBody(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(2), IntLit(3)))))),
+        Some(Stmnts(List(IntLit(2)))))) {
+        parse("""
+if false
+  1 + 2
+elsif true
+  2 + 3
+else
+  2
+end
+""")
+      }
+        assertResult(IfExpr(BoolLit(false),
+          Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))),
+          List(
+            ElsifBody(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(2), IntLit(3))))),
+            ElsifBody(IntLit(1), Stmnts(List(Binary(PLUS,IntLit(2), IntLit(3)))))
+          ),
+          None)) {
+        parse("""
+if false
+  1 + 2
+elsif true
+  2 + 3
+elsif 1
   2 + 3
 end
 """)

@@ -48,6 +48,8 @@ object Op {
 case class FormalArgs(val args: List[LVar]) extends AST
 case class ActualArgs(val args: List[Expr]) extends AST
 
+case class ElsifBody(cond: Expr, body: Stmnts)
+
 sealed trait AST
 sealed trait Literal extends Expr
 case class IntLit(v: Int) extends Literal
@@ -69,7 +71,7 @@ sealed trait Expr extends AST
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
 case class Hash(v: Map[Expr, Expr]) extends Expr
-case class IfExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
+case class IfExpr(cond: Expr, tBody: Stmnts, elsifBody: List[ElsifBody], fBody: Option[Stmnts]) extends Expr
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
@@ -88,6 +90,7 @@ case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, b
 case class BraceBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
 
 case class Stmnts(v: List[Expr]) extends AST {
+  def foreach = v.foreach _
   def map(f: Expr => Expr): Stmnts = Stmnts(v.map(f))
   def prependExpr(e: Option[Expr]) = Stmnts(e.map(_ :: v).getOrElse(v))
 }

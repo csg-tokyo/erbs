@@ -34,20 +34,25 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       val kvs = maps.map { kv => format(kv._1) + " => " + format(kv._2) }.mkString(", ")
       if (maps.size == 0) write("{}") else write("{ " + kvs + " }")
     }
-    case IfExpr(cond, Stmnts(stmnts), fBody) => {
+    case IfExpr(cond, stmnts, elsifBody, fBody) => {
       writeln("if " + format(cond))
-      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      writeBody(stmnts)
       fBody match {
-        case Some(Stmnts(s)) =>
+        case Some(body) =>
           indentedWrite("else"+"\n")
-          nested { s.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+          writeBody(body)
         case _ => // nothing
+      }
+      elsifBody.foreach {
+        case ElsifBody(cond, body) =>
+          indentedWrite("elsif "+ format(cond)+"\n")
+          writeBody(body)
       }
       indentedWrite("end")
     }
-    case UnlessExpr(cond, Stmnts(stmnts), f_body) => {
+    case UnlessExpr(cond, stmnts, f_body) => {
       writeln("unless " + format(cond))
-      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      writeBody(stmnts)
       indentedWrite("end")
     }
     case IfModExpr(cond, expr) => write(format(expr) + " if " + format(cond))
@@ -68,19 +73,19 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       val blck = block.fold("")(format(_))
       write(recver + name + args + blck)
     }
-    case DoBlock(args, Stmnts(stmnts)) => {
+    case DoBlock(args, stmnts) => {
       writeln(" do" + args.fold("") (" |" + format(_) + "|"))
-      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      writeBody(stmnts)
       indentedWrite("end")
     }
-    case BraceBlock(args, Stmnts(stmnts)) => {
-      if (stmnts.size < 2) {
+    case BraceBlock(args, stmnts) => {
+      if (stmnts.v.size < 2) {
         write(" {" + args.fold("") (" |" + format(_) + "| "))
         stmnts.foreach { stmnt => write(format(stmnt)) }
         write(" }")
       } else {
         writeln(" {" + args.fold("") (" |" + format(_) + "|"))
-        nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+        writeBody(stmnts)
         indentedWrite("}")
       }
     }
@@ -113,9 +118,9 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       }
       indentedWrite("end")
     }
-    case DefExpr(name, args, Stmnts(stmnts)) => {
+    case DefExpr(name, args, stmnts) => {
       writeln("def "+ name + args.fold("") ("(" + format(_) + ")"))
-      nested { stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") } }
+      writeBody(stmnts)
       indentedWrite("end")
     }
     case Stmnts(stmnts) => {
@@ -162,6 +167,10 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
     depth += 1
     fn
     depth -= 1
+  }
+
+  private def writeBody(stmnts: Stmnts) = nested {
+    stmnts.foreach { stmnt => indentedWrite(format(stmnt)+"\n") }
   }
 
   private def format(ast: AST): String = PrettyPrinter(ast, depth).call

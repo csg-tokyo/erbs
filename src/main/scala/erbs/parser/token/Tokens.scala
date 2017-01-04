@@ -20,6 +20,7 @@ trait Tokens {
   val K_UNLESS = """unless\b""".r
   val K_THEN = """then\b""".r
   val K_ELSE = """else\b""".r
+  val K_ELSIF = """elsif\b""".r
   val K_TRUE = """true\b""".r
   val K_FALSE = """false\b""".r
   val K_RETURN =  """return\b""".r

@@ -313,7 +313,7 @@ end""") {
       it ("prints if expression") {
         assertResult("""if true
   1 + 2
-end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), None)) }
+end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), Nil, None)) }
         assertResult("""unless a(10)
   b
 end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) }
@@ -321,7 +321,12 @@ end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None
   b
 else
   c
-end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Some((Stmnts(List(LVar("c"))))))) }
+end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Nil, Some((Stmnts(List(LVar("c"))))))) }
+        assertResult("""if a(10)
+  b
+elsif 1
+  c
+end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), List(ElsifBody(IntLit(1), Stmnts(List(LVar("c"))))), None)) }
       }
 
       it ("print class expr") {
@@ -403,7 +408,7 @@ end""") {
   end
 end""") { pp(ClassExpr(ConstLit("A"),
   Stmnts(List(DefExpr(("a"), None, Stmnts(
-    List(IfExpr(BoolLit(true), Stmnts(List(LVar("b"))), Some((Stmnts(List(LVar("c"))))))))
+    List(IfExpr(BoolLit(true), Stmnts(List(LVar("b"))), Nil, Some((Stmnts(List(LVar("c"))))))))
   )))))
         }
       }
