@@ -587,6 +587,12 @@ def call(a, b)
 end
 """)
       }
+      assertResult(DefExpr("call", Some(HashArgs(Hash((Map(SymbolLit("key") -> IntLit(1)))))), Stmnts(Nil))) {
+        parse("""
+def call(key: 1)
+end
+""")
+      }
       assertResult(DefExpr("call", None, Stmnts(List(StringLit(""""1+2""""))))) {
         parse("""
 def call

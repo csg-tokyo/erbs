@@ -45,8 +45,11 @@ object Op {
   }
 }
 
-case class FormalArgs(val args: List[LVar]) extends AST
+
 case class ActualArgs(val args: List[Expr]) extends AST
+sealed trait Args extends AST
+case class FormalArgs(val args: List[LVar]) extends Args
+case class HashArgs(val args: Hash) extends Args
 
 case class ElsifBody(cond: Expr, body: Stmnts)
 
@@ -70,6 +73,9 @@ case class Keyword(v: String) extends Literal
 sealed trait Expr extends AST
 case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
+object Hash {
+  def empty = Hash(Map.empty)
+}
 case class Hash(v: Map[Expr, Expr]) extends Expr
 case class IfExpr(cond: Expr, tBody: Stmnts, elsifBody: List[ElsifBody], fBody: Option[Stmnts]) extends Expr
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
@@ -83,7 +89,7 @@ case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block:
 case class Assign(target: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, parent: Option[Expr], body: Stmnts) extends Expr
 case class ModuleExpr(name: ConstLit, body: Stmnts) extends Expr
-case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
+case class DefExpr(name: String, args: Option[Args], body: Stmnts) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
