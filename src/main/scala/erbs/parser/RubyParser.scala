@@ -58,8 +58,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolKey | rocketKey) ~ arg ^^ { case k ~ v => Map(k -> v) }
 
   // TODO add inheritace
-  // TODO else
-  protected lazy val classExpr: PackratParser[ClassExpr] = "class" ~> const ~ stmnts <~ "end" ^^ { case name ~ body => ClassExpr(name, body) }
+  protected lazy val classExpr: PackratParser[ClassExpr] = "class" ~> const ~ ("<" ~> expr).? ~ stmnts <~ "end" ^^ { case name ~ parent ~ body => ClassExpr(name, parent, body) }
   protected lazy val moduleExpr: PackratParser[ModuleExpr] = "module" ~> const ~ stmnts <~ "end" ^^ { case name ~ body => ModuleExpr(name, body) }
   protected lazy val defExpr: PackratParser[DefExpr] = "def" ~> T_DEFMNAME ~ formalArgs.? ~ stmnts <~ "end" ^^ { case name ~ args ~ body => DefExpr(name, args, body) }
 

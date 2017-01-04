@@ -504,13 +504,13 @@ end
     }
 
     it ("parses class") {
-      assertResult(ClassExpr(ConstLit("Sample"), Stmnts(Nil))) {
+      assertResult(ClassExpr(ConstLit("Sample"), None, Stmnts(Nil))) {
         parse("""
 class Sample
 end
 """)
       }
-      assertResult(ClassExpr(ConstLit("A"),
+      assertResult(ClassExpr(ConstLit("A"), None,
         Stmnts(List(DefExpr("a", None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2))))))))) {
         parse("""
 class A
