@@ -99,7 +99,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       case _ => write(joinWithComma(vars))
     }
     case ClassExpr(name, parent, Stmnts(stmnts)) => classNested {
-      writeln("class " + format(name))
+      writeln("class " + format(name) + parent.fold("")(" < "+format(_)) )
       nested {
         for (i <- 0 until stmnts.length) {
           val cr = if (i == stmnts.length-1) "\n" else "\n\n"

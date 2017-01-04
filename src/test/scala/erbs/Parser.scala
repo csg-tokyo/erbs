@@ -510,10 +510,26 @@ class Sample
 end
 """)
       }
+      assertResult(ClassExpr(ConstLit("A"), Some(ConstLit("B")), Stmnts(Nil))) {
+        parse("""
+class A < B
+end
+""")
+      }
       assertResult(ClassExpr(ConstLit("A"), None,
         Stmnts(List(DefExpr("a", None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2))))))))) {
         parse("""
 class A
+  def a
+    1 + 2
+  end
+end
+""")
+      }
+      assertResult(ClassExpr(ConstLit("A"), Some(ConstLit("B")),
+        Stmnts(List(DefExpr("a", None, Stmnts(List(Binary(PLUS, IntLit(1), IntLit(2))))))))) {
+        parse("""
+class A < B
   def a
     1 + 2
   end
