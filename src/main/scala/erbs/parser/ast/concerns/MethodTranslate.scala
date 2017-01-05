@@ -27,7 +27,7 @@ trait MethodTranslate {
 
   private lazy val formalArgs = syntaxTags.keys.toList.map(LVar(_)) match {
     case Nil => None
-    case x => Some(FormalArgs(x.map(FormalArgElement(_))))
+    case x => Some(FormalArgs(x.map(SimpleArgElement(_))))
   }
 
   private def toCallingArgs(map: Map[String, Expr]) = syntaxTags.keys.toList.map { map.get(_).get } match {

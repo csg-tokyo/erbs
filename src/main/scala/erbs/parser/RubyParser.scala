@@ -69,7 +69,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
 
   protected lazy val defaultArgsList: PackratParser[List[(LVar, Expr)]] = rep1sep(defaultAssign, ",")
   protected lazy val keywordArgsList: PackratParser[List[(SymbolLit, Expr)]] = rep1sep(keywordAssign, ",")
-  protected lazy val formalArgList: PackratParser[List[FormalArgElement]] = rep1sep(lvar, ",") ^^ { args => args.map { FormalArgElement(_) } }
+  protected lazy val formalArgList: PackratParser[List[SimpleArgElement]] = rep1sep(lvar, ",") ^^ { args => args.map { SimpleArgElement(_) } }
   protected lazy val actualArgList: PackratParser[List[ActualArgElement]] = rep1sep(arg, ",")  ^^ { args => args.map { ActualArgElement(_) } }
   protected lazy val _formalArgs: PackratParser[FormalArgs] = formalArgList ^^ FormalArgs
   protected lazy val _actualArgs: PackratParser[ActualArgs] = actualArgList ^^ ActualArgs

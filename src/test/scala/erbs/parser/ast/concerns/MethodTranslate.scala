@@ -29,7 +29,7 @@ class MethodTranslateTest extends FunSpec {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("<=", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
-      assertResult(DefExpr("self.op_6061_B", Some(FormalArgs(List(FormalArgElement(LVar("b"))))), Stmnts(List(IntLit(10))))) {
+      assertResult(DefExpr("self.op_6061_B", Some(FormalArgs(List(SimpleArgElement(LVar("b"))))), Stmnts(List(IntLit(10))))) {
         op.toMethodDefinition
       }
     }

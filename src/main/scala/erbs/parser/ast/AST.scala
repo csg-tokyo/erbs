@@ -49,7 +49,7 @@ object Op {
 sealed trait ArgElement extends AST {
   def value: Expr
 }
-case class FormalArgElement(val value: LVar) extends ArgElement
+case class SimpleArgElement(val value: LVar) extends ArgElement
 case class ActualArgElement(val value: Expr) extends ArgElement
 case class KeywordArgElement(val key: SymbolLit, val value: Expr) extends ArgElement
 case class defaultArgElement(val key: LVar, val value: Expr) extends ArgElement
