@@ -93,11 +93,8 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       write(Op.stringfy(op))
       write(if (expr.isInstanceOf[Binary]) s"(${format(expr)})" else format(expr))
     }
-    case ActualArgs(names) => write(joinWithComma(names))
-    case FormalArgs(vars) => vars match {
-      case Nil => ()
-      case _ => write(joinWithComma(vars))
-    }
+    case ActualArgs(names) => write(constructArgument(names))
+    case FormalArgs(vars) => write(constructArgument(vars))
     case ClassExpr(name, parent, Stmnts(stmnts)) => classNested {
       writeln("class " + format(name) + parent.fold("")(" < "+format(_)) )
       nested {
@@ -176,4 +173,11 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
   private def format(ast: AST): String = PrettyPrinter(ast, depth).call
 
   private def joinWithComma(vars: List[Expr]): String = vars.map(format(_)).mkString(", ")
+
+  private def constructArgument(vars: List[ArgElement]): String = vars.map {
+    case KeywordArgElement(key, value) => key + ": " + format(value)
+    case DefaultArgElement(key, value) => key + " = " + format(value)
+    case SimpleArgElement(value) => value
+    case ActualArgElement(value) => format(value)
+  }.mkString(", ")
 }

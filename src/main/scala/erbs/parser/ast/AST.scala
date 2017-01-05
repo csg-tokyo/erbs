@@ -45,10 +45,15 @@ object Op {
   }
 }
 
-case class FormalArgs(val args: List[LVar]) extends AST
-case class ActualArgs(val args: List[Expr]) extends AST
 
-case class ElsifBody(cond: Expr, body: Stmnts)
+sealed trait ArgElement extends AST
+case class SimpleArgElement(val value: String) extends ArgElement
+case class KeywordArgElement(val key: String, val value: Expr) extends ArgElement
+case class DefaultArgElement(val key: String, val value: Expr) extends ArgElement
+case class ActualArgElement(val value: Expr) extends ArgElement
+
+case class FormalArgs(val args: List[ArgElement]) extends AST
+case class ActualArgs(val args: List[ArgElement]) extends AST
 
 sealed trait AST
 sealed trait Literal extends Expr
@@ -72,6 +77,8 @@ case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
 case class Hash(v: Map[Expr, Expr]) extends Expr
 case class IfExpr(cond: Expr, tBody: Stmnts, elsifBody: List[ElsifBody], fBody: Option[Stmnts]) extends Expr
+case class ElsifBody(cond: Expr, body: Stmnts)
+
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr

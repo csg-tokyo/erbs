@@ -156,23 +156,23 @@ class PrettyPrinterTest extends FunSpec {
         pp(Cmd(Some(IVar("a")), "call", None, None))
       }
       assertResult("@a.call 10, 20") {
-        pp(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(IntLit(10), IntLit(20)))), None))
+        pp(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(IntLit(20))))), None))
       }
       assertResult("attr_reader :a, :b") {
-        pp(Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None))
+        pp(Cmd(None, "attr_reader", Some(ActualArgs(List(ActualArgElement(SymbolLit("a")), ActualArgElement(SymbolLit("b"))))), None))
       }
     }
 
     it ("prints method call with { ~ } block") {
       assertResult("""call(10) { |x| x + 1 }""") {
         pp(Call(None, "call",
-          Some(ActualArgs(List(IntLit(10)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
+          Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
+          Some(BraceBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
       assertResult("""a.call(10, 11) { |x| x + 1 }""") {
         pp(Call(Some(LVar("a")), "call",
-          Some(ActualArgs(List(IntLit(10), IntLit(11)))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
+          Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(IntLit(11))))),
+          Some(BraceBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
     }
 
@@ -182,16 +182,16 @@ class PrettyPrinterTest extends FunSpec {
 end""") {
         pp(
           Call(None, "call",
-            Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
-            Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
+            Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(SymbolLit("symbol"))))),
+            Some(DoBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
           ))
       }
       assertResult("""a.call(10) do |x|
   x + 1
 end""") {
         pp(Call(Some(LVar("a")), "call",
-          Some(ActualArgs(List(IntLit(10)))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
+          Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
+          Some(DoBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
     }
@@ -201,8 +201,8 @@ end""") {
   x + 1
 end""") {
         pp(Cmd(None, "call",
-          Some(ActualArgs(List(SymbolLit("symbol")))),
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
+          Some(ActualArgs(List(ActualArgElement(SymbolLit("symbol"))))),
+          Some(DoBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
 
@@ -210,7 +210,7 @@ end""") {
   x + 1
 end""") {
         pp(Cmd(None, "call", None,
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))),
             Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
         ))
       }
@@ -219,7 +219,7 @@ end""") {
   x + 1
 end""") {
         pp(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
-          Some(DoBlock(Some(ActualArgs(List(LVar("x")))),
+          Some(DoBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))),
             Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1))))))
         ))
       }
@@ -228,14 +228,14 @@ end""") {
     it ("prints command call with { ~ } block") {
       assertResult("""call { |x| x + 1 }""") {
         pp(Cmd(None, "call", None,
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+          Some(BraceBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))),
             Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
 
       assertResult("""call :aaa { |x| x + 1 }""") {
         pp(Cmd(None, "call",
-          Some(ActualArgs(List(SymbolLit("aaa")))),
-          Some(BraceBlock(Some(ActualArgs(List(LVar("x")))),
+          Some(ActualArgs(List(ActualArgElement(SymbolLit("aaa"))))),
+          Some(BraceBlock(Some(ActualArgs(List(ActualArgElement(LVar("x"))))),
             Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1))))))))
       }
     }
@@ -297,16 +297,16 @@ end""") {
 
       it ("prints method call") {
         assertResult("call(a)") {
-          pp(Call(None, "call", Some(ActualArgs(List(LVar("a")))), None))
+          pp(Call(None, "call", Some(ActualArgs(List(ActualArgElement(LVar("a"))))), None))
         }
         assertResult("call(a) + 1") {
-          pp(Binary(PLUS, Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1)))
+          pp(Binary(PLUS, Call(None, "call", Some(ActualArgs(List(ActualArgElement(LVar("a"))))), None), IntLit(1)))
         }
         assertResult("a1.call") {
           pp(Call(Some(LVar("a1")), "call", None, None))
         }
         assertResult("a1.call(10, true)") {
-          pp(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None))
+          pp(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(BoolLit(true))))), None))
         }
       }
 
@@ -316,20 +316,20 @@ end""") {
 end""") { pp(IfExpr(BoolLit(true), Stmnts(List(Binary(PLUS,IntLit(1),IntLit(2)))), Nil, None)) }
         assertResult("""unless a(10)
   b
-end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) }
+end""") { pp(UnlessExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), None)) }
         assertResult("""if a(10)
   b
 else
   c
-end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Nil, Some((Stmnts(List(LVar("c"))))))) }
+end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), Nil, Some((Stmnts(List(LVar("c"))))))) }
         assertResult("""if a(10)
   b
 elsif 1
   c
-end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), List(ElsifBody(IntLit(1), Stmnts(List(LVar("c"))))), None)) }
+end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), List(ElsifBody(IntLit(1), Stmnts(List(LVar("c"))))), None)) }
       }
 
-      it ("print class expr") {
+      it ("print lass expr") {
         assertResult("""class A
 end""") { pp(ClassExpr(ConstLit("A"), None, Stmnts(Nil))) }
         assertResult("""class A < B
@@ -360,8 +360,24 @@ end""") {
 
         assertResult("""def a(opt)
 end""") {
-          pp(DefExpr(("a"), Some(FormalArgs(List(LVar("opt")))), Stmnts(Nil)))
+          pp(DefExpr(("a"), Some(FormalArgs(List(ActualArgElement(LVar("opt"))))), Stmnts(Nil)))
         }
+
+        assertResult("""def call(key = 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(DefaultArgElement("key", IntLit(1))))), Stmnts(Nil)))
+        }
+
+      assertResult("""def call(key: 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
+        }
+
+      assertResult("""def call(v, key: 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(SimpleArgElement("v"), KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
+        }
+
       }
     }
 
