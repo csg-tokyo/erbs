@@ -362,6 +362,22 @@ end""") {
 end""") {
           pp(DefExpr(("a"), Some(FormalArgs(List(ActualArgElement(LVar("opt"))))), Stmnts(Nil)))
         }
+
+        assertResult("""def call(key = 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(DefaultArgElement(LVar("key"), IntLit(1))))), Stmnts(Nil)))
+        }
+
+      assertResult("""def call(key: 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
+        }
+
+      assertResult("""def call(v, key: 1)
+end""") {
+       pp(DefExpr("call", Some(FormalArgs(List(SimpleArgElement(LVar("v")), KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
+        }
+
       }
     }
 
