@@ -587,15 +587,21 @@ def call(a, b)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(KeywordArgs(List((SymbolLit("key"), IntLit(1))))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(FormalArgs(List(KeywordArgElement(SymbolLit("key"), IntLit(1))))), Stmnts(Nil))) {
         parse("""
 def call(key: 1)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(DefaultArgs(List((LVar("key"), IntLit(1))))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(FormalArgs(List(DefaultArgElement(LVar("key"), IntLit(1))))), Stmnts(Nil))) {
         parse("""
 def call(key = 1)
+end
+""")
+      }
+      assertResult(DefExpr("call", Some(FormalArgs(List(SimpleArgElement(LVar("v")), DefaultArgElement(LVar("key"), IntLit(1))))), Stmnts(Nil))) {
+        parse("""
+def call(v, key = 1)
 end
 """)
       }

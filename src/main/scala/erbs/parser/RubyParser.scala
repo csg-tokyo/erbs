@@ -67,6 +67,10 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val defaultAssign: PackratParser[(LVar, Expr)] = lvar ~ ("=" ~> arg) ^^ { case k ~ v => (k, v) }
   protected lazy val keywordAssign: PackratParser[(SymbolLit, Expr)] = symbolKey ~ arg ^^ { case k ~ v => (k, v) }
 
+  protected lazy val defaultArgElement: PackratParser[DefaultArgElement] = lvar ~ ("=" ~> arg) ^^ { case k ~ v => DefaultArgElement(k, v) }
+  protected lazy val keywordArgElement: PackratParser[KeywordArgElement] = symbolKey ~ arg ^^ { case k ~ v => KeywordArgElement(k, v) }
+  protected lazy val simpleArgElement: PackratParser[SimpleArgElement] = lvar ^^ SimpleArgElement
+
   protected lazy val defaultArgsList: PackratParser[List[(LVar, Expr)]] = rep1sep(defaultAssign, ",")
   protected lazy val keywordArgsList: PackratParser[List[(SymbolLit, Expr)]] = rep1sep(keywordAssign, ",")
   protected lazy val formalArgList: PackratParser[List[SimpleArgElement]] = rep1sep(lvar, ",") ^^ { args => args.map { SimpleArgElement(_) } }
@@ -76,9 +80,10 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val _keywordArgs: PackratParser[KeywordArgs] =  keywordArgsList ^^ KeywordArgs
   protected lazy val _defaultArgs: PackratParser[DefaultArgs] = defaultArgsList ^^ DefaultArgs
   protected lazy val v2Args: PackratParser[Args] = _defaultArgs | _keywordArgs | _formalArgs
+  protected lazy val v2Args2: PackratParser[Args] = rep1sep(defaultArgElement | keywordArgElement | simpleArgElement, ",")  ^^ { args => FormalArgs(args) }
   protected lazy val formalArgs: PackratParser[FormalArgs] =  "(" ~> formalArgList.? <~ ")" ^^ { args => FormalArgs(args.getOrElse(Nil)) }
   // formal arguemnt for greater than v2.0.0
-  protected lazy val formalArgs2: PackratParser[Args] =  "(" ~> v2Args.? <~ ")" ^^ { args => args.getOrElse(FormalArgs(Nil)) }
+  protected lazy val formalArgs2: PackratParser[Args] =  "(" ~> v2Args2.? <~ ")" ^^ { args => args.getOrElse(FormalArgs(Nil)) }
   protected lazy val actualArgs: PackratParser[ActualArgs] =  "(" ~> actualArgList.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
   protected lazy val actualArgs2: PackratParser[ActualArgs] =  customLiteral("(") ~> actualArgList.? <~ ")" ^^ { args => ActualArgs(args.getOrElse(Nil)) }
 

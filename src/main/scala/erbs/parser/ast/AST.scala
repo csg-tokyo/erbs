@@ -52,7 +52,7 @@ sealed trait ArgElement extends AST {
 case class SimpleArgElement(val value: LVar) extends ArgElement
 case class ActualArgElement(val value: Expr) extends ArgElement
 case class KeywordArgElement(val key: SymbolLit, val value: Expr) extends ArgElement
-case class defaultArgElement(val key: LVar, val value: Expr) extends ArgElement
+case class DefaultArgElement(val key: LVar, val value: Expr) extends ArgElement
 
 sealed trait Args extends AST
 case class Argument(val args: List[ArgElement]) extends Args
