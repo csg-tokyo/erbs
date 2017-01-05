@@ -50,19 +50,12 @@ sealed trait ArgElement extends AST {
   def value: Expr
 }
 case class SimpleArgElement(val value: LVar) extends ArgElement
-case class ActualArgElement(val value: Expr) extends ArgElement
 case class KeywordArgElement(val key: SymbolLit, val value: Expr) extends ArgElement
 case class DefaultArgElement(val key: LVar, val value: Expr) extends ArgElement
+case class ActualArgElement(val value: Expr) extends ArgElement
 
-sealed trait Args extends AST
-case class Argument(val args: List[ArgElement]) extends Args
-
-case class FormalArgs(val args: List[ArgElement]) extends Args
-case class KeywordArgs(val args: List[(SymbolLit, Expr)]) extends Args
-case class DefaultArgs(val args: List[(LVar, Expr)]) extends Args
-case class ActualArgs(val args: List[ArgElement]) extends Args
-
-case class ElsifBody(cond: Expr, body: Stmnts)
+case class FormalArgs(val args: List[ArgElement]) extends AST
+case class ActualArgs(val args: List[ArgElement]) extends AST
 
 sealed trait AST
 sealed trait Literal extends Expr
@@ -86,6 +79,8 @@ case class ARef(v: Expr, ref: Expr) extends Expr
 case class Ary(v: List[Expr]) extends Expr
 case class Hash(v: Map[Expr, Expr]) extends Expr
 case class IfExpr(cond: Expr, tBody: Stmnts, elsifBody: List[ElsifBody], fBody: Option[Stmnts]) extends Expr
+case class ElsifBody(cond: Expr, body: Stmnts)
+
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
@@ -97,7 +92,7 @@ case class Cmd(rev: Option[Expr], name: String, args: Option[ActualArgs], block:
 case class Assign(target: Expr, value: Expr, op: Op) extends Expr
 case class ClassExpr(name: ConstLit, parent: Option[Expr], body: Stmnts) extends Expr
 case class ModuleExpr(name: ConstLit, body: Stmnts) extends Expr
-case class DefExpr(name: String, args: Option[Args], body: Stmnts) extends Expr
+case class DefExpr(name: String, args: Option[FormalArgs], body: Stmnts) extends Expr
 
 sealed abstract class Block(args: Option[ActualArgs], body: Stmnts) extends Expr
 case class DoBlock(args: Option[ActualArgs], body: Stmnts) extends Block(args, body)
