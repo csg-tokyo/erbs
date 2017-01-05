@@ -244,37 +244,37 @@ class ParserTest extends FunSpec {
       assertResult(Cmd(Some(IVar("a")), "call", None, None)) {
         parse("@a.call")
       }
-      assertResult(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(IntLit(10), IntLit(20)))), None)) {
+      assertResult(Cmd(Some(IVar("a")), "call", Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(IntLit(20))))), None)) {
         parse("@a.call 10, 20")
       }
-      assertResult(Cmd(None, "call", Some(ActualArgs(List(IntLit(10)))), None)) {
+      assertResult(Cmd(None, "call", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None)) {
         parse("call 10")
       }
-      assertResult(Cmd(None, "call", Some(ActualArgs(List(Binary(PLUS, IntLit(10), IntLit(1))))), None)) {
+      assertResult(Cmd(None, "call", Some(ActualArgs(List(ActualArgElement(Binary(PLUS, IntLit(10), IntLit(1)))))), None)) {
         parse("call 10 + 1")
       }
-      assertResult(Cmd(None, "attr_reader", Some(ActualArgs(List(SymbolLit("a"), SymbolLit("b")))), None)) {
+      assertResult(Cmd(None, "attr_reader", Some(ActualArgs(List(ActualArgElement(SymbolLit("a")), ActualArgElement(SymbolLit("b"))))), None)) {
         parse("attr_reader :a, :b")
       }
     }
 
     it ("parses method call with { ~ } block") {
       assertResult(Call(None, "call",
-        Some(ActualArgs(List(IntLit(10)))),
-        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS, LVar("x"),IntLit(1)))))))) {
+        Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
+        Some(BraceBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("x"),IntLit(1)))))))) {
         parse("""call(10) { |x| x + 1 }""")
       }
       assertResult(Call(Some(LVar("a")), "call",
-        Some(ActualArgs(List(IntLit(10), IntLit(11)))),
-        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(IntLit(11))))),
+        Some(BraceBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""a.call(10,11) { |x| x + 1 }""")
       }
     }
 
     it("parses method call with do ~ end block") {
       assertResult(Call(None, "call",
-        Some(ActualArgs(List(IntLit(10), SymbolLit("symbol")))),
-        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1)))))))) {
+        Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(SymbolLit("symbol"))))),
+        Some(DoBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1)))))))) {
         parse("""
 call(10, :symbol) do |x|
   x + 1
@@ -282,8 +282,8 @@ end
 """)
       }
       assertResult(Call(Some(LVar("a")), "call",
-        Some(ActualArgs(List(IntLit(10)))),
-        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
+        Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
+        Some(DoBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
       )) {
         parse("""
 a.call(10) do |x|
@@ -295,19 +295,19 @@ end
 
     it ("parses command call with { ~ } block") {
       assertResult(Cmd(None, "call", None,
-        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(BraceBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""call { |x| x + 1 }""")
       }
       assertResult(Cmd(None, "call",
-        Some(ActualArgs(List(SymbolLit("aaa")))),
-        Some(BraceBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(ActualArgs(List(ActualArgElement(SymbolLit("aaa"))))),
+        Some(BraceBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""call :aaa { |x| x + 1 }""")
       }
     }
 
     it ("parses command call with do ~ end block") {
       assertResult(Cmd(None, "call", None,
-        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(DoBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""
 call do |x|
   x + 1
@@ -315,8 +315,8 @@ end
 """)
       }
       assertResult(Cmd(None, "call",
-        Some(ActualArgs(List(SymbolLit("visual")))),
-        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
+        Some(ActualArgs(List(ActualArgElement(SymbolLit("visual"))))),
+        Some(DoBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
         parse("""
 call :visual do |x|
   x + 1
@@ -324,7 +324,7 @@ end
 """)
       }
       assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
-        Some(DoBlock(Some(ActualArgs(List(LVar("x")))), Stmnts(List(Binary(PLUS, LVar("a"), IntLit(1))))))
+        Some(DoBlock(Some(ActualArgs(List(FormalArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("a"), IntLit(1))))))
       )) { parse("""
 [1,2].each do |x|
   a + 1
@@ -404,25 +404,25 @@ end
     }
 
     it ("parses method call") {
-      assertResult(Call(None, "call", Some(ActualArgs(List(LVar("a")))), None)) {
+      assertResult(Call(None, "call", Some(ActualArgs(List(ActualArgElement(LVar("a"))))), None)) {
         parse("call(a)")
       }
-      assertResult(Binary(PLUS, Call(None, "call", Some(ActualArgs(List(LVar("a")))), None), IntLit(1))) {
+      assertResult(Binary(PLUS, Call(None, "call", Some(ActualArgs(List(ActualArgElement(LVar("a"))))), None), IntLit(1))) {
         parse("call(a) + 1")
       }
-      assertResult(Call(Some(LVar("b")), "call", Some(ActualArgs(List(LVar("a")))), None)) {
+      assertResult(Call(Some(LVar("b")), "call", Some(ActualArgs(List(ActualArgElement(LVar("a"))))), None)) {
         parse("b.call(a)")
       }
-      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), IntLit(10)))), None)) {
+      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(ActualArgElement(IntLit(10)),ActualArgElement(IntLit(10))))), None)) {
         parse("a1.call(10, 10)")
       }
-      assertResult(Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(IntLit(10)))), None)) {
+      assertResult(Call(Some(LVar("a1")), "_call", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None)) {
         parse("a1._call(10)")
       }
-      assertResult(Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(IntLit(10)))), None)) {
+      assertResult(Call(Some(LVar("a1")), "_calL?", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None)) {
         parse("a1._calL?(10)")
       }
-      assertResult(Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(IntLit(10)))), None)) {
+      assertResult(Call(Some(LVar("a1")), "_calL!", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None)) {
         parse("a1._calL!(10)")
       }
       assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List())), None)) {
@@ -431,7 +431,7 @@ end
       assertResult(Binary(LT, Call(Some(LVar("a")), "call", Some(ActualArgs(Nil)), None), IntLit(10))) {
         parse("a.call() < 10")
       }
-      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(IntLit(10), BoolLit(true)))), None)) {
+      assertResult(Call(Some(LVar("a1")), "call", Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(BoolLit(true))))), None)) {
         parse("a1.call(10, true)")
       }
     }
@@ -444,7 +444,7 @@ if true
 end
 """)
       }
-      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), Nil, None)) {
+      assertResult(IfExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), Nil, None)) {
         parse("""
 if a(10)
   b
@@ -494,7 +494,7 @@ elsif 1
 end
 """)
       }
-      assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(IntLit(10)))), None), Stmnts(List(LVar("b"))), None)) {
+      assertResult(UnlessExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), None)) {
         parse("""
 unless a(10)
   b
@@ -575,13 +575,13 @@ def a()
 end
 """)
       }
-      assertResult(DefExpr("a", Some(FormalArgs(List(LVar("opt")))), Stmnts(Nil))) {
+      assertResult(DefExpr("a", Some(FormalArgs(List(FormalArgElement(LVar("opt"))))), Stmnts(Nil))) {
         parse("""
 def a(opt)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(FormalArgs(List(LVar("a"), LVar("b")))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(FormalArgs(List(FormalArgElement(LVar("a")), FormalArgElement(LVar("b"))))), Stmnts(Nil))) {
         parse("""
 def call(a, b)
 end
@@ -606,7 +606,7 @@ def call
 end
 """)
       }
-      assertResult(DefExpr("value=", Some(FormalArgs(List(LVar("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ))))) {
+      assertResult(DefExpr("value=", Some(FormalArgs(List(FormalArgElement(LVar("v"))))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ))))) {
         parse("""
 def value=(v)
   @value = v
@@ -758,7 +758,7 @@ end
         }
       }
       it ("parses Not(!)") {
-        assertResult(Call(None, "Operator::Origin::op_resources_Name", Some(ActualArgs(List(Call(None, "Operator::Resource_name::op_aws", None, None)))), None)) {
+        assertResult(Call(None, "Operator::Origin::op_resources_Name", Some(ActualArgs(List(ActualArgElement(Call(None, "Operator::Resource_name::op_aws", None, None))))), None)) {
           parse("""
 Operator(resource_name)
   defs aws()
@@ -788,9 +788,9 @@ resources aws
       it ("parses @token") {
         assertResult(
           Call(None, "Operator::ModOrigin::op_X_4562",Some(ActualArgs(
-            List(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
-              List(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
-                List(IntLit(10)))), None)))), None)))), None))
+            List(ActualArgElement(Call(None, "Operator::Foo::op_fn_A_94",Some(ActualArgs(
+              List(ActualArgElement(Call(None, "Operator::Baz::op_fn_B_94",Some(ActualArgs(
+                List(ActualArgElement(IntLit(10))))), None))))), None))))), None))
         {
           parse("""
 Operator(foo)

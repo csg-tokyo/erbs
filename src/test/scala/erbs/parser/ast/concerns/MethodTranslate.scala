@@ -9,7 +9,7 @@ class MethodTranslateTest extends FunSpec {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("a", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
-      assertResult(Call(None, "Operator::Origin::op_a_B", Some(ActualArgs(List(IntLit(10)))),None)) {
+      assertResult(Call(None, "Operator::Origin::op_a_B", Some(ActualArgs(List(ActualArgElement(IntLit(10))))),None)) {
         op.toMethodCall(Map("b" -> IntLit(10)))
       }
     }
@@ -18,7 +18,7 @@ class MethodTranslateTest extends FunSpec {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("<=", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
-      assertResult(Call(None, "Operator::Origin::op_6061_B", Some(ActualArgs(List(IntLit(10)))),None)) {
+      assertResult(Call(None, "Operator::Origin::op_6061_B", Some(ActualArgs(List(ActualArgElement(IntLit(10))))),None)) {
         op.toMethodCall(Map("b" -> IntLit(10)))
       }
     }
@@ -29,7 +29,7 @@ class MethodTranslateTest extends FunSpec {
       val syntax = Syntax(Map("b" -> LVar("origin")), List("<=", "b"))
       val op = Operator(Set("origin"), syntax, Stmnts(List(IntLit(10))))
 
-      assertResult(DefExpr("self.op_6061_B", Some(FormalArgs(List(LVar("b")))), Stmnts(List(IntLit(10))))) {
+      assertResult(DefExpr("self.op_6061_B", Some(FormalArgs(List(FormalArgElement(LVar("b"))))), Stmnts(List(IntLit(10))))) {
         op.toMethodDefinition
       }
     }

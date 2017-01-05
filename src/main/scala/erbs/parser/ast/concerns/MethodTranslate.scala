@@ -27,12 +27,12 @@ trait MethodTranslate {
 
   private lazy val formalArgs = syntaxTags.keys.toList.map(LVar(_)) match {
     case Nil => None
-    case x => Some(FormalArgs(x))
+    case x => Some(FormalArgs(x.map(FormalArgElement(_))))
   }
 
   private def toCallingArgs(map: Map[String, Expr]) = syntaxTags.keys.toList.map { map.get(_).get } match {
     case Nil => None
-    case x => Some(ActualArgs(x))
+    case x => Some(ActualArgs(x.map(ActualArgElement(_))))
   }
 
   private def normalizeSymbol(str: String): String = str.map {

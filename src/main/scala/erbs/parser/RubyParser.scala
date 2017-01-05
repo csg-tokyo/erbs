@@ -45,10 +45,10 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS, _) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
   protected lazy val userVar: PackratParser[Literal] = lvar | ivar | const
-  protected lazy val ret: PackratParser[Expr] = "return" ~> actualArgList.? ^^ { args => Return(args.getOrElse(Nil)) }
+  protected lazy val ret: PackratParser[Expr] = "return" ~> actualArgList.? ^^ { args => Return(args.getOrElse(Nil).map(_.value)) }
 
   protected lazy val aref: PackratParser[ARef] = primaryForAref ~ (customLiteral("[") ~> primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
-  protected lazy val arefArgs: PackratParser[List[Expr]] = actualArgList <~ ",".?
+  protected lazy val arefArgs: PackratParser[List[Expr]] = actualArgList <~ ",".? ^^ { args => args.map(_.value) }
   protected lazy val primaryForAref: PackratParser[Expr] = valMinus | valWithNot | branchExpr | string | userVar | "(" ~> expr <~ ")"
   protected lazy val ary: PackratParser[Ary] = "[" ~>  arefArgs.? <~ "]" ^^ { args => Ary(args.getOrElse(Nil)) }
 
@@ -69,8 +69,8 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
 
   protected lazy val defaultArgsList: PackratParser[List[(LVar, Expr)]] = rep1sep(defaultAssign, ",")
   protected lazy val keywordArgsList: PackratParser[List[(SymbolLit, Expr)]] = rep1sep(keywordAssign, ",")
-  protected lazy val formalArgList: PackratParser[List[LVar]] = rep1sep(lvar, ",")
-  protected lazy val actualArgList: PackratParser[List[Expr]] = rep1sep(arg, ",")
+  protected lazy val formalArgList: PackratParser[List[FormalArgElement]] = rep1sep(lvar, ",") ^^ { args => args.map { FormalArgElement(_) } }
+  protected lazy val actualArgList: PackratParser[List[ActualArgElement]] = rep1sep(arg, ",")  ^^ { args => args.map { ActualArgElement(_) } }
   protected lazy val _formalArgs: PackratParser[FormalArgs] = formalArgList ^^ FormalArgs
   protected lazy val _actualArgs: PackratParser[ActualArgs] = actualArgList ^^ ActualArgs
   protected lazy val _keywordArgs: PackratParser[KeywordArgs] =  keywordArgsList ^^ KeywordArgs
