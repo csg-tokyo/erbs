@@ -176,7 +176,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
 
   private def constructArgument(vars: List[ArgElement]): String = vars.map {
     case KeywordArgElement(key, value) => key + ": " + format(value)
-    case DefaultArgElement(key, value) => format(key) + " = " + format(value)
+    case DefaultArgElement(key, value) => key + " = " + format(value)
     case SimpleArgElement(value) => value
     case ActualArgElement(value) => format(value)
   }.mkString(", ")
