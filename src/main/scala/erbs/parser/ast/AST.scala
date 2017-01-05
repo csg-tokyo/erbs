@@ -46,9 +46,7 @@ object Op {
 }
 
 
-sealed trait ArgElement extends AST {
-  def value: Expr
-}
+sealed trait ArgElement extends AST
 case class SimpleArgElement(val value: LVar) extends ArgElement
 case class KeywordArgElement(val key: String, val value: Expr) extends ArgElement
 case class DefaultArgElement(val key: LVar, val value: Expr) extends ArgElement
