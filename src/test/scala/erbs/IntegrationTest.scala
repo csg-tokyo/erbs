@@ -11,6 +11,8 @@ class IntegrationTest extends FunSpec {
     it ("should return ruby soruce code") {
       fileAssert("basic_class.rbx")
       fileAssert("complex_pp_test.rbx")
+      fileAssert("base_socket.rb")
+      // fileAssert("client.rb")
     }
   }
 

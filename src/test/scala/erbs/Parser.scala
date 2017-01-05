@@ -103,6 +103,12 @@ class ParserTest extends FunSpec {
       assertResult(ConstLit("Sample")) {
         parse("Sample")
       }
+      assertResult(ConstLit("A::B")) {
+        parse("A::B")
+      }
+      assertResult(ConstLit("A::B::C")) {
+        parse("A::B::C")
+      }
     }
 
     it ("parses symbol wrapped value") {
@@ -252,6 +258,9 @@ class ParserTest extends FunSpec {
       }
       assertResult(Cmd(None, "call", Some(ActualArgs(List(ActualArgElement(Binary(PLUS, IntLit(10), IntLit(1)))))), None)) {
         parse("call 10 + 1")
+      }
+      assertResult(Cmd(Some(LVar("a")), "call" , Some(ActualArgs(List(ActualArgElement(Binary(PLUS, IntLit(10), IntLit(1)))))), None)) {
+        parse("a.call 10 + 1")
       }
       assertResult(Cmd(None, "attr_reader", Some(ActualArgs(List(ActualArgElement(SymbolLit("a")), ActualArgElement(SymbolLit("b"))))), None)) {
         parse("attr_reader :a, :b")
@@ -513,6 +522,12 @@ end
       assertResult(ClassExpr(ConstLit("A"), Some(ConstLit("B")), Stmnts(Nil))) {
         parse("""
 class A < B
+end
+""")
+      }
+      assertResult(ClassExpr(ConstLit("A"), Some(ConstLit("B::C")), Stmnts(Nil))) {
+        parse("""
+class A < B::C
 end
 """)
       }
