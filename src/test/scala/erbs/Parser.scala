@@ -261,12 +261,12 @@ class ParserTest extends FunSpec {
     it ("parses method call with { ~ } block") {
       assertResult(Call(None, "call",
         Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
-        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("x"),IntLit(1)))))))) {
+        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS, LVar("x"),IntLit(1)))))))) {
         parse("""call(10) { |x| x + 1 }""")
       }
       assertResult(Call(Some(LVar("a")), "call",
         Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(IntLit(11))))),
-        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""a.call(10,11) { |x| x + 1 }""")
       }
     }
@@ -274,7 +274,7 @@ class ParserTest extends FunSpec {
     it("parses method call with do ~ end block") {
       assertResult(Call(None, "call",
         Some(ActualArgs(List(ActualArgElement(IntLit(10)), ActualArgElement(SymbolLit("symbol"))))),
-        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1)))))))) {
+        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1)))))))) {
         parse("""
 call(10, :symbol) do |x|
   x + 1
@@ -283,7 +283,7 @@ end
       }
       assertResult(Call(Some(LVar("a")), "call",
         Some(ActualArgs(List(ActualArgElement(IntLit(10))))),
-        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
+        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"), IntLit(1))))))
       )) {
         parse("""
 a.call(10) do |x|
@@ -295,19 +295,19 @@ end
 
     it ("parses command call with { ~ } block") {
       assertResult(Cmd(None, "call", None,
-        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""call { |x| x + 1 }""")
       }
       assertResult(Cmd(None, "call",
         Some(ActualArgs(List(ActualArgElement(SymbolLit("aaa"))))),
-        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(BraceBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""call :aaa { |x| x + 1 }""")
       }
     }
 
     it ("parses command call with do ~ end block") {
       assertResult(Cmd(None, "call", None,
-        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
+        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS,LVar("x"),IntLit(1)))))))) {
         parse("""
 call do |x|
   x + 1
@@ -316,7 +316,7 @@ end
       }
       assertResult(Cmd(None, "call",
         Some(ActualArgs(List(ActualArgElement(SymbolLit("visual"))))),
-        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
+        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS, LVar("x"), IntLit(1)))))))) {
         parse("""
 call :visual do |x|
   x + 1
@@ -324,7 +324,7 @@ end
 """)
       }
       assertResult(Cmd(Some(Ary(List(IntLit(1), IntLit(2)))), "each", None,
-        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement(LVar("x"))))), Stmnts(List(Binary(PLUS, LVar("a"), IntLit(1))))))
+        Some(DoBlock(Some(ActualArgs(List(SimpleArgElement("x")))), Stmnts(List(Binary(PLUS, LVar("a"), IntLit(1))))))
       )) { parse("""
 [1,2].each do |x|
   a + 1
@@ -575,13 +575,13 @@ def a()
 end
 """)
       }
-      assertResult(DefExpr("a", Some(FormalArgs(List(SimpleArgElement(LVar("opt"))))), Stmnts(Nil))) {
+      assertResult(DefExpr("a", Some(FormalArgs(List(SimpleArgElement("opt")))), Stmnts(Nil))) {
         parse("""
 def a(opt)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(FormalArgs(List(SimpleArgElement(LVar("a")), SimpleArgElement(LVar("b"))))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(FormalArgs(List(SimpleArgElement("a"), SimpleArgElement("b")))), Stmnts(Nil))) {
         parse("""
 def call(a, b)
 end
@@ -599,7 +599,7 @@ def call(key = 1)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(FormalArgs(List(SimpleArgElement(LVar("v")), DefaultArgElement(LVar("key"), IntLit(1))))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(FormalArgs(List(SimpleArgElement("v"), DefaultArgElement(LVar("key"), IntLit(1))))), Stmnts(Nil))) {
         parse("""
 def call(v, key = 1)
 end
@@ -612,7 +612,7 @@ def call
 end
 """)
       }
-      assertResult(DefExpr("value=", Some(FormalArgs(List(SimpleArgElement(LVar("v"))))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ))))) {
+      assertResult(DefExpr("value=", Some(FormalArgs(List(SimpleArgElement("v")))), Stmnts(List(Assign(IVar("value"), LVar("v"), EQ))))) {
         parse("""
 def value=(v)
   @value = v

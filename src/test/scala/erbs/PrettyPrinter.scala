@@ -375,7 +375,7 @@ end""") {
 
       assertResult("""def call(v, key: 1)
 end""") {
-       pp(DefExpr("call", Some(FormalArgs(List(SimpleArgElement(LVar("v")), KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
+       pp(DefExpr("call", Some(FormalArgs(List(SimpleArgElement("v"), KeywordArgElement("key", IntLit(1))))), Stmnts(Nil)))
         }
 
       }

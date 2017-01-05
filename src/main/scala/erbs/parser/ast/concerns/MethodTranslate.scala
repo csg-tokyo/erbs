@@ -25,7 +25,7 @@ trait MethodTranslate {
     }.mkString("_")
   )
 
-  private lazy val formalArgs = syntaxTags.keys.toList.map(LVar(_)) match {
+  private lazy val formalArgs = syntaxTags.keys.toList match {
     case Nil => None
     case x => Some(FormalArgs(x.map(SimpleArgElement(_))))
   }

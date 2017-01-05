@@ -63,7 +63,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val defExpr: PackratParser[DefExpr] = "def" ~> T_DEFMNAME ~ formalArgs.? ~ stmnts <~ "end" ^^ { case name ~ args ~ body => DefExpr(name, args, body) }
 
   protected lazy val actualArgElement: PackratParser[ActualArgElement] = arg ^^ ActualArgElement
-  protected lazy val simpleArgElement: PackratParser[SimpleArgElement] = lvar ^^ SimpleArgElement
+  protected lazy val simpleArgElement: PackratParser[SimpleArgElement] = T_ID ^^ SimpleArgElement
   protected lazy val defaultArgElement: PackratParser[DefaultArgElement] = lvar ~ ("=" ~> arg) ^^ { case k ~ v => DefaultArgElement(k, v) }
   protected lazy val keywordArgElement: PackratParser[KeywordArgElement] = (T_SYMBOL <~ ":") ~ arg ^^ { case k ~ v => KeywordArgElement(k, v) }
 
