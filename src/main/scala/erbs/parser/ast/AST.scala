@@ -49,7 +49,7 @@ object Op {
 case class ActualArgs(val args: List[Expr]) extends AST
 sealed trait Args extends AST
 case class FormalArgs(val args: List[LVar]) extends Args
-case class KeywordArgs(val args: Map[Expr, Expr]) extends Args
+case class KeywordArgs(val args: List[(SymbolLit, Expr)]) extends Args
 case class DefaultArgs(val args: List[(LVar, Expr)]) extends Args
 
 case class ElsifBody(cond: Expr, body: Stmnts)

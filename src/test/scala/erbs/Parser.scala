@@ -587,7 +587,7 @@ def call(a, b)
 end
 """)
       }
-      assertResult(DefExpr("call", Some(KeywordArgs(Map(SymbolLit("key") -> IntLit(1)))), Stmnts(Nil))) {
+      assertResult(DefExpr("call", Some(KeywordArgs(List((SymbolLit("key"), IntLit(1))))), Stmnts(Nil))) {
         parse("""
 def call(key: 1)
 end

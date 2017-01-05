@@ -40,6 +40,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val trueValue: PackratParser[BoolLit] = "true" ^^^ BoolLit(true)
   protected lazy val bool: PackratParser[BoolLit] = trueValue | falseValue
   protected lazy val symbol: PackratParser[SymbolLit] = ":" ~> T_SYMBOL ^^ SymbolLit
+  protected lazy val symbolKey: PackratParser[SymbolLit] = T_SYMBOL <~ ":" ^^ SymbolLit
   protected lazy val valWithNot: PackratParser[Unary] = "!" ~> (bool | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { Unary(EXT, _) }
   protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS, _) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
@@ -54,9 +55,9 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val hash: PackratParser[Hash] = "{" ~>  _hash.? <~ "}" ^^ { _.getOrElse(Hash(Map.empty)) }
   protected lazy val _hash: PackratParser[Hash] =  hashBody ^^ Hash
   protected lazy val hashBody: PackratParser[Map[Expr, Expr]] = rep1sep(keyValue, ",") ^^ { _.reduceLeft { (acc, e) => acc ++ e } }
-  protected lazy val symbolKey: PackratParser[Expr] = (string | T_SYMBOL ^^ SymbolLit) <~ ":"
-  protected lazy val rocketKey: PackratParser[Expr] = arg <~ "=>"
-  protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolKey | rocketKey) ~ arg ^^ { case k ~ v => Map(k -> v) }
+  protected lazy val symbolHashKey: PackratParser[Expr] = (string <~ ":") | symbolKey
+  protected lazy val rocketHashKey: PackratParser[Expr] = arg <~ "=>"
+  protected lazy val keyValue: PackratParser[Map[Expr, Expr]] = (symbolHashKey | rocketHashKey) ~ arg ^^ { case k ~ v => Map(k -> v) }
 
   // TODO add inheritace
   protected lazy val classExpr: PackratParser[ClassExpr] = "class" ~> const ~ ("<" ~> expr).? ~ stmnts <~ "end" ^^ { case name ~ parent ~ body => ClassExpr(name, parent, body) }
@@ -64,14 +65,17 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val defExpr: PackratParser[DefExpr] = "def" ~> T_DEFMNAME ~ formalArgs2.? ~ stmnts <~ "end" ^^ { case name ~ args ~ body => DefExpr(name, args, body) }
 
   protected lazy val defaultAssign: PackratParser[(LVar, Expr)] = lvar ~ ("=" ~> arg) ^^ { case k ~ v => (k, v) }
+  protected lazy val keywordAssign: PackratParser[(SymbolLit, Expr)] = symbolKey ~ arg ^^ { case k ~ v => (k, v) }
+
   protected lazy val defaultArgsList: PackratParser[List[(LVar, Expr)]] = rep1sep(defaultAssign, ",")
+  protected lazy val keywordArgsList: PackratParser[List[(SymbolLit, Expr)]] = rep1sep(keywordAssign, ",")
   protected lazy val formalArgList: PackratParser[List[LVar]] = rep1sep(lvar, ",")
   protected lazy val actualArgList: PackratParser[List[Expr]] = rep1sep(arg, ",")
   protected lazy val _formalArgs: PackratParser[FormalArgs] = formalArgList ^^ FormalArgs
   protected lazy val _actualArgs: PackratParser[ActualArgs] = actualArgList ^^ ActualArgs
-  protected lazy val _hashArgs: PackratParser[KeywordArgs] = hashBody ^^ KeywordArgs
+  protected lazy val _keywordArgs: PackratParser[KeywordArgs] =  keywordArgsList ^^ KeywordArgs
   protected lazy val _defaultArgs: PackratParser[DefaultArgs] = defaultArgsList ^^ DefaultArgs
-  protected lazy val v2Args: PackratParser[Args] = _defaultArgs | _hashArgs | _formalArgs
+  protected lazy val v2Args: PackratParser[Args] = _defaultArgs | _keywordArgs | _formalArgs
   protected lazy val formalArgs: PackratParser[FormalArgs] =  "(" ~> formalArgList.? <~ ")" ^^ { args => FormalArgs(args.getOrElse(Nil)) }
   // formal arguemnt for greater than v2.0.0
   protected lazy val formalArgs2: PackratParser[Args] =  "(" ~> v2Args.? <~ ")" ^^ { args => args.getOrElse(FormalArgs(Nil)) }
