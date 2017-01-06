@@ -106,11 +106,12 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
     case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
   }
   // reciver.method_name arg1, arg2
-  protected lazy val reciverCommand: PackratParser[Cmd] = (primary <~ ".") ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
+  protected lazy val receiverCommand: PackratParser[Cmd] = (primary <~ ".") ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
     case recv ~ name ~ args ~ block => Cmd(Some(recv), name, args, block)
   }
+  protected lazy val receiverCommandWithoutArgs: PackratParser[Cmd] = (secondary <~ ".") ~ T_MNAME ^^ { case recv ~ name  => Cmd(Some(recv), name, None, None) }
   // TODO add COLON call e.g. a::b
-  protected lazy val command: PackratParser[Cmd] = simpleCommand | reciverCommand
+  protected lazy val command: PackratParser[Cmd] = simpleCommand | receiverCommand
 
   protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))
