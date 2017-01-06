@@ -35,7 +35,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   // @ref http://www.scala-lang.org/old/node/11315.html
   protected lazy val lvar: PackratParser[LVar] = not(reserved) ~> T_ID ^^ LVar
   protected lazy val ivar: PackratParser[IVar] = "@" ~> T_SYMBOL ^^ IVar
-  protected lazy val const: PackratParser[ConstLit] = T_CONSTANT ^^ ConstLit
+  protected lazy val const: PackratParser[ConstLit] = rep1sep(T_CONSTANT, "::") ^^ { args => ConstLit(args.mkString("::"))}
   protected lazy val falseValue: PackratParser[BoolLit] = "false" ^^^ BoolLit(false)
   protected lazy val trueValue: PackratParser[BoolLit] = "true" ^^^ BoolLit(true)
   protected lazy val bool: PackratParser[BoolLit] = trueValue | falseValue
@@ -105,13 +105,13 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val simpleCommand: PackratParser[Cmd] = (lvar <~ t_space) ~ actualArgList ~ block.? ^^ {
     case LVar(name) ~ args ~ block => Cmd(None, name, Some(ActualArgs(args)), block)
   }
-  // a.call args
-  protected lazy val reciverCommand: PackratParser[Cmd] = (primary <~ ".") ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
+  // reciver.method_name arg1, arg2
+  protected lazy val receiverCommand: PackratParser[Cmd] = (primary <~ ".") ~ T_MNAME ~ (t_space ~> commandArgs).? ~ block.? ^^ {
     case recv ~ name ~ args ~ block => Cmd(Some(recv), name, args, block)
   }
+  protected lazy val receiverCommandWithoutArgs: PackratParser[Cmd] = (secondary <~ ".") ~ T_MNAME ^^ { case recv ~ name  => Cmd(Some(recv), name, None, None) }
   // TODO add COLON call e.g. a::b
-  // command must have at least one
-  protected lazy val command: PackratParser[Cmd] = simpleCommand | reciverCommand
+  protected lazy val command: PackratParser[Cmd] = simpleCommand | receiverCommand
 
   protected lazy val commadCall: PackratParser[Expr] = T_MNAME ~ block ^^ {
     case name ~ block => Cmd(None, name, None, Some(block))

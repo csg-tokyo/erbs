@@ -52,6 +52,9 @@ class PrettyPrinterTest extends FunSpec {
       assertResult("ASDF2") {
         pp(ConstLit("ASDF2"))
       }
+      assertResult("A::B") {
+        pp(ConstLit("A::B"))
+      }
     }
 
     it ("prints symbol") {
@@ -334,6 +337,8 @@ end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit
 end""") { pp(ClassExpr(ConstLit("A"), None, Stmnts(Nil))) }
         assertResult("""class A < B
 end""") { pp(ClassExpr(ConstLit("A"), Some(ConstLit("B")), Stmnts(Nil))) }
+        assertResult("""class A < B::C
+end""") { pp(ClassExpr(ConstLit("A"), Some(ConstLit("B::C")), Stmnts(Nil))) }
         assertResult("""class A
   def a
     1 + 2
