@@ -150,6 +150,18 @@ class ParserTest extends FunSpec {
       }
     }
 
+    it ("parses global variable") {
+      assertResult(GVar("a")) {
+        parse("$a")
+      }
+      assertResult(GVar("a1")) {
+        parse("$a1")
+      }
+      assertResult(GVar("A")) {
+        parse("$A")
+      }
+    }
+
     it ("parses array value") {
       assertResult(Ary(Nil)) {
         parse("[]")

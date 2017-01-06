@@ -35,16 +35,17 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   // @ref http://www.scala-lang.org/old/node/11315.html
   protected lazy val lvar: PackratParser[LVar] = not(reserved) ~> T_ID ^^ LVar
   protected lazy val ivar: PackratParser[IVar] = "@" ~> T_SYMBOL ^^ IVar
+  protected lazy val gvar: PackratParser[GVar] = "$" ~> T_SYMBOL ^^ GVar
   protected lazy val const: PackratParser[ConstLit] = rep1sep(T_CONSTANT, "::") ^^ { args => ConstLit(args.mkString("::"))}
   protected lazy val falseValue: PackratParser[BoolLit] = "false" ^^^ BoolLit(false)
   protected lazy val trueValue: PackratParser[BoolLit] = "true" ^^^ BoolLit(true)
   protected lazy val bool: PackratParser[BoolLit] = trueValue | falseValue
   protected lazy val symbol: PackratParser[SymbolLit] = ":" ~> T_SYMBOL ^^ SymbolLit
   protected lazy val symbolKey: PackratParser[SymbolLit] = T_SYMBOL <~ ":" ^^ SymbolLit
-  protected lazy val valWithNot: PackratParser[Unary] = "!" ~> (bool | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { Unary(EXT, _) }
-  protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS, _) }
+  protected lazy val valWithNot: PackratParser[Unary] = "!" ~> (bool | gvar | const | lvar | ivar | "(" ~> expr <~ ")" | valWithNot) ^^ { Unary(EXT, _) }
+  protected lazy val valMinus: PackratParser[Unary] = "-" ~> (const | gvar | lvar | ivar | double | int | "(" ~> expr <~ ")") ^^ { Unary(MINUS, _) }
   protected lazy val literal: PackratParser[Expr] = symbol | double | int
-  protected lazy val variable: PackratParser[Literal] = lvar | ivar | const
+  protected lazy val variable: PackratParser[Literal] = gvar | lvar | ivar | const
   protected lazy val ret: PackratParser[Expr] = "return" ~> actualArgList.? ^^ { args => Return(args.getOrElse(Nil).map(_.value)) }
 
   protected lazy val aref: PackratParser[ARef] = primaryForAref ~ (customLiteral("[") ~> primary <~ "]") ^^ { case v ~ ref => ARef(v, ref) }
