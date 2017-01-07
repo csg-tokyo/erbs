@@ -26,6 +26,7 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
     case Keyword(v) => write(v.toString)
     case LVar(v) => write(v.toString)
     case IVar(v) => write("@" + v.toString)
+    case GVar(v) => write("$" + v.toString)
     case Binary(op, lhs, rhs) => write(format(lhs) + s" ${Op.stringfy(op)} " + format(rhs))
     case Assign(lhs, rhs, op) => write(format(lhs) + s" ${Op.stringfy(op)} " + format(rhs))
     case Ary(vars) => write("[" + joinWithComma(vars) + "]")

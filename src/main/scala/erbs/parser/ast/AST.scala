@@ -65,6 +65,7 @@ case class SymbolLit(v: String) extends Literal
 case class StringLit(v: String) extends Literal
 case class LVar(val v: String) extends Literal
 case class IVar(v: String) extends Literal
+case class GVar(v: String) extends Literal
 case class ATToken(v: String) extends Literal // @token
 object ATToken {
   def apply(l: LVar) = new ATToken(l.v)

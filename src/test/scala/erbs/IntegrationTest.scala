@@ -21,6 +21,7 @@ class IntegrationTest extends FunSpec {
       fileAssertEqual("token_test1.rbx", "10")
       fileAssertEqual("token_test2.rbx", "abcdefghijkl")
       fileAssertEqual("pipe.rbx", ".ensime_cache/")
+      fileAssertEqual("pipe2.rbx", ".ensime_cache/")
       fileAssertEqual("cat.rbx", "cat file_path")
       fileAssertEqual("tag.rbx", "ruby-lang and haskell-lang are awesome")
       fileAssertEqual("cat_ruby.rbx", "cat rack.rb")

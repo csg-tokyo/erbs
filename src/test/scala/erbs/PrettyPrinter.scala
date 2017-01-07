@@ -78,6 +78,18 @@ class PrettyPrinterTest extends FunSpec {
       }
     }
 
+    it ("prints global varible") {
+      assertResult("$a") {
+        pp(GVar("a"))
+      }
+      assertResult("$a1") {
+        pp(GVar("a1"))
+      }
+      assertResult("$_a1") {
+        pp(GVar("_a1"))
+      }
+    }
+
     it ("prints array") {
       assertResult("[]") {
         pp(Ary(Nil))
