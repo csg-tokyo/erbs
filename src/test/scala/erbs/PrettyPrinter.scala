@@ -344,6 +344,15 @@ elsif 1
 end""") { pp(IfExpr(Call(None, "a", Some(ActualArgs(List(ActualArgElement(IntLit(10))))), None), Stmnts(List(LVar("b"))), List(ElsifBody(IntLit(1), Stmnts(List(LVar("c"))))), None)) }
       }
 
+      it ("print while and until expression") {
+        assertResult("""while true
+  b
+end""") { pp(WhileExpr(BoolLit(true), Stmnts(List(LVar("b"))))) }
+        assertResult("""until true
+  b
+end""") { pp(UntilExpr(BoolLit(true), Stmnts(List(LVar("b"))))) }
+      }
+
       it ("print lass expr") {
         assertResult("""class A
 end""") { pp(ClassExpr(ConstLit("A"), None, Stmnts(Nil))) }

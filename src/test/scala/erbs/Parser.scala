@@ -172,6 +172,9 @@ class ParserTest extends FunSpec {
       assertResult(Ary(List(StringLit(""""a""""), IntLit(3)))) {
         parse("[\"a\", 3]")
       }
+      assertResult(Ary(List(Ary(List(IntLit(1),IntLit(3))), IntLit(3)))) {
+        parse("[[1, 3], 3]")
+      }
     }
 
     it ("parses hash") {
@@ -519,6 +522,23 @@ end
         parse("""
 unless a(10)
   b
+end
+""")
+      }
+    }
+
+    it ("parses while and until expression") {
+      assertResult(WhileExpr(BoolLit(true), Stmnts(List(LVar("b"))))) {
+        parse("""
+while true
+ b
+end
+""")
+      }
+      assertResult(UntilExpr(BoolLit(true), Stmnts(List(LVar("b"))))) {
+        parse("""
+until true
+ b
 end
 """)
       }
