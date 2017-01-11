@@ -45,7 +45,6 @@ object Op {
   }
 }
 
-
 sealed trait ArgElement extends AST
 case class SimpleArgElement(val value: String) extends ArgElement
 case class KeywordArgElement(val key: String, val value: Expr) extends ArgElement
@@ -83,6 +82,8 @@ case class ElsifBody(cond: Expr, body: Stmnts)
 case class IfModExpr(cond: Expr, expr: Expr) extends Expr
 case class UnlessExpr(cond: Expr, t_body: Stmnts, f_body: Option[Stmnts]) extends Expr
 case class UnlessModExpr(cond: Expr, t_body: Expr) extends Expr
+case class WhileExpr(cond: Expr, body: Stmnts) extends Expr
+case class UntilExpr(cond: Expr, body: Stmnts) extends Expr
 case class Return(args: List[Expr]) extends Expr
 case class Unary(op: Op, v: Expr) extends Expr
 case class Binary(v: Op, lht: Expr, rht: Expr) extends Expr

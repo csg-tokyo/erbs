@@ -12,6 +12,8 @@ trait Tokens {
   val T_CONSTANT = """[A-Z][_A-Za-z0-9]*""".r
 
   val K_DO = """do\b""".r
+  val K_WHILE = """while\b""".r
+  val K_UNTIL = """until\b""".r
   val K_CLS = """class\b""".r
   val K_MODULE = """module\b""".r
   val K_DEF = """def\b""".r
