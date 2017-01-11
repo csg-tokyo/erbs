@@ -18,6 +18,9 @@ class IntegrationTest extends FunSpec {
 
   describe ("Extend Parser") {
     it ("should return ruby value") {
+      fileAssertEqual("nterm.rbx", "")
+      fileAssertEqual("postfix.rbx", "")
+      fileAssertEqual("prefix.rbx", "true")
       fileAssertEqual("token_test1.rbx", "10")
       fileAssertEqual("token_test2.rbx", "abcdefghijkl")
       fileAssertEqual("pipe.rbx", ".ensime_cache/")
