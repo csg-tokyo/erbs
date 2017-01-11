@@ -56,6 +56,16 @@ case class PrettyPrinter(ast: AST, private var depth: Int) {
       writeBody(stmnts)
       indentedWrite("end")
     }
+    case WhileExpr(cond, stmnts) => {
+      writeln("while " + format(cond))
+      writeBody(stmnts)
+      indentedWrite("end")
+    }
+    case UntilExpr(cond, stmnts) => {
+      writeln("until " + format(cond))
+      writeBody(stmnts)
+      indentedWrite("end")
+    }
     case IfModExpr(cond, expr) => write(format(expr) + " if " + format(cond))
     case UnlessModExpr(cond, expr) => write(format(expr) + " unless " + format(cond))
     case Return(args) => {

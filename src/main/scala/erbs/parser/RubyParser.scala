@@ -27,7 +27,7 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val t_space: PackratParser[String] = customLiteral(" ")
 
   protected def reserved = reserved_value
-  protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS | K_ELSIF
+  protected lazy val reserved_value = K_CLS | K_DEF | K_END | K_IF | K_THEN | K_ELSE | K_TRUE | K_FALSE | K_DO | K_RETURN | K_MODULE | K_UNLESS | K_ELSIF | K_WHILE | K_UNTIL
   var operator: PackratParser[Op] = t_plus | t_minus | t_mul | t_div | t_and | t_or | t_ge | t_gt | t_le | t_lt | t_eeq
   protected lazy val int: PackratParser[IntLit] = T_INT ^^ { e => IntLit(e.toInt) }
   protected lazy val double: PackratParser[DoubleLit] = T_DOUBLE ^^ { e => DoubleLit(e.toDouble) }
@@ -82,7 +82,10 @@ trait RubyParser extends BaseParser[Stmnts] with Tokens {
   protected lazy val unlessExpr: PackratParser[UnlessExpr] = "unless" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => UnlessExpr(cond, body, None) }
   protected lazy val elseifBody: PackratParser[ElsifBody] = "elsif" ~> expr ~ stmnts ^^ { case cond ~ body => ElsifBody(cond, body) }
   protected lazy val elseifBodies: PackratParser[List[ElsifBody]] = elseifBody.*
-  protected lazy val branchExpr: PackratParser[Expr] = ifExpr | unlessExpr
+  protected lazy val branchExpr: PackratParser[Expr] = ifExpr | unlessExpr | whileExpr | untilExpr
+
+  protected lazy val whileExpr: PackratParser[WhileExpr] = "while" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => WhileExpr(cond, body) }
+  protected lazy val untilExpr: PackratParser[UntilExpr] = "until" ~> expr ~ stmnts <~ "end" ^^ { case cond ~ body => UntilExpr(cond, body) }
 
   protected lazy val blockParamDef: PackratParser[ActualArgs] = "|" ~> simpleArgList <~ "|" ^^ ActualArgs
   protected lazy val doBlock: PackratParser[Block] = "do" ~> blockParamDef.? ~ stmnts <~ "end" ^^ { case params ~ body => DoBlock(params, body) }
